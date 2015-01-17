@@ -1,4 +1,4 @@
-from flask import g
+from flask import request, g
 
 from emporium import app
 from database import db
@@ -8,11 +8,21 @@ from util.responses import APIResponse
 
 @app.before_request
 def app_before_request():
+    if '/static/' in request.path:
+        return
+
     # Load session if it exists
     g.session = Session()
 
-    # Set uid
-    g.user = g.session.get("uid")
+    g.user = None
+
+    # Set a user for testing
+    if app.config.get("TESTING"):
+        if 'FAKE_USER' in request.headers:
+            g.user = int(request.headers.get("FAKE_USER"))
+    else:
+        # Set uid
+        g.user = g.session.get("uid")
 
     # Setup DB transaction
     g.db = db.getconn()
@@ -20,6 +30,9 @@ def app_before_request():
 
 @app.after_request
 def app_after_request(response):
+    if '/static/' in request.path:
+        return response
+
     # Set userid
     if g.user:
         g.session["uid"] = g.user

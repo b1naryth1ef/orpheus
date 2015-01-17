@@ -1,6 +1,9 @@
 import os, sys
+
 from flask import Flask
 from flask.ext.openid import OpenID
+
+from util.log import setup_logging
 
 app = Flask(__name__)
 
@@ -24,5 +27,6 @@ def load_event_handlers():
     from util import handlers
 
 def setup():
+    setup_logging()
     load_all_views()
     load_event_handlers()

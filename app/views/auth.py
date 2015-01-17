@@ -2,6 +2,7 @@ import re
 
 from flask import Blueprint, g, redirect
 
+from util import flashy
 from util.errors import UserError, APIError
 from util.responses import APIResponse
 
@@ -40,6 +41,7 @@ def route_login():
 @auth.route("/logout")
 def route_logout():
     del g.session["uid"]
+    return flashy("You have been logged out!")
 
 @auth.route("/info")
 def route_info():
@@ -59,5 +61,4 @@ def route_info():
             "settings": resp.settings,
         }
     })
-
 
