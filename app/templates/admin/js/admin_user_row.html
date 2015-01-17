@@ -1,0 +1,8 @@
+<tr>
+  <td><%- user.id %></td>
+  <td><%- user.steamid %></td>
+  <td><%- user.username %></td>
+  <td><%- user.bets_placed || 0 %></td>
+  <td><%- user.items_in_holding || 0 %></td>
+  <td><%- moment.unix(user.last_login).format('MMMM Do YYYY, h:mm:ss a') %></td>
+</tr>

@@ -4,6 +4,7 @@ from flask import Blueprint, g, redirect
 from datetime import datetime
 
 from util import flashy
+from util.etc import get_or_cache_nickname
 from util.errors import UserError, APIError
 from util.responses import APIResponse
 
@@ -36,7 +37,7 @@ def create_or_login(resp):
         g.user = create_user(id, group)
         g.group = group
 
-    g.session["uid"] = g.user
+    g.session["u"] = g.user
     return redirect(oid.get_next_url())
 
 @auth.route("/login")
@@ -49,7 +50,7 @@ def route_login():
 
 @auth.route("/logout")
 def route_logout():
-    del g.session["uid"]
+    g.user = None
     return flashy("You have been logged out!")
 
 @auth.route("/info")
@@ -64,10 +65,6 @@ def route_info():
 
     if not resp:
         g.user = None
-        if 'u' in g.session:
-            del g.session['u']
-        if 'g' in g.session:
-            del g.session['g']
         return APIResponse({
             "authed": False
         })
@@ -76,6 +73,7 @@ def route_info():
         "authed": True,
         "user": {
             "id": g.user,
+            "name": get_or_cache_nickname(resp.steamid),
             "steamid": str(resp.steamid),
             "settings": resp.settings,
             "group": resp.ugroup

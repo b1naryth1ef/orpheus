@@ -7,9 +7,9 @@ def main():
         sys.exit(1)
 
     if sys.argv[1] == "web":
-        from emporium import app, setup
+        from emporium import app, setup, get_js_templates
         setup()
-        app.run("0.0.0.0", debug=True)
+        app.run("0.0.0.0", debug=True, extra_files=list(get_js_templates()))
 
     if sys.argv[1] == "tests":
         os.system("python -m unittest discover tests '*.py'")

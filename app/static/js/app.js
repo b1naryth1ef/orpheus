@@ -12,29 +12,18 @@ App.prototype.render = function (name, obj) {
     return this.templates[name](obj);
 }
 
-App.prototype.view = function (route) {
-    this.views[route] = new View(this, route);
+App.prototype.view = function (route, exact) {
+    this.views[route] = new View(this, route, exact);
     return this.views[route];
 }
 
 App.prototype.run = function () {
-    var parser = document.createElement('a');
-    parser.href = window.location.pathname.substr(1);
-
+    var url = '/' + window.location.pathname.substr(1);
     if (this.setup) { this.setup.call(this); }
-
-    // Special index-page case
-    if (!parser.pathname || parser.pathname === "/") {
-        if (this.views["/"]) {
-            return this.views["/"].call();
-        }
-    }
 
     // Pattern match the route
     for (k in this.views) {
-        if (k === "/") { continue; }
-        var q = parser.pathname.match(new RegExp(k));
-        if (q && q.length) {
+        if (k == url) {
             return this.views[k].call();
         }
     }
@@ -42,10 +31,11 @@ App.prototype.run = function () {
     console.error("could not find router handler!");
 }
 
-var View = function (app, route) {
+var View = function (app, route, exact) {
     this.app = app;
     this.route = route;
     this.handler = null;
+    this.exact = exact || true;
 }
 
 View.prototype.attach = function (f) {

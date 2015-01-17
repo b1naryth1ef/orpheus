@@ -21,6 +21,11 @@ class Session(object):
             self._data = {}
         self._changed = False
 
+    def delete(self, item):
+        self._changed = True
+        if item in self._data:
+            del self._data[item]
+
     def get(self, item, default=None):
         return self._data.get(item, default)
 

@@ -4,12 +4,15 @@ from flask import Flask
 from flask.ext.openid import OpenID
 
 from util.log import setup_logging
+from util.steam import SteamAPI
 
 app = Flask(__name__)
 
 app.config.from_pyfile("settings.py")
 
 oid = OpenID(app)
+
+steam = SteamAPI(app.config.get("STEAM_API_KEY"))
 
 def load_all_views():
     """
@@ -26,18 +29,22 @@ def load_all_views():
 def load_event_handlers():
     from util import handlers
 
-def build_js_templates():
-    TEMPLATES = "var T = {};"
-
+def get_js_templates():
     for (curdir, dirs, files) in os.walk("templates/"):
         for fname in files:
             if "/js" in curdir and fname.endswith(".html"):
-                p = open(os.path.join(curdir, fname))
-                TEMPLATES += 'T["%s"] = _.template("%s");' % (
-                    fname.rsplit(".", 1)[0],
-                    p.read().replace("\n", "").replace('"', "'")
-                )
-                p.close()
+                yield os.path.join(curdir, fname)
+
+def build_js_templates():
+    TEMPLATES = "var T = {};"
+
+    for jst in get_js_templates():
+        p = open(jst)
+        TEMPLATES += 'T["%s"] = _.template("%s");' % (
+            jst.rsplit("/", 1)[-1].rsplit(".", 1)[0],
+            p.read().replace("\n", "").replace('"', "'")
+        )
+        p.close()
 
     with open("static/js/templates.js", "w") as f:
         f.write(TEMPLATES)

@@ -47,6 +47,9 @@ def app_after_request(response):
     if g.user:
         g.session["g"] = g.group
         g.session["u"] = g.user
+    else:
+        g.session.delete("g")
+        g.session.delete("u")
 
     # Save session if it changed
     g.session.save(response)
