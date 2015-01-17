@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 
+import redis
 from psycopg2.pool import ThreadedConnectionPool
 from psycopg2.extras import NamedTupleCursor, Json
 
@@ -30,4 +31,6 @@ db = PostgresDatabase("host={host} port={port} dbname=emporium user=emporium pas
     host=app.config.get("PG_HOST"),
     port=app.config.get("PG_PORT"),
     pw=CRYPT.get("postgres")))
+
+redis = redis.Redis(app.config.get("R_HOST"), port=app.config.get("R_PORT"))
 

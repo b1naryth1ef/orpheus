@@ -1,6 +1,6 @@
 import re
 
-from flask import Blueprint, g
+from flask import Blueprint, g, redirect
 
 from emporium import oid
 from helpers.user import create_user
@@ -12,8 +12,8 @@ steam_id_re = re.compile('steamcommunity.com/openid/id/(.*?)$')
 def create_or_login(resp):
     id = steam_id_re.findall(resp.identity_url)[0]
 
-    g.cursor.execute("SELECT (id, active) FROM users WHERE steamid=%s", id)
-    results = g.cursor.findall()
+    g.cursor.execute("SELECT id, active FROM users WHERE steamid=%s", (id, ))
+    results = g.cursor.fetchall()
 
     if len(results):
         if results[0].active:
@@ -24,14 +24,19 @@ def create_or_login(resp):
     else:
         g.user = create_user(id)
 
+    g.session["uid"] = g.user
     return redirect(oid.get_next_url())
 
 @auth.route("/login")
+@oid.loginhandler
 def route_login():
-    pass
+    if g.user:
+        return redirect(oid.get_next_url())
+
+    return oid.try_login("http://steamcommunity.com/openid")
 
 @auth.route("/logout")
 def route_logout():
-    pass
+    del g.session["uid"]
 
 
