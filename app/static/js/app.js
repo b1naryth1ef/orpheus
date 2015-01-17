@@ -58,6 +58,10 @@ app.setup = function () {
                 this.user = null;
                 $(".unauthed").show();
             }
+
+            if (data.user.group === "super" || data.user.group === "admin") {
+                $(".admin").show();
+            }
         }).bind(this)
     });
 };
