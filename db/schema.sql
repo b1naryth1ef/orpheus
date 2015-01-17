@@ -17,8 +17,8 @@ CREATE TYPE user_group AS ENUM ('normal', 'moderator', 'admin', 'super');
 
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
-  steamid character varying(255) NOT NULL,
-  email character varying(255),
+  steamid character varying(255) NOT NULL UNIQUE,
+  email character varying(255) UNIQUE,
   active boolean,
   join_date timestamp,
   last_login timestamp,
