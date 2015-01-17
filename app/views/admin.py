@@ -1,7 +1,7 @@
 from flask import Blueprint, g, render_template, request
 
+from database import map_db_values
 from helpers.user import UserGroup
-
 from util.etc import paginate, get_or_cache_nickname
 from util.errors import UserError, APIError
 from util.responses import APIResponse
@@ -26,7 +26,7 @@ def admin_users():
     return render_template("admin/users.html")
 
 USERS_LIST_QUERY = """
-    SELECT id, steamid, email, date_part('epoch', last_login) as last_login FROM users ORDER BY id LIMIT %s OFFSET %s
+    SELECT id, steamid, email, active, date_part('epoch', last_login) as last_login FROM users ORDER BY id LIMIT %s OFFSET %s
 """
 
 @admin.route("/api/user/list")
@@ -34,16 +34,42 @@ def admin_users_list():
     page = int(request.values.get("page", 1))
 
     g.cursor.execute("SELECT count(*) as c FROM users")
-    pages = g.cursor.fetchone().c / 100
+    pages = (g.cursor.fetchone().c / 100) + 1
 
     g.cursor.execute(USERS_LIST_QUERY, paginate(page, per_page=100))
+
     users = []
     for entry in g.cursor.fetchall():
         users.append({
             "id": entry.id,
             "steamid": entry.steamid,
             "username": get_or_cache_nickname(entry.steamid),
-            "last_login": entry.last_login
+            "last_login": entry.last_login,
+            "active": entry.active
         })
 
     return APIResponse({"users": users, "pages": pages})
+
+USER_EDITABLE_FIELDS = [
+    "email", "active"
+]
+
+@admin.route("/api/user/edit", methods=["POST"])
+def admin_user_edit():
+    user = request.values.get("user")
+    print user
+
+    g.cursor.execute("SELECT id FROM users WHERE id=%s", (user, ))
+    if not g.cursor.fetchone():
+        raise APIError("Invalid User")
+
+    query = {k: v for (k, v) in request.values.iteritems() if k in USER_EDITABLE_FIELDS}
+    if not len(query):
+        raise APIError("Nothing to change!")
+
+    sql = "UPDATE users SET {} WHERE id=%(id)s".format(map_db_values(query))
+
+    query['id'] = user
+    g.cursor.execute(sql, query)
+
+    return APIResponse()

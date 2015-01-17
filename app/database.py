@@ -27,6 +27,9 @@ def transaction():
     finally:
         db.putconn(conn)
 
+def map_db_values(obj):
+    return ', '.join(map(lambda i: i+"=%("+i+")s", obj.keys()))
+
 db = PostgresDatabase("host={host} port={port} dbname=emporium user=emporium password={pw}".format(
     host=app.config.get("PG_HOST"),
     port=app.config.get("PG_PORT"),

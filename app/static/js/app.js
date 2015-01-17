@@ -12,9 +12,9 @@ App.prototype.render = function (name, obj) {
     return this.templates[name](obj);
 }
 
-App.prototype.view = function (route, exact) {
-    this.views[route] = new View(this, route, exact);
-    return this.views[route];
+App.prototype.view = function (name) {
+    this.views[name] = new View(this, name);
+    return this.views[name];
 }
 
 App.prototype.run = function () {
@@ -23,27 +23,30 @@ App.prototype.run = function () {
 
     // Pattern match the route
     for (k in this.views) {
-        if (k == url) {
-            return this.views[k].call();
+        for (match in this.views[k].routes) {
+            if (match == url) {
+                return this.views[k].call(match);
+            }
         }
     }
 
     console.error("could not find router handler!");
 }
 
-var View = function (app, route, exact) {
+var View = function (app, name) {
     this.app = app;
-    this.route = route;
-    this.handler = null;
-    this.exact = exact || true;
+    this.name = name;
+    this.routes = {};
+    this.setup = null;
 }
 
-View.prototype.attach = function (f) {
-    this.handler = f;
+View.prototype.route = function (route, f) {
+    this.routes[route] = f;
 }
 
-View.prototype.call = function () {
-    return this.handler.call(this);
+View.prototype.call = function (route) {
+    if (this.setup) this.setup();
+    return this.routes[route].call(this);
 }
 
 var app = new App();

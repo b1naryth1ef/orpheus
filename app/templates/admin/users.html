@@ -1,8 +1,12 @@
 {% extends "admin/index.html" %}
 {% block content %}
 <div class="panel panel-default">
-  <div class="panel-heading">Users</div>
-  <div class="table-responsive">
+  <div class="panel-heading">
+    <a id="refresh-users" data-toggle="tooltip" title="" class="pull-right" data-original-title="Refresh Panel">
+      <em class="fa fa-refresh"></em>
+    </a>Users
+  </div>
+  <div class="table-responsive" id="users-table">
     <table id="table-ext-1" class="table table-bordered table-hover">
       <thead>
         <tr>
@@ -12,6 +16,7 @@
           <th>Bets Placed</th>
           <th>Items in Holding</th>
           <th>Last Login</th>
+          <th>Edit</th>
         </tr>
       </thead>
       <tbody id="users-content"></tbody>
@@ -29,20 +34,15 @@
         </div>
       </div>
       <div class="col-lg-8"></div>
-      <div class="col-lg-2">
-        <div class="input-group pull-right">
-          <select class="input-sm form-control">
-            <option value="0">Bulk action</option>
-            <option value="1">Delete</option>
-            <option value="2">Clone</option>
-            <option value="3">Export</option>
-          </select>
-          <span class="input-group-btn">
-            <button class="btn btn-sm btn-default">Apply</button>
-          </span>
-        </div>
+      <div class="col-lg-2 text-right">
+        <ul class="pagination pagination-sm" id="users-pagination">
+          <li><a id="users-page-last"><em class="fa fa-arrow-left fa-2x"></em></a></li>
+          <li><a id="users-page-current" style="font-size: 20px"></a></li>
+          <li><a id="users-page-next"><em class="fa fa-arrow-right fa-2x"></em></a></li>
+        </ul>
       </div>
     </div>
   </div>
 </div>
+<div id="user-modal-location"></div>
 {% endblock %}

@@ -96,12 +96,15 @@ class SteamAPI(object):
             raise SteamAPIError("Failed to getFromVanity for vanity `%s`" % vanity)
         return int(r.json()["response"].get("steamid", 0))
 
-    def getGroupMembers(self, id):
+    def getGroupMembers(self, id, page=1):
         """
         Returns a list of steam 64bit ID's for every member in group `group`,
         a group public shortname or ID.
         """
-        r = retry_request(lambda f: f.get("http://steamcommunity.com/groups/%s/memberslistxml/?xml=1" % id, timeout=10))
+        r = retry_request(lambda f: f.get("http://steamcommunity.com/groups/%s/memberslistxml/?xml=1" % id, timeout=10,
+            params={
+                "p": page   
+            }))
 
         if not r:
             raise SteamAPIError("Failed to getGroupMembers for group id `%s`" % id)
