@@ -9,7 +9,7 @@ def main():
     if sys.argv[1] == "web":
         from emporium import app, setup
         setup()
-        app.run(debug=True)
+        app.run("0.0.0.0", debug=True)
 
     if sys.argv[1] == "tests":
         os.system("python -m unittest discover tests '*.py'")

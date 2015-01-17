@@ -3,6 +3,8 @@ from flask import g
 from emporium import app
 from database import db
 from util.sessions import Session
+from util.errors import ResponseException
+from util.responses import APIResponse
 
 @app.before_request
 def app_before_request():
@@ -31,3 +33,6 @@ def app_after_request(response):
 
     return response
 
+@app.errorhandler(ResponseException)
+def app_response_error(err):
+    return err.to_response()

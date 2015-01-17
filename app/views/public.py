@@ -7,7 +7,7 @@ def route_index():
     g.cursor.execute("SELECT id, username FROM accounts")
     results = g.cursor.fetchall()
     print map(lambda i: i.username, results)
-    return render_template("home.html")
+    return render_template("base.html")
 
 @public.route("/about")
 def route_about():

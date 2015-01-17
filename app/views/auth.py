@@ -2,6 +2,9 @@ import re
 
 from flask import Blueprint, g, redirect
 
+from util.errors import UserError, APIError
+from util.responses import APIResponse
+
 from emporium import oid
 from helpers.user import create_user
 
@@ -19,8 +22,7 @@ def create_or_login(resp):
         if results[0].active:
             g.user = results[0].id
         else:
-            # TODO: throw error to user, they are not allowed to login
-            return None
+            raise UserError("Your account has been deactivated. Please contact support if you feel this was in error.""error", oid.get_next_url())
     else:
         g.user = create_user(id)
 
@@ -38,5 +40,24 @@ def route_login():
 @auth.route("/logout")
 def route_logout():
     del g.session["uid"]
+
+@auth.route("/info")
+def route_info():
+    if not g.user:
+        return APIResponse({
+            "authed": False
+        })
+
+    g.cursor.execute("SELECT steamid, settings FROM users WHERE id=%s", (g.user, ))
+    resp = g.cursor.fetchone()
+
+    return APIResponse({
+        "authed": True,
+        "user": {
+            "id": g.user,
+            "steamid": str(resp.steamid),
+            "settings": resp.settings,
+        }
+    })
 
 
