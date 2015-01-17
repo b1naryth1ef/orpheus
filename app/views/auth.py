@@ -1,6 +1,7 @@
 import re
 
 from flask import Blueprint, g, redirect
+from datetime import datetime
 
 from util import flashy
 from util.errors import UserError, APIError
@@ -16,16 +17,19 @@ steam_id_re = re.compile('steamcommunity.com/openid/id/(.*?)$')
 def create_or_login(resp):
     id = steam_id_re.findall(resp.identity_url)[0]
 
-    g.cursor.execute("SELECT id, active FROM users WHERE steamid=%s", (id, ))
-    results = g.cursor.fetchall()
+    g.cursor.execute("SELECT id, active, ugroup FROM users WHERE steamid=%s", (id, ))
+    user = g.cursor.fetchone()
 
-    if len(results):
-        if results[0].active:
-            g.user = results[0].id
+    if user:
+        if user.active:
+            g.user = user.id
+            g.group = user.ugroup
+            g.cursor.execute("UPDATE users SET last_login=%s WHERE id=%s", (datetime.utcnow(), user.id))
         else:
-            raise UserError("Your account has been deactivated. Please contact support if you feel this was in error.""error", oid.get_next_url())
+            raise UserError("Account Disabled. Please contact support for more information")
     else:
         g.user = create_user(id)
+        g.group = 'normal'
 
     g.session["uid"] = g.user
     return redirect(oid.get_next_url())
@@ -50,7 +54,7 @@ def route_info():
             "authed": False
         })
 
-    g.cursor.execute("SELECT steamid, settings FROM users WHERE id=%s", (g.user, ))
+    g.cursor.execute("SELECT steamid, settings, ugroup FROM users WHERE id=%s", (g.user, ))
     resp = g.cursor.fetchone()
 
     return APIResponse({
@@ -59,6 +63,7 @@ def route_info():
             "id": g.user,
             "steamid": str(resp.steamid),
             "settings": resp.settings,
+            "group": resp.ugroup
         }
     })
 

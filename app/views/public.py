@@ -4,10 +4,7 @@ public = Blueprint("public", __name__)
 
 @public.route("/")
 def route_index():
-    g.cursor.execute("SELECT id, username FROM accounts")
-    results = g.cursor.fetchall()
-    print map(lambda i: i.username, results)
-    return render_template("base.html")
+    return render_template("index.html")
 
 @public.route("/about")
 def route_about():

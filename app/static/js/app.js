@@ -1,7 +1,15 @@
+/*
+   This is an extremely simple JS view-route controller.
+*/
+
 var App = function () {
-    this.templates = {};
+    this.templates = T || {};
     this.views = {};
     this.setup = null;
+}
+
+App.prototype.render = function (name, obj) {
+    return this.templates[name](obj);
 }
 
 App.prototype.view = function (route) {

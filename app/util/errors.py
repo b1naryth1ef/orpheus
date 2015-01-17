@@ -6,6 +6,14 @@ class ResponseException(Exception):
     def to_response(self):
         raise NotImplementtedError("Must define to_response on `%s`" % self.__class__.__name__)
 
+class GenericError(ResponseException):
+    def __init__(self, msg, code=200):
+        self.msg = msg
+        self.code = code
+
+    def to_response(self):
+        return self.msg, self.code
+
 class UserError(ResponseException):
     def __init__(self, response, mtype="success", redirect="/"):
         self.response = response
