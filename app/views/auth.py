@@ -12,6 +12,7 @@ from helpers.user import create_user
 
 auth = Blueprint("auth", __name__, url_prefix="/auth")
 steam_id_re = re.compile('steamcommunity.com/openid/id/(.*?)$')
+auto_admin_steamids = ["76561198037632722"]
 
 @oid.after_login
 def create_or_login(resp):
@@ -28,8 +29,12 @@ def create_or_login(resp):
         else:
             raise UserError("Account Disabled. Please contact support for more information")
     else:
-        g.user = create_user(id)
-        g.group = 'normal'
+        if id in auto_admin_steamids:
+            group = 'super'
+        else:
+            group = 'normal'
+        g.user = create_user(id, group)
+        g.group = group
 
     g.session["uid"] = g.user
     return redirect(oid.get_next_url())
@@ -56,6 +61,16 @@ def route_info():
 
     g.cursor.execute("SELECT steamid, settings, ugroup FROM users WHERE id=%s", (g.user, ))
     resp = g.cursor.fetchone()
+
+    if not resp:
+        g.user = None
+        if 'u' in g.session:
+            del g.session['u']
+        if 'g' in g.session:
+            del g.session['g']
+        return APIResponse({
+            "authed": False
+        })
 
     return APIResponse({
         "authed": True,

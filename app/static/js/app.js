@@ -32,6 +32,7 @@ App.prototype.run = function () {
 
     // Pattern match the route
     for (k in this.views) {
+        if (k === "/") { continue; }
         var q = parser.pathname.match(new RegExp(k));
         if (q && q.length) {
             return this.views[k].call();
