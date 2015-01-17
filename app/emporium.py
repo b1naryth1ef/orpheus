@@ -1,9 +1,12 @@
 import os, sys
 from flask import Flask
+from flask.ext.openid import OpenID
 
 app = Flask(__name__)
 
 app.config.from_pyfile("settings.py")
+
+oid = OpenID(app)
 
 def load_all_views():
     """
