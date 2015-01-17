@@ -11,6 +11,7 @@ parser.add_argument("-u", "--username", help="PSQL Username", default="emporium"
 parser.add_argument("-s", "--server", help="PSQL Host", default="localhost")
 args = parser.parse_args()
 
+# Lists all the tables in a database
 LIST_TABLES_SQL = """
 SELECT table_name
   FROM information_schema.tables
@@ -18,6 +19,7 @@ SELECT table_name
       AND table_type='BASE TABLE';
 """
 
+# Lists all the custom types in a schema/database
 LIST_TYPES_SQL = """
 SELECT      n.nspname as schema, t.typname as type
 FROM        pg_type t
@@ -50,12 +52,15 @@ def main():
         cursor = db.cursor()
         cursor.execute(LIST_TABLES_SQL)
         for table in cursor.fetchall():
-            cursor.execute("DROP TABLE %s" % table[0])
+            print "  Dropping table '%s'" % table[0]
+            cursor.execute("DROP TABLE %s CASCADE" % table[0])
 
         cursor.execute(LIST_TYPES_SQL)
         for ctype in cursor.fetchall():
+            print "  Dropping type '%s'" % ctype[1]
             cursor.execute("DROP TYPE %s" % ctype[1])
 
+        print "  DONE!"
         db.commit()
 
     if args.create:
@@ -64,6 +69,19 @@ def main():
             cursor = db.cursor()
             cursor.execute(f.read())
             db.commit()
+
+        print "  Conforming table ownership..."
+        with db.cursor() as c:
+            c.execute(LIST_TABLES_SQL)
+            for table in c.fetchall():
+                c.execute("ALTER TABLE %s OWNER TO %s" % (table[0], 'emporium'))
+
+            c.execute(LIST_TYPES_SQL)
+            for ttype in c.fetchall():
+                c.execute("ALTER TYPE %s OWNER TO %s" % (ttype[1], 'emporium'))
+
+        db.commit()
+        print "  DONE!"
 
     if args.migration:
         migration = sorted(os.listdir(os.path.join(DIR, "migrations")))[-1]
