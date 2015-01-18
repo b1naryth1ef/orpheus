@@ -1,4 +1,4 @@
-from flask import request, g
+from flask import request, g, redirect
 from psycopg2 import OperationalError
 
 from emporium import app
@@ -14,6 +14,11 @@ def app_before_request():
 
     # Load session if it exists
     g.session = Session()
+    if g.session.new():
+        g.session["ip"] = request.remote_addr
+    elif g.session["ip"] != request.remote_addr:
+        g.session.end()
+        return redirect("/")
 
     g.user = None
     g.group = "normal"
@@ -43,16 +48,15 @@ def app_after_request(response):
     if '/static/' in request.path:
         return response
 
-    # Set userid
+    # Update the session if applicable
     if g.user:
         g.session["g"] = g.group
         g.session["u"] = g.user
-    else:
-        g.session.delete("g")
-        g.session.delete("u")
 
-    # Save session if it changed
-    g.session.save(response)
+        # Save session if it changed
+        g.session.save(response)
+    else:
+        g.session.end()
 
     # Commit DB changes for request
     if g.db:

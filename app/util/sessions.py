@@ -21,6 +21,14 @@ class Session(object):
             self._data = {}
         self._changed = False
 
+    def new(self):
+        return not redis.exists("session:%s" % self._id)
+
+    def end(self):
+        redis.delete("session:%s" % self._id)
+        self._data = {}
+        self._changed = False
+
     def delete(self, item):
         self._changed = True
         if item in self._data:

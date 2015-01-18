@@ -189,3 +189,10 @@ CREATE TABLE trades (
     created_at timestamp
 );
 
+
+CREATE TABLE fraud_result (
+    id SERIAL PRIMARY KEY,
+    data jsonb,
+    created_at timestamp
+);
+

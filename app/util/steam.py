@@ -83,6 +83,18 @@ class SteamAPI(object):
             raise SteamAPIError("Failed to request url `%s`" % url)
         return resp.json()
 
+    def getFriendList(self, id):
+        r = retry_request(lambda f: f.get("http://api.steampowered.com/ISteamUser/GetFriendList/v0001/", params={
+            "key": self.key,
+            "steamid": id,
+            "relationship": "all"
+        }, timeout=10))
+
+        if not r:
+            raise SteamAPIError("Failed to getFriendList for steamid `%s`" % id)
+
+        return map(lambda i: i.get("steamid"), r.json()["friendslist"]["friends"].values())
+
     def getFromVanity(self, vanity):
         """
         Returns a steamid from a vanity name

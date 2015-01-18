@@ -4,5 +4,24 @@ By tracking the players of teams, and getting a tree of their friends, we can
 attempt to find bets that seem like malicious activity.
 """
 
+from emporium import steam
+from database import transaction, as_json
+
+def get_all_friends(ids):
+    """
+    Returns an aggergated list of all friends a given steam-id has.
+    """
+    friends = set()
+
+    for id in ids:
+        friends = friends | set(steam.getFriendList(id))
+
+    return friends
+
+def check_match(mid):
+    with transaction() as t:
+        t.execute("SELECT teams FROM matches WHERE id=%s", (mid, ))
+        friends = get_all_friends(t.fetchone().teams)
+
 def run_fraud_check():
     pass
