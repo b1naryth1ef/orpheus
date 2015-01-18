@@ -1,6 +1,6 @@
 /*
    This is an extremely simple JS view-route controller.
-*/
+   */
 
 var App = function () {
     this.templates = T || {};
@@ -51,21 +51,49 @@ View.prototype.call = function (route) {
 
 var app = new App();
 
+function getCookie(name) {
+    var value = "; " + document.cookie;
+    var parts = value.split("; " + name + "=");
+    if (parts.length == 2) return parts.pop().split(";").shift();
+}
+
+app.openWebSocket = function () {
+    this.ws = new WebSocket("ws://" + window.location.hostname + ":7080");
+
+    this.ws.onopen = (function (eve) {
+        console.log("WS was opened");
+        this.ws.send("auth " + getCookie("s"));
+    }).bind(this);
+
+    this.ws.onmessage = (function (eve) {
+        console.log(eve);
+    }).bind(this);
+
+    this.ws.onclose = (function (eve) {
+        console.error("WS was closed, attempting reconnect in 10 seconds...");
+        setTimeout((function () {
+            this.openWebSocket();
+        }).bind(this), 10000);
+    }).bind(this);
+}
+
 app.setup = function () {
     $.ajax("/auth/info", {
         success: (function (data) {
             if (data.authed) {
                 this.user = data.user;
                 $(".authed").show();
+                if (data.user.group === "super" || data.user.group === "admin") {
+                    $(".admin").show();
+                }
             } else {
                 this.user = null;
                 $(".unauthed").show();
             }
 
-            if (data.user.group === "super" || data.user.group === "admin") {
-                $(".admin").show();
-            }
         }).bind(this)
     });
+
+    this.openWebSocket();
 };
 

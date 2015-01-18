@@ -8714,7 +8714,7 @@ body [data-classyloader] {
 }
 }.uk-notify {
     position: fixed;
-    top: 50px;
+    top: 70px;
     left: 50px;
     z-index: 1040;
     -moz-box-sizing: border-box;
@@ -9982,3 +9982,9 @@ body .jvectormap-zoomout {
     display:  none
 }
 
+.unmargin {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  margin-right: 0px;
+  margin-left: 0px;
+}

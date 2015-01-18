@@ -16,6 +16,7 @@ psycopg2==2.5.4
 pyasn1==0.1.7
 pycparser==2.10
 pyquery==1.2.9
+python-dateutil==2.4.0
 python-openid==2.2.5
 redis==2.10.3
 requests==2.5.1

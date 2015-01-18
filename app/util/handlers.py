@@ -16,7 +16,7 @@ def app_before_request():
     g.session = Session()
 
     g.user = None
-    g.group = None
+    g.group = "normal"
 
     # Set a user for testing
     if app.config.get("TESTING"):

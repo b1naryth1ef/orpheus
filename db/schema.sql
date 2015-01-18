@@ -90,7 +90,6 @@ CREATE TABLE games (
     created_at timestamp
 );
 
-
 /*
   Represents a team who plays a game
     game: the game this team plays
@@ -118,6 +117,7 @@ CREATE TABLE teams (
   Represents a match played on a game for which there is a result and bets
     game: the game reference
     teams: a list of NON-FOREIGN references to teams
+    players: a list of NON-FOREIGN references to users
     meta: metadata (e.g. media, streams)
     lock_date: when this match will lock bets
     match_date: when this match is actually being played
@@ -132,6 +132,7 @@ CREATE TABLE matches (
     id SERIAL PRIMARY KEY,
     game integer REFERENCES games(id),
     teams integer[],
+    players integer[],
     meta jsonb,
     lock_date timestamp,
     match_date timestamp,

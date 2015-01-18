@@ -90,6 +90,7 @@ admin.route("/admin/users", function () {
                     $("#edit-user-error").text(data.message);
                 } else {
                     $("#edit-user-modal").modal("hide");
+                    $.notify("User saved!", "success");
                     this.loadUsers();
                 }
             }).bind(this)

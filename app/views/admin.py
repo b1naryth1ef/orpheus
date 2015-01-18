@@ -1,7 +1,11 @@
 from flask import Blueprint, g, render_template, request
 
 from database import map_db_values
+
+from helpers import get_count
 from helpers.user import UserGroup
+from helpers.game import create_game
+
 from util.etc import paginate, get_or_cache_nickname
 from util.errors import UserError, APIError
 from util.responses import APIResponse
@@ -19,11 +23,19 @@ def admin_before_request():
 
 @admin.route("/")
 def admin_dashboard():
-    return render_template("admin/index.html")
+    return render_template("admin/index.html",
+        users_count=get_count("users"),
+        games_count=get_count("games"),
+        matches_count=get_count("matches"),
+        bets_count=get_count("bets"))
 
 @admin.route("/users")
 def admin_users():
     return render_template("admin/users.html")
+
+@admin.route("/games")
+def admin_games():
+    return render_template("admin/games.html")
 
 USERS_LIST_QUERY = """
     SELECT id, steamid, email, active, date_part('epoch', last_login) as last_login FROM users ORDER BY id LIMIT %s OFFSET %s
@@ -73,3 +85,15 @@ def admin_user_edit():
     g.cursor.execute(sql, query)
 
     return APIResponse()
+
+@admin.route("/api/game/create", methods=["POST"])
+def admin_game_create():
+    try:
+        id = create_game(g.user, request.values["name"], int(request.values["appid"]))
+    except Exception, e:
+        raise APIError("Invalid Data: %s" % e)
+
+    return APIResponse({
+        "game": id
+    })
+

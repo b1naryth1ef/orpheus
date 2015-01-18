@@ -1,13 +1,104 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="row">
+  <div class="col-lg-3 col-md-6">
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        <div class="row">
+          <div class="col-xs-3">
+            <em class="fa fa-users fa-5x"></em>
+          </div>
+          <div class="col-xs-9 text-right">
+            <div class="text-lg">{{ users_count }}</div>
+            <h2 class="unmargin">Users</h3>
+          </div>
+        </div>
+      </div>
+      <a href="/admin/users" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
+        <span class="pull-left">View Details</span>
+        <span class="pull-right">
+          <em class="fa fa-chevron-circle-right"></em>
+        </span>
+      </a>
+    </div>
+  </div>
+  <div class="col-lg-3 col-md-6">
+    <div class="panel panel-green">
+      <div class="panel-heading">
+        <div class="row">
+          <div class="col-xs-3">
+            <em class="fa fa-gamepad fa-5x"></em>
+          </div>
+          <div class="col-xs-9 text-right">
+            <div class="text-lg">{{ games_count }}</div>
+            <h2 class="unmargin">Games</h3>
+          </div>
+        </div>
+      </div>
+      <a href="/admin/games" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
+        <span class="pull-left">View Details</span>
+        <span class="pull-right">
+          <em class="fa fa-chevron-circle-right"></em>
+        </span>
+      </a>
+    </div>
+  </div>
+  <div class="col-lg-3 col-md-6">
+    <!-- START panel-->
+    <div class="panel panel-warning">
+      <div class="panel-heading">
+        <div class="row">
+          <div class="col-xs-3">
+            <em class="fa fa-shopping-cart fa-5x"></em>
+          </div>
+          <div class="col-xs-9 text-right">
+            <div class="text-lg">124</div>
+            <p class="m0">New Orders!</p>
+          </div>
+        </div>
+      </div>
+      <a href="#" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
+        <span class="pull-left">View Details</span>
+        <span class="pull-right">
+          <em class="fa fa-chevron-circle-right"></em>
+        </span>
+      </a>
+    </div>
+    <!-- END panel-->
+  </div>
+  <div class="col-lg-3 col-md-6">
+    <!-- START panel-->
+    <div class="panel panel-danger">
+      <div class="panel-heading">
+        <div class="row">
+          <div class="col-xs-3">
+            <em class="fa fa-support fa-5x"></em>
+          </div>
+          <div class="col-xs-9 text-right">
+            <div class="text-lg">13</div>
+            <p class="m0">Support Tickets!</p>
+          </div>
+        </div>
+      </div>
+      <a href="#" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
+        <span class="pull-left">View Details</span>
+        <span class="pull-right">
+          <em class="fa fa-chevron-circle-right"></em>
+        </span>
+      </a>
+    </div>
+    <!-- END panel-->
+  </div>
+</div>
+
 {% endblock %}
 
 {% block post_scripts %}
-  <style>
-    .topnavbar {
-      background-color: #f05050;
-      background-image: linear-gradient(to right, #f05050 0, #f05050 100%);
-    }
-  </style>
-  <script src="/static/js/admin.js"></script>
+<style>
+.topnavbar {
+  background-color: #f05050;
+  background-image: linear-gradient(to right, #f05050 0, #f05050 100%);
+}
+</style>
+<script src="/static/js/admin.js"></script>
 {% endblock %}

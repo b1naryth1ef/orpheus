@@ -23,7 +23,7 @@ def route_stats_overview():
 def route_match_list():
     return APIResponse({
         "matches": [
-            
+
         ]
     })
 
@@ -31,9 +31,26 @@ def route_match_list():
 def route_match_info(id):
     pass
 
+GET_GAMES_SQL = """
+SELECT id, name, appid FROM games
+WHERE view_perm >= %s AND active = true
+"""
+
 @api.route("/game/list")
 def route_game_list():
-    pass
+    g.cursor.execute(GET_GAMES_SQL, (g.group, ))
+
+    results = []
+    for entry in g.cursor.fetchall():
+        results.append({
+            "id": entry.id,
+            "name": entry.name,
+            "appid": entry.appid
+        })
+
+    return APIResponse({
+        "games": results
+    })
 
 @api.route("/game/<int:id>/info")
 def route_game_info():
