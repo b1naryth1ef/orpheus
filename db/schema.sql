@@ -134,13 +134,16 @@ CREATE TABLE matches (
     teams integer[],
     players integer[],
     meta jsonb,
+    results jsonb,
     lock_date timestamp,
     match_date timestamp,
     public_date timestamp,
     view_perm user_group,
     active boolean,
     created_by integer REFERENCES users(id),
-    created_at timestamp
+    created_at timestamp,
+    results_by integer REFERENCES users(id),
+    results_at timestamp
 );
 
 
@@ -155,21 +158,6 @@ CREATE TABLE match_draft (
   to_house jsonb,
   started_at timestamp,
   finished_at timestamp
-);
-
-
-/*
-  Represents the result of a match. Seperate mostly for auditing purposes.
-    results: the actual match results (entered by a human)
-    match: match id
-*/
-
-CREATE TABLE match_results (
-    id SERIAL PRIMARY KEY,
-    results jsonb,
-    match integer REFERENCES matches(id),
-    created_by integer REFERENCES users(id),
-    created_at timestamp
 );
 
 
