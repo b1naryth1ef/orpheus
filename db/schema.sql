@@ -145,7 +145,23 @@ CREATE TABLE matches (
 
 
 /*
+  Represents a item-draft for a match.
+*/
+
+CREATE TABLE match_draft (
+  id SERIAL PRIMARY KEY,
+  match integer REFERENCES matches(id);
+  to_users jsonb,
+  to_house jsonb,
+  started_at timestamp,
+  finished_at timestamp
+);
+
+
+/*
   Represents the result of a match. Seperate mostly for auditing purposes.
+    results: the actual match results (entered by a human)
+    match: match id
 */
 
 CREATE TABLE match_results (
@@ -166,8 +182,7 @@ CREATE TABLE bets (
     better integer REFERENCES users(id),
     match integer REFERENCES matches(id),
     team integer REFERENCES teams(id),
-    items jsonb,
-    returns jsonb
+    items jsonb
 );
 
 
@@ -190,8 +205,13 @@ CREATE TABLE trades (
 );
 
 
+/*
+  Represents the result of a fraud run for a match
+*/
+
 CREATE TABLE fraud_result (
     id SERIAL PRIMARY KEY,
+    match integer REFERENCES matches(id)
     data jsonb,
     created_at timestamp
 );
