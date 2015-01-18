@@ -30,7 +30,7 @@ AND     n.nspname NOT IN ('pg_catalog', 'information_schema')
 """
 
 def open_database_connection(pw):
-    return psycopg2.connect("host={host} port={port} dbname=emporium user={user} password={pw}".format(
+    return psycopg2.connect("host={host} port={port} dbname=emporium user={user} password='{pw}'".format(
         host=args.server,
         user=args.username,
         pw=pw,

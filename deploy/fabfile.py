@@ -14,11 +14,11 @@ USERS = {
     },
     "andrei": {
         "unix": "$6$f5O1ho/X$jO8EtochLrThL78rrfxa4ifCkenyoiNlWQUWYetnPR3s3C6ITQaRnIRdCjD6L.v4dgYlZBp7/HwU46uHedQ1S/",
-        "pg": "$1$nM.E5Wx1$Us3v2tPJUS2oqwQ270aeP."
+        "pg": "1b0daf8de16ebfe51d1f93f90db82b03"
     },
     "emporium": {
         "unix": None,
-        "pg": None
+        "pg": "ef8506a7d156e0cef6f1b6be663c80c6"
     }
 }
 
@@ -31,6 +31,19 @@ PACKAGES = [
     "python-pip", "screen", "redis-server", "nginx", "git",
     "ufw", "libffi-dev", "libxml2", "libxslt1-dev"
 ]
+
+def setup_ufw():
+    sudo("ufw default deny incoming")
+    sudo("ufw default allow outgoing")
+
+    # SSH
+    sudo("ufw allow 43594/tcp")
+
+    # HTTP/HTTPS
+    sudo("ufw allow 80/tcp")
+    sudo("ufw allow 443/tcp")
+
+    sudo("ufw enable")
 
 def setup_postgres():
     sudo("wget -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | apt-key add -")
@@ -45,7 +58,6 @@ def setup_postgres():
     pg_users = {k: v["pg"] for (k, v) in USERS.iteritems() if v["pg"]}
     upload_template("configs/postgres/bootstrap.sql", "/tmp/bootstrap.sql", use_sudo=True, context={
         "users": pg_users,
-        "password": "md5$1$XGM08BDs$2sq6zAMzlZiP5VwKXgruH."
     }, use_jinja=True)
 
     sudo('su postgres -c "psql -a -f /tmp/bootstrap.sql"')
@@ -185,6 +197,9 @@ def bootstrap():
 
     print "Setting up sshd..."
     push_sshd_config()
+
+    print "Setting up UFW..."
+    setup_ufw()
 
     print "Deploying initial code..."
     deploy()
