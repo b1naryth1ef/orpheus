@@ -40,9 +40,9 @@ def build_js_templates():
 
     for jst in get_js_templates():
         p = open(jst)
-        TEMPLATES += 'T["%s"] = _.template("%s");' % (
+        TEMPLATES += 'T.%s = _.template("%s");\n' % (
             jst.rsplit("/", 1)[-1].rsplit(".", 1)[0],
-            p.read().replace("\n", "").replace('"', "'")
+            p.read().replace("\n", "").replace('"', "\\\"")
         )
         p.close()
 

@@ -179,6 +179,31 @@ admin.route("/admin/games", function () {
             });
         }
     }).bind(this));
-
-
 })
+
+admin.loadMatches = function () {
+    this.page = this.page || 1;
+    this.max_pages = 0;
+    this.matchCache = {};
+
+    $.ajax("/admin/api/match/list", {
+        success: (function (data) {
+            $("#matchs-content").empty();
+            _.each(data.matchs, (function (v) {
+                this.matchsCache[v.id] = v;
+                $("#matchs-content").append(this.app.render("admin_match_row", {
+                    match: v,
+                    teams: "test vs test",
+                    hidden: true,
+                }));
+                $(".match-row:hidden").fadeIn();
+            }).bind(this));
+        }).bind(this)
+    });
+}
+
+admin.route("/admin/matches", function () {
+    this.loadMatches();
+})
+
+

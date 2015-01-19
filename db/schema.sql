@@ -90,28 +90,6 @@ CREATE TABLE games (
     created_at timestamp
 );
 
-/*
-  Represents a team who plays a game
-    game: the game this team plays
-    name: the team name
-    tag: the team tag
-    meta: metadata (logos/websites/etc) about the team
-    active: whether this is active
-    created_by: user created by
-    created_at: when this was created
-*/
-
-CREATE TABLE teams (
-    id SERIAL PRIMARY KEY,
-    game integer REFERENCES games(id),
-    name character varying(255) NOT NULL,
-    tag character varying(12) NOT NULL,
-    meta jsonb,
-    active boolean,
-    created_by integer REFERENCES users(id),
-    created_at timestamp
-);
-
 
 /*
   Represents a match played on a game for which there is a result and bets
@@ -131,8 +109,7 @@ CREATE TABLE teams (
 CREATE TABLE matches (
     id SERIAL PRIMARY KEY,
     game integer REFERENCES games(id),
-    teams integer[],
-    players integer[],
+    teams jsonb,
     meta jsonb,
     results jsonb,
     lock_date timestamp,
@@ -153,7 +130,7 @@ CREATE TABLE matches (
 
 CREATE TABLE match_draft (
   id SERIAL PRIMARY KEY,
-  match integer REFERENCES matches(id);
+  match integer REFERENCES matches(id),
   to_users jsonb,
   to_house jsonb,
   started_at timestamp,
@@ -169,7 +146,7 @@ CREATE TABLE bets (
     id SERIAL PRIMARY KEY,
     better integer REFERENCES users(id),
     match integer REFERENCES matches(id),
-    team integer REFERENCES teams(id),
+    team integer,
     items jsonb
 );
 
@@ -199,7 +176,7 @@ CREATE TABLE trades (
 
 CREATE TABLE fraud_result (
     id SERIAL PRIMARY KEY,
-    match integer REFERENCES matches(id)
+    match integer REFERENCES matches(id),
     data jsonb,
     created_at timestamp
 );

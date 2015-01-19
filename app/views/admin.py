@@ -5,6 +5,7 @@ from database import map_db_values
 from helpers import get_count
 from helpers.user import UserGroup
 from helpers.game import create_game
+from helpers.match import create_match
 
 from util.etc import paginate, get_or_cache_nickname
 from util.errors import UserError, APIError
@@ -36,6 +37,10 @@ def admin_users():
 @admin.route("/games")
 def admin_games():
     return render_template("admin/games.html")
+
+@admin.route("/matches")
+def admin_matches():
+    return render_template("admin/matches.html")
 
 USERS_LIST_QUERY = """
     SELECT id, steamid, email, active, date_part('epoch', last_login) as last_login FROM users ORDER BY id LIMIT %s OFFSET %s
@@ -143,3 +148,41 @@ def admin_edit_game():
     g.cursor.execute(sql, query)
 
     return APIResponse()
+
+MATCHES_LIST_QUERY = """
+SELECT id, game, teams, meta, results, active,
+    date_part('epoch', lock_date) as lock_date,
+    date_part('epoch', match_date) as match_date,
+    date_part('epoch', public_date) as public_date
+FROM matches;
+"""
+
+@admin.route("/api/match/list")
+def admin_match_list():
+    page = int(request.values.get("page", 1))
+
+    g.cursor.execute("SELECT count(*) as c FROM matches")
+    pages = (g.cursor.fetchone().c / 100) + 1
+
+    g.cursor.execute(MATCHES_LIST_QUERY, paginate(page, per_page=100))
+
+    matches = []
+    for entry in g.cursor.fetchall():
+        matches.append({
+            "id": entry.id,
+            "game": entry.game,
+            "teams": teams,
+            "meta": meta,
+            "results": results,
+            "active": active,
+            "lock_date": lock_date,
+            "match_date": match_date,
+            "public_date": public_date
+        })
+
+    return APIResponse({"matches": matches, "pages": pages})
+
+@admin.route("/api/match/create", methods=["POST"])
+def admin_match_create():
+    pass
+
