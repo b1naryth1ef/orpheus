@@ -1,0 +1,58 @@
+<div id="game-modal" class="modal fade in" style="display: block; padding-right: 17px;">
+<div class="modal-backdrop fade in" style="height: 560px;"></div>
+<div class="modal-dialog modal-lg" data-id="<%- create ? "" : game.id %>" data-mode="<%- create ? 'create' : 'edit' %>">
+  <div class="modal-content">
+    <div class="modal-header">
+      <button type="button" data-dismiss="modal" class="close">×</button>
+      <h4 class="modal-title">
+        <% if (create) { %>
+        <h4>Add Game</h4>
+        <% } else { %>
+        <h4>Edit Game: <%- game.name %></h4>
+        <% } %>
+    </div>
+    <div class="modal-body">
+      <div id="game-modal-error" class="alert alert-danger" style="display: none;"></div>
+      <div class="form-group">
+        <fieldset>
+          <div class="form-group">
+            <label class="col-sm-2 control-label">Game Name:</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control game-field" field-name="name" value="<%- !create ? game.name : "" %>">
+            </div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <div class="form-group">
+            <label class="col-sm-2 control-label">Steam App ID:</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control game-field" field-name="appid" value="<%- !create ? game.appid : "" %>">
+            </div>
+          </div>
+        </fieldset>
+        <% if (!create) { %>
+          <fieldset>
+            <label class="col-sm-2 control-label"></label>
+            <div class="col-sm-10">
+              <label class="switch switch-lg">
+                <input class="game-field" field-name="active" type="checkbox" <%= (!create && game.active) ? 'checked' : '' %>>
+                <span></span>
+              </label>
+            </div>
+          </fieldset>
+        <% } %>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" data-dismiss="modal" class="btn btn-danger">Close</button>
+      <button type="button" class="btn btn-success" id="game-save">
+        <% if (create) { %>
+        Add Game
+        <% } else { %>
+        Save Changes
+        <% } %>
+      </button>
+    </div>
+  </div>
+</div>
+</div>

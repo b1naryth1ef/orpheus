@@ -1,0 +1,47 @@
+{% extends "admin/index.html" %}
+{% block content %}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <a id="refresh-games" data-toggle="tooltip" title="" class="pull-right" data-original-title="Refresh Panel">
+      <em class="fa fa-refresh"></em>
+    </a>Games
+  </div>
+  <div class="table-responsive" id="games-table">
+    <table id="table-ext-1" class="table table-bordered table-hover">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>App ID</th>
+          <th>Active</th>
+          <th># of matches</th>
+          <th># of teams</th>
+          <th>Edit</th>
+        </tr>
+      </thead>
+      <tbody id="games-content"></tbody>
+    </table>
+  </div>
+  <!-- END table-responsive-->
+  <div class="panel-footer">
+    <div class="row">
+      <div class="col-lg-2">
+        <div class="input-group">
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-sm btn-success" id="game-add-button">Add Game</button>
+          </span>
+        </div>
+      </div>
+      <div class="col-lg-8"></div>
+      <div class="col-lg-2 text-right">
+        <ul class="pagination pagination-sm" id="games-pagination">
+          <li><a id="games-page-last"><em class="fa fa-arrow-left fa-2x"></em></a></li>
+          <li><a id="games-page-current" style="font-size: 20px"></a></li>
+          <li><a id="games-page-next"><em class="fa fa-arrow-right fa-2x"></em></a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="game-modal-location"></div>
+{% endblock %}

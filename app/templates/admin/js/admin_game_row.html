@@ -1,0 +1,9 @@
+<tr style="<%- hidden ? 'display: none;' : '' %>" class="game-row" data-id="<%- game.id %>">
+  <td><%- game.id %></td>
+  <td><%- game.name %></td>
+  <td><%- game.appid %></td>
+  <td><%- game.active %></td>
+  <td><%- game.match_count || 0 %></td>
+  <td><%- game.team_count || 0 %></td>
+  <td><a href="#" class="btn btn-info btn-sm game-edit">Edit</a></td>
+</tr>

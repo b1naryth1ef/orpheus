@@ -9,6 +9,10 @@ var App = function () {
 }
 
 App.prototype.render = function (name, obj) {
+    if (!this.templates[name]) {
+        console.error("Failed to find template with name: " + name);
+        return "";
+    }
     return this.templates[name](obj);
 }
 
