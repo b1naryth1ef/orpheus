@@ -9,6 +9,7 @@ parser.add_argument("-c", "--create", help="Create all unknown tables", action="
 parser.add_argument("-m", "--migration", help="Run a migration", action="store_true")
 parser.add_argument("-u", "--username", help="PSQL Username", default="emporium")
 parser.add_argument("-s", "--server", help="PSQL Host", default="localhost")
+parser.add_argument("-g", "--generate", help="Generate fake data", action="store_true")
 args = parser.parse_args()
 
 # Lists all the tables in a database
@@ -80,6 +81,17 @@ def main():
             for ttype in c.fetchall():
                 c.execute("ALTER TYPE %s OWNER TO %s" % (ttype[1], 'emporium'))
 
+        db.commit()
+        print "  DONE!"
+
+    if args.generate:
+        print "Generating fake data..."
+        from generate import DATA_GENERATORS
+
+        with db.cursor() as c:
+            for gen in DATA_GENERATORS:
+                print "  running %s" % gen.__name__
+                gen(c)
         db.commit()
         print "  DONE!"
 

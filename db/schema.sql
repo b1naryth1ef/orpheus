@@ -26,8 +26,8 @@ CREATE TABLE users (
   steamid character varying(255) NOT NULL UNIQUE,
   email character varying(255) UNIQUE,
   active boolean,
-  join_date timestamp with timezone,
-  last_login timestamp with timezone,
+  join_date timestamp with time zone,
+  last_login timestamp with time zone,
   ugroup user_group,
   settings jsonb
 );
@@ -56,7 +56,7 @@ CREATE TABLE accounts (
     sentry bytea,
     status bot_status,
     inventory steam_item[],
-    last_activity timestamp with timezone,
+    last_activity timestamp with time zone,
     active boolean
 );
 
@@ -97,7 +97,7 @@ CREATE TABLE games (
     view_perm user_group,
     active boolean,
     created_by integer REFERENCES users(id),
-    created_at timestamp with timezone
+    created_at timestamp with time zone
 );
 
 
@@ -110,7 +110,9 @@ CREATE TABLE teams (
   tag varchar(24) UNIQUE,
   name text,
   logo text,
-  meta jsonb
+  meta jsonb,
+  created_by integer REFERENCES users(id),
+  created_at timestamp with time zone
 );
 
 
@@ -135,17 +137,17 @@ CREATE TABLE matches (
     teams integer[],
     meta jsonb,
     results jsonb,
-    lock_date timestamp with timezone,
-    match_date timestamp with timezone,
-    public_date timestamp with timezone,
+    lock_date timestamp with time zone,
+    match_date timestamp with time zone,
+    public_date timestamp with time zone,
     view_perm user_group,
     active boolean,
     created_by integer REFERENCES users(id),
-    created_at timestamp with timezone,
+    created_at timestamp with time zone,
     results_by integer REFERENCES users(id),
-    results_at timestamp with timezone,
-    draft_started_at timestamp with timezone,
-    draft_finished_at timestamp with timezone
+    results_at timestamp with time zone,
+    draft_started_at timestamp with time zone,
+    draft_finished_at timestamp with time zone
 );
 
 
@@ -161,8 +163,8 @@ CREATE TABLE bets (
     match integer REFERENCES matches(id),
     team integer,
     value integer,
-    items steam_items[],
-    winnings steam_items[],
+    items steam_item[],
+    winnings steam_item[],
     state bet_state
 );
 
@@ -186,7 +188,7 @@ CREATE TABLE trades (
     bot_in steam_item[],
     state trade_state,
     ttype trade_type,
-    created_at timestamp with timezone
+    created_at timestamp with time zone
 );
 
 
@@ -198,6 +200,6 @@ CREATE TABLE fraud_result (
     id SERIAL PRIMARY KEY,
     match integer REFERENCES matches(id),
     data jsonb,
-    created_at timestamp with timezone
+    created_at timestamp with time zone
 );
 

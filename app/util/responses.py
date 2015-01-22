@@ -1,6 +1,6 @@
 import json
 
-from flask import Response
+from flask import Response, request
 
 class APIResponse(Response):
     def __init__(self, obj={}):
@@ -9,6 +9,13 @@ class APIResponse(Response):
         if not 'success' in obj:
             obj['success'] = True
 
-        self.data = json.dumps(obj)
+        if request.values.get("pretty") == '1':
+            self.data = json.dumps(obj,
+                sort_keys=True,
+                indent=2,
+                separators=(',', ': '))
+        else:
+            self.data = json.dumps(obj)
+
         self.mimetype = "application/json"
 

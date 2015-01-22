@@ -33,9 +33,12 @@
         "type": "BO3",
         "event": null,
         "streams": ["http://twitch.tv/b1naryth1ef"],
-        "vods": [],
       },
-      "results": {}
+      "results": {
+        "winner": 1, // can be null, represents a revert/etc
+        "score": [[0, 16], [5-16]],
+        "vods": []
+      }
     }
   ]
 }

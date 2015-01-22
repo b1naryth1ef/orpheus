@@ -64,7 +64,7 @@ def match_to_json(t, m):
     here can be gathered with a single query and windowed multi-join, but lets wait
     until shit breaks, eh?
     """
-    if not isinstance(m, namedtuple):
+    if not isinstance(m, tuple):
         t.execute(MATCH_SELECT_SQL, (m, ))
         m = t.fetchone()
 
@@ -88,14 +88,14 @@ def match_to_json(t, m):
     match['bets'] = len(bets)
 
     # Grab team information, including bets (this should be a join)
-    t.execute("SELECT * FROM teams WHERE id IN %s", (m.teams, ))
+    t.execute("SELECT * FROM teams WHERE id IN %s", (tuple(m.teams), ))
     teams = t.fetchall()
 
     for index, team in enumerate(teams):
         team_data = {
             "id": team.id,
             "name": team.name,
-            "tag": tame.tag,
+            "tag": team.tag,
             "logo": team.logo,
         }
 
@@ -109,7 +109,7 @@ def match_to_json(t, m):
 
         match['teams'].append(team_data)
 
-    for key in ['league', 'type', 'event', 'streams', 'vods']:
+    for key in ['league', 'type', 'event', 'streams']:
         if key in m.meta:
             match['extra'][key] = m.meta[key]
 

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, g
 
 from util.etc import paginate
-
+from helpers.match import match_to_json
 from util.errors import UserError, APIError
 from util.responses import APIResponse
 
@@ -22,7 +22,7 @@ def route_stats_overview():
     pass
 
 MATCH_LIST_QUERY = """
-SELECT id, game, teams FROM matches ORDER BY id LIMIT %s OFFSET %s
+SELECT * FROM matches ORDER BY id LIMIT %s OFFSET %s
 """
 
 @api.route("/match/list")
@@ -34,16 +34,8 @@ def route_match_list():
 
     g.cursor.execute(MATCH_LIST_QUERY, paginate(page, per_page=25))
 
-    matches = []
-    for entry in g.cursor.fetchall():
-        matches.append({
-            "id": entry.id,
-            "game": entry.game,
-            "teams": entry.teams
-        })
-
     return APIResponse({
-        "matches": matches
+        "matches": map(match_to_json, g.cursor.fetchall())
     })
 
 @api.route("/match/<int:id>/info")
