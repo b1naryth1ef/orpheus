@@ -2,6 +2,12 @@
     CSGO Emporium Backend Database Schema
 */
 
+CREATE TYPE steam_item AS (
+  class_id integer,
+  instance_id integer
+);
+
+
 /*
   Represents a single user in the system
     steamid: the users steamid
@@ -49,8 +55,8 @@ CREATE TABLE accounts (
     password character varying(255),
     sentry bytea,
     status bot_status,
+    inventory steam_item[],
     last_activity timestamp,
-    inventory text[],
     active boolean
 );
 
@@ -73,6 +79,7 @@ CREATE TABLE steam_guard_codes (
 /*
   Represents a game on which matches can be played
     name: the game name to be used in titles/etc
+    meta: holds game metadata (links, rules, etc)
     appid: the steam appid
     view_perm: the user group that can view this
     active: whether this is active
@@ -83,6 +90,7 @@ CREATE TABLE steam_guard_codes (
 CREATE TABLE games (
     id SERIAL PRIMARY KEY,
     name character varying(255) NOT NULL,
+    meta jsonb,
     appid integer,
     view_perm user_group,
     active boolean,
@@ -120,21 +128,9 @@ CREATE TABLE matches (
     created_by integer REFERENCES users(id),
     created_at timestamp,
     results_by integer REFERENCES users(id),
-    results_at timestamp
-);
-
-
-/*
-  Represents a item-draft for a match.
-*/
-
-CREATE TABLE match_draft (
-  id SERIAL PRIMARY KEY,
-  match integer REFERENCES matches(id),
-  to_users jsonb,
-  to_house jsonb,
-  started_at timestamp,
-  finished_at timestamp
+    results_at timestamp,
+    draft_started_at timestamp,
+    draft_finished_at timestamp
 );
 
 
@@ -142,13 +138,36 @@ CREATE TABLE match_draft (
   Represents a bet placed on a match
 */
 
+CREATE TYPE bet_state AS ENUM ('offered', 'accepted', 'won', 'lost');
+
 CREATE TABLE bets (
     id SERIAL PRIMARY KEY,
     better integer REFERENCES users(id),
     match integer REFERENCES matches(id),
-    team integer,
-    items jsonb
+    state bet_state,
+    team integer
 );
+
+
+/*
+  Represents a single steam-item owned by a bot
+    account: the bot who owns this item
+    owner: the person who bet this item
+    match: the match this item was bet on
+    locked: whether this item can be used in returns/winnings
+*/
+
+CREATE TABLE items (
+    id SERIAL PRIMARY KEY,
+    item steam_item UNIQUE NOT NULL,
+    account integer REFERENCES accounts(id),
+    owner integer REFERENCES users(id),
+    bet integer REFERENCES bets(id),
+    locked boolean
+);
+
+
+CREATE INDEX ON items (item);
 
 
 /*
@@ -162,8 +181,9 @@ CREATE TABLE trades (
     id SERIAL PRIMARY KEY,
     account integer REFERENCES accounts(id),
     trader integer REFERENCES users(id),
-    bot_out jsonb,
-    bot_in jsonb,
+    bet integer REFERENCES bets(id),
+    bot_out steam_item[],
+    bot_in steam_item[],
     state trade_state,
     ttype trade_type,
     created_at timestamp

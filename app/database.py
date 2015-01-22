@@ -7,6 +7,9 @@ from psycopg2.extras import NamedTupleCursor, Json
 from emporium import app
 from settings import CRYPT
 
+class ValidationError(Exception):
+    pass
+
 class PostgresDatabase(ThreadedConnectionPool):
     def __init__(self, conn, minc=1, maxc=12):
         ThreadedConnectionPool.__init__(self, minc, maxc, dsn=conn, cursor_factory=NamedTupleCursor)

@@ -1,7 +1,14 @@
-<div class="row">
+<div class="row match-row">
   <div class="col-lg-12">
     <div id="panelDemo7" class="panel panel-default">
-      <div class="panel-heading">Default Panel</div>
+      <div class="panel-heading">
+        <h2>
+        <% for (var team in match.teams) { %>
+          <%- match.teams[team].name %>
+          <%- (team < (match.teams.length - 1)) ? "VS" : "" %>
+        <% } %>
+        </h2>
+      </div>
       <div class="panel-body">
         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum tincidunt est vitae ultrices accumsan. Aliquam ornare lacus adipiscing, posuere lectus et, fringilla augue.</p>
       </div>

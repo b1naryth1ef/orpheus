@@ -15,7 +15,6 @@ admin = Blueprint("admin", __name__, url_prefix="/admin")
 
 @admin.before_request
 def admin_before_request():
-    print g.session._id
     if not g.user or not g.group:
         raise UserError("Yeah right...", "error")
 

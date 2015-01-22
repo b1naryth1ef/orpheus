@@ -8,9 +8,7 @@ class UserGroup(object):
     ADMIN = 'admin'
     SUPER = 'super'
 
-DEFAULT_SETTINGS = {
-
-}
+DEFAULT_SETTINGS = {}
 
 CREATE_USER_QUERY = """
     INSERT INTO users (steamid, active, join_date, last_login, ugroup, settings) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id

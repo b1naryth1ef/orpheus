@@ -1,7 +1,20 @@
 var home = app.view("home");
 
+home.renderMatches = function () {
+    var renderMatchesFromData = (function (data) {
+        // Clear previous matches listed
+        $(".matches-container").empty();
+
+        _.each(data.matches, (function (item) {
+            $(".matches-container").append(this.app.render("frontpage_match", {match: item}));
+        }).bind(this));
+    }).bind(this);
+
+    $.ajax("/api/match/list", {
+        success: renderMatchesFromData
+    })
+}
+
 home.route("/", function () {
-    console.log(this);
-    console.log(this.app.templates);
-    $(".content-wrapper").append(this.app.render("frontpage_match", {}));
+    this.renderMatches();
 });
