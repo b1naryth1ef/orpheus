@@ -26,8 +26,8 @@ CREATE TABLE users (
   steamid character varying(255) NOT NULL UNIQUE,
   email character varying(255) UNIQUE,
   active boolean,
-  join_date timestamp,
-  last_login timestamp,
+  join_date timestamp with timezone,
+  last_login timestamp with timezone,
   ugroup user_group,
   settings jsonb
 );
@@ -56,9 +56,11 @@ CREATE TABLE accounts (
     sentry bytea,
     status bot_status,
     inventory steam_item[],
-    last_activity timestamp,
+    last_activity timestamp with timezone,
     active boolean
 );
+
+CREATE INDEX ON ACCOUNTS (inventory);
 
 
 /*
@@ -95,7 +97,20 @@ CREATE TABLE games (
     view_perm user_group,
     active boolean,
     created_by integer REFERENCES users(id),
-    created_at timestamp
+    created_at timestamp with timezone
+);
+
+
+/*
+  Represents a team
+*/
+
+CREATE TABLE teams (
+  id SERIAL PRIMARY KEY,
+  tag varchar(24) UNIQUE,
+  name text,
+  logo text,
+  meta jsonb
 );
 
 
@@ -117,20 +132,20 @@ CREATE TABLE games (
 CREATE TABLE matches (
     id SERIAL PRIMARY KEY,
     game integer REFERENCES games(id),
-    teams jsonb,
+    teams integer[],
     meta jsonb,
     results jsonb,
-    lock_date timestamp,
-    match_date timestamp,
-    public_date timestamp,
+    lock_date timestamp with timezone,
+    match_date timestamp with timezone,
+    public_date timestamp with timezone,
     view_perm user_group,
     active boolean,
     created_by integer REFERENCES users(id),
-    created_at timestamp,
+    created_at timestamp with timezone,
     results_by integer REFERENCES users(id),
-    results_at timestamp,
-    draft_started_at timestamp,
-    draft_finished_at timestamp
+    results_at timestamp with timezone,
+    draft_started_at timestamp with timezone,
+    draft_finished_at timestamp with timezone
 );
 
 
@@ -144,30 +159,15 @@ CREATE TABLE bets (
     id SERIAL PRIMARY KEY,
     better integer REFERENCES users(id),
     match integer REFERENCES matches(id),
-    state bet_state,
-    team integer
+    team integer,
+    value integer,
+    items steam_items[],
+    winnings steam_items[],
+    state bet_state
 );
 
-
-/*
-  Represents a single steam-item owned by a bot
-    account: the bot who owns this item
-    owner: the person who bet this item
-    match: the match this item was bet on
-    locked: whether this item can be used in returns/winnings
-*/
-
-CREATE TABLE items (
-    id SERIAL PRIMARY KEY,
-    item steam_item UNIQUE NOT NULL,
-    account integer REFERENCES accounts(id),
-    owner integer REFERENCES users(id),
-    bet integer REFERENCES bets(id),
-    locked boolean
-);
-
-
-CREATE INDEX ON items (item);
+CREATE INDEX ON bets (items);
+CREATE INDEX ON bets (winnings);
 
 
 /*
@@ -186,7 +186,7 @@ CREATE TABLE trades (
     bot_in steam_item[],
     state trade_state,
     ttype trade_type,
-    created_at timestamp
+    created_at timestamp with timezone
 );
 
 
@@ -198,6 +198,6 @@ CREATE TABLE fraud_result (
     id SERIAL PRIMARY KEY,
     match integer REFERENCES matches(id),
     data jsonb,
-    created_at timestamp
+    created_at timestamp with timezone
 );
 

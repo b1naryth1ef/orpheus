@@ -5,6 +5,9 @@
     {
       "id": 1,
       "game": 1,
+      "when": 1421958151,
+      "value": 16190,
+      "bets": 384,
       "teams": [
         {
           "name": "Counter-Logic Gaming",
@@ -25,15 +28,15 @@
           "odds": 67
         }
       ],
-      "info": {
+      "extra": {
         "league": "cevo",
         "type": "BO3",
         "event": null,
         "streams": ["http://twitch.tv/b1naryth1ef"],
         "vods": [],
-        "when": "my_utc_time",
       },
       "results": {}
     }
   ]
 }
+```

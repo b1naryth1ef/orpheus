@@ -1,7 +1,10 @@
 from datetime import datetime
+from collections import namedtuple
 
-from database import transaction, as_json, ValidationError
+from database import transaction, tranf, as_json, ValidationError
 from helpers.user import UserGroup
+
+
 
 CREATE_MATCH_SQL = """
 INSERT INTO matches (game, teams, meta, results, lock_date, match_date, public_date, view_perm, active, created_at, created_by)
@@ -51,4 +54,66 @@ def create_match(user, game, teams, meta, lock_date, match_date, public_date, vi
 
         return t.fetchone().id
 
+
+MATCH_SELECT_SQL = "SELECT * FROM matches WHERE id=%s"
+
+@tranf
+def match_to_json(t, m):
+    """
+    Right now this function is a performance clusterfuck. Almost all of the data in
+    here can be gathered with a single query and windowed multi-join, but lets wait
+    until shit breaks, eh?
+    """
+    if not isinstance(m, namedtuple):
+        t.execute(MATCH_SELECT_SQL, (m, ))
+        m = t.fetchone()
+
+    if not m:
+        # TODO: wurt m8
+        raise Exception("Failed to match_to_json with arg %s" % m)
+
+    match = {}
+
+    match['id'] = m.id
+    match['game'] = m.game
+    match['when'] = int(m.match_date.strftime("%s"))
+    match['teams'] = []
+    match['extra'] = {}
+
+    # This will most definitily require some fucking caching at some point
+    t.execute("SELECT * FROM bets WHERE match=%s", (m.id, ))
+    bets = t.fetchall()
+
+    match['value'] = sum(map(lambda i: i.value, bets))
+    match['bets'] = len(bets)
+
+    # Grab team information, including bets (this should be a join)
+    t.execute("SELECT * FROM teams WHERE id IN %s", (m.teams, ))
+    teams = t.fetchall()
+
+    for index, team in enumerate(teams):
+        team_data = {
+            "id": team.id,
+            "name": team.name,
+            "tag": tame.tag,
+            "logo": team.logo,
+        }
+
+        team_bets = filter(lambda i: i.team == team.id, bets)
+        team_data['bets'] = len(team_bets)
+        team_data['value'] = sum(map(lambda i: i.value, team_bets))
+
+        # TODO: do this shit
+        team_data['payout'] = 0
+        team_data['odds'] = 0
+
+        match['teams'].append(team_data)
+
+    for key in ['league', 'type', 'event', 'streams', 'vods']:
+        if key in m.meta:
+            match['extra'][key] = m.meta[key]
+
+    match['results'] = m.results
+
+    return match
 
