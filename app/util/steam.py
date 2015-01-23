@@ -115,7 +115,7 @@ class SteamAPI(object):
         """
         r = retry_request(lambda f: f.get("http://steamcommunity.com/groups/%s/memberslistxml/?xml=1" % id, timeout=10,
             params={
-                "p": page   
+                "p": page
             }))
 
         if not r:

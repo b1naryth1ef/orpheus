@@ -20,3 +20,4 @@ SECRET_KEY = '\xfb\xcc\xe1\x1e\xae\x8aJ+\xe9\xbfm\xe7\x1e\xd3{f(\x1a\x97\xa1*l\x
 # Eventually we will change this
 CRYPT_KEY = 'Uu9_noCYmf1Bsa_KJH9K7fLdyQevUcyTk_RH8bhzHkY='
 CRYPT = SecureLoader().load(CRYPT_KEY)
+

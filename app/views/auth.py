@@ -4,12 +4,11 @@ from flask import Blueprint, g, redirect
 from datetime import datetime
 
 from util import flashy
-from util.etc import get_or_cache_nickname
 from util.errors import UserError, APIError
 from util.responses import APIResponse
 
 from emporium import oid
-from helpers.user import create_user
+from helpers.user import create_user, gache_nickname
 
 auth = Blueprint("auth", __name__, url_prefix="/auth")
 steam_id_re = re.compile('steamcommunity.com/openid/id/(.*?)$')
@@ -73,7 +72,7 @@ def route_info():
         "authed": True,
         "user": {
             "id": g.user,
-            "name": get_or_cache_nickname(resp.steamid),
+            "name": gache_nickname(resp.steamid),
             "steamid": str(resp.steamid),
             "settings": resp.settings,
             "group": resp.ugroup

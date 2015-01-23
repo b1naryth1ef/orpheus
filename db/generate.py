@@ -42,8 +42,8 @@ MATCHES = [
 ]
 
 MATCH_QUERY = """
-INSERT INTO matches (game, teams, meta, lock_date, match_date, public_date) VALUES
-(%(game)s, %(teams)s, %(meta)s, %(lock_date)s, %(match_date)s, %(public_date)s);
+INSERT INTO matches (game, teams, meta, lock_date, match_date, public_date, active) VALUES
+(%(game)s, %(teams)s, %(meta)s, %(lock_date)s, %(match_date)s, %(public_date)s, true);
 """
 
 def generate_matches(t):

@@ -1,10 +1,9 @@
 from datetime import datetime
 from collections import namedtuple
 
-from database import transaction, tranf, as_json, ValidationError
+from database import transaction, tranf, as_json
+from util.errors import InvalidRequestError, ValidationError
 from helpers.user import UserGroup
-
-
 
 CREATE_MATCH_SQL = """
 INSERT INTO matches (game, teams, meta, results, lock_date, match_date, public_date, view_perm, active, created_at, created_by)
@@ -69,8 +68,7 @@ def match_to_json(t, m):
         m = t.fetchone()
 
     if not m:
-        # TODO: wurt m8
-        raise Exception("Failed to match_to_json with arg %s" % m)
+        raise InvalidRequestError("Failed to match_to_json with arg %s" % m)
 
     match = {}
 

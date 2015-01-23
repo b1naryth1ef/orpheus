@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from database import transaction, as_json
+from emporium import steam
+from database import transaction, as_json, redis
 
 class UserGroup(object):
     NORMAL = 'normal'
@@ -24,4 +25,19 @@ def create_user(steamid, group=UserGroup.NORMAL):
         now = datetime.utcnow()
         t.execute(CREATE_USER_QUERY, (steamid, True, now, now, group, as_json(DEFAULT_SETTINGS)))
         return t.fetchone().id
+
+def gache_nickname(steamid):
+    """
+    Gets a steam nickname either from the cache, or the steam API. It
+    then ensures it's cached for 2 hours.
+    """
+    nick = redis.get("nick:%s" % steamid)
+    if not nick:
+        nick = steam.getUserInfo(steamid)['personaname']
+        redis.setex("nick:%s" % steamid, nick, 60 * 120)
+
+    if not isinstance(nick, unicode):
+        nick = nick.decode("utf-8")
+
+    return nick
 

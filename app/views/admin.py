@@ -3,11 +3,11 @@ from flask import Blueprint, g, render_template, request
 from database import map_db_values
 
 from helpers import get_count
-from helpers.user import UserGroup
+from helpers.user import UserGroup, gache_nickname
 from helpers.game import create_game
 from helpers.match import create_match
 
-from util.etc import paginate, get_or_cache_nickname
+from util.etc import paginate
 from util.errors import UserError, APIError
 from util.responses import APIResponse
 
@@ -59,7 +59,7 @@ def admin_users_list():
         users.append({
             "id": entry.id,
             "steamid": entry.steamid,
-            "username": get_or_cache_nickname(entry.steamid),
+            "username": gache_nickname(entry.steamid),
             "last_login": entry.last_login,
             "active": entry.active
         })

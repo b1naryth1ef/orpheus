@@ -52,8 +52,10 @@ def setup_postgres():
     sudo("apt-get update", quiet=True)
     ensure_installed("postgresql-9.4", "postgresql-client-9.4", "postgresql-common", "postgresql-server-dev-9.4")
 
+    upload_template("configs/postgres/postgresql.conf", "/etc/postgresql/9.4/main/postgresql.conf", use_sudo=True)
     upload_template("configs/postgres/pg_hba.conf", "/etc/postgresql/9.4/main/pg_hba.conf", use_sudo=True)
-    sudo("chown postgres: /etc/postgresql/9.4/main/pg_hba.conf")
+    sudo("chown -R postgres: /etc/postgresql/9.4/main/")
+    sudo("service postgresql restart")
 
     pg_users = {k: v["pg"] for (k, v) in USERS.iteritems() if v["pg"]}
     upload_template("configs/postgres/bootstrap.sql", "/tmp/bootstrap.sql", use_sudo=True, context={

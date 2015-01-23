@@ -2,6 +2,15 @@ from flask import jsonify
 
 from util import flashy
 
+class EmporiumException(Exception):
+    pass
+
+class ValidationError(Exception):
+    pass
+
+class InvalidRequestError(Exception):
+    pass
+
 class ResponseException(Exception):
     def to_response(self):
         raise NotImplementtedError("Must define to_response on `%s`" % self.__class__.__name__)
@@ -32,3 +41,4 @@ class APIError(ResponseException):
 
     def to_response(self):
         return jsonify(self.obj)
+

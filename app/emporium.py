@@ -54,3 +54,4 @@ def setup():
     load_all_views()
     load_event_handlers()
     build_js_templates()
+

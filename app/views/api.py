@@ -1,8 +1,8 @@
 from flask import Blueprint, request, g
 
-from util.etc import paginate
 from helpers.match import match_to_json
-from util.errors import UserError, APIError
+from util.etc import paginate
+from util.errors import UserError, APIError, InvalidRequestError
 from util.responses import APIResponse
 
 api = Blueprint("api", __name__, url_prefix="/api")
@@ -22,7 +22,9 @@ def route_stats_overview():
     pass
 
 MATCH_LIST_QUERY = """
-SELECT * FROM matches ORDER BY id LIMIT %s OFFSET %s
+SELECT * FROM matches
+WHERE now() > public_date AND active=true
+ORDER BY id LIMIT %s OFFSET %s
 """
 
 @api.route("/match/list")
@@ -40,7 +42,13 @@ def route_match_list():
 
 @api.route("/match/<int:id>/info")
 def route_match_info(id):
-    pass
+    try:
+        match = match_to_json(id)
+        return APIResponse({
+            "match": match
+        })
+    except InvalidRequestError:
+        raise APIError("Invalid match ID")
 
 GET_GAMES_SQL = """
 SELECT id, name, appid FROM games

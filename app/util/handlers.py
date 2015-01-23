@@ -69,3 +69,4 @@ def app_after_request(response):
 @app.errorhandler(ResponseException)
 def app_response_error(err):
     return err.to_response()
+
