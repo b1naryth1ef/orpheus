@@ -1,36 +1,22 @@
-import getpass, os
+import getpass, os, re
 
 from fabric.contrib.files import upload_template, exists
 from fabric.api import *
+from fabric.colors import *
 
+from data import USERS, REPOS, BASE_PACKAGES, ROLE_PACKAGES
+
+env.servers = {
+    "db": ["edb01"],
+    "app": ["eapp01"]
+}
+
+env.hosts = []
 env.user = getpass.getuser()
-env.hosts = ['192.210.231.127:43594']
 env.forward_agent = True
 
-USERS = {
-    "joon": {
-        "unix": "$6$XJY4rpPg$c1Qa18HYcMlrVASQVyh6Av5Cgm7h7Zm61IixwPtY0o02xeaZKtsAy.jR0Ows/R2isJ5JOEytb5nbUDtRwcQh3.",
-        "pg": None
-    },
-    "andrei": {
-        "unix": "$6$f5O1ho/X$jO8EtochLrThL78rrfxa4ifCkenyoiNlWQUWYetnPR3s3C6ITQaRnIRdCjD6L.v4dgYlZBp7/HwU46uHedQ1S/",
-        "pg": "1b0daf8de16ebfe51d1f93f90db82b03"
-    },
-    "emporium": {
-        "unix": None,
-        "pg": "ef8506a7d156e0cef6f1b6be663c80c6"
-    }
-}
-
-REPOS = {
-    "git@github.com:parkjoon/csgoemporiumfrontend.git": ("frontend", "/var/www/emporium")
-}
-
-PACKAGES = [
-    "htop", "vim-nox", "tmux", "python2.7", "python2.7-dev",
-    "python-pip", "screen", "redis-server", "nginx", "git",
-    "ufw", "libffi-dev", "libxml2", "libxslt1-dev"
-]
+def parse_hostname(name):
+    return re.findall("e([a-zA-Z]+)([0-9]+)", name)[0]
 
 def setup_ufw():
     sudo("ufw default deny incoming")
@@ -39,9 +25,10 @@ def setup_ufw():
     # SSH
     sudo("ufw allow 43594/tcp")
 
-    # HTTP/HTTPS
-    sudo("ufw allow 80/tcp")
-    sudo("ufw allow 443/tcp")
+    if env.role == "app":
+        # HTTP/HTTPS
+        sudo("ufw allow 80/tcp")
+        sudo("ufw allow 443/tcp")
 
     sudo("ufw enable")
 
@@ -65,6 +52,11 @@ def setup_postgres():
     sudo('su postgres -c "psql -a -f /tmp/bootstrap.sql"')
     sudo("shred -n 200 /tmp/bootstrap.sql")
     sudo("rm -rf /tmp/bootstrap.sql")
+
+def setup_looknfeel():
+    # Set the hostname
+    sudo("hostname %s" % env.host)
+    sudo("sed -i 's/127.0.1.1.*/127.0.1.1\t'\"%s\"'/g' /etc/hosts" % env.host)
 
 def ensure_installed(*packages):
     need = []
@@ -96,7 +88,7 @@ def os_create_user(user, password, groups):
     for group in groups:
         sudo("adduser %s %s" % (user, group))
 
-def sync_users():
+def setup_users():
     for user in USERS:
         if not os_user_exists(user):
             os_create_user(user, USERS[user]["unix"], ["sudo"])
@@ -111,15 +103,13 @@ def sync_ssh_keys(user):
     upload_template("keys/%s" % user, "/home/%s/.ssh/authorized_keys" % user, use_jinja=False, backup=False, use_sudo=True)
     sudo('chown %s: /home/%s/.ssh/authorized_keys' % (user, user))
 
-def push_sshd_config():
+def setup_sshd():
     upload_template("configs/sshd_config", "/etc/ssh/sshd_config", use_sudo=True)
     sudo("chmod 644 /etc/ssh/sshd_config")
     sudo("chown root: /etc/ssh/sshd_config")
     sudo("service ssh restart", warn_only=True)
 
-def setup_supervisor():
-    ensure_installed("supervisor")
-
+def sync_supervisor():
     for template in os.listdir("configs/supervisor/"):
         upload_template("configs/supervisor/%s" % template, "/etc/supervisor/conf.d/%s" % template, use_sudo=True)
 
@@ -171,37 +161,52 @@ def sync_rush():
     sudo("chown emporium: /var/www/emporium/rush")
 
 def deploy():
+    env.role, env.num = parse_hostname(env.host)
+    if env.role not in ["app"]:
+        print red("ERROR: Cannot deploy to server with role %s!" % role)
+        return
+
     sync_repos()
     sync_requirements()
     sync_rush()
-    setup_supervisor()
-
-def host(host):
-    env.hosts = [host]
+    sync_supervisor()
 
 def bootstrap():
+    env.role, env.num = parse_hostname(env.host)
     env.user = "root"
 
-    print "Updating apt..."
+    print blue("Updating apt...")
     sudo("apt-get update", quiet=True)
 
-    print "Nuking bad packages..."
+    print blue("Nuking bad packages...")
     sudo("apt-get purge --yes apache2", quiet=True)
 
-    print "Setting up packages..."
-    ensure_installed(*PACKAGES)
+    print blue("Setting up packages...")
+    ensure_installed(BASE_PACKAGES + ROLE_PACKAGES[env.role])
 
-    print "Setting up postgres..."
-    setup_postgres()
+    print blue("Setting up users...")
+    setup_users()
 
-    print "Syncing users..."
-    sync_users()
+    print blue("Setting up sshd...")
+    setup_sshd()
 
-    print "Setting up sshd..."
-    push_sshd_config()
-
-    print "Setting up UFW..."
+    print blue("Setting up UFW...")
     setup_ufw()
 
-    print "Deploying initial code..."
-    deploy()
+    print blue("Setting up look and feel...")
+    setup_looknfeel()
+
+    if env.role == "db":
+        print "Setting up postgres..."
+        setup_postgres()
+
+    if env.role == "app":
+        print "Deploying initial code..."
+        deploy()
+
+def db():
+    env.hosts = env.servers['db']
+
+def app():
+    env.hosts = env.servers['app']
+
