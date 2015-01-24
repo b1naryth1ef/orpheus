@@ -1,7 +1,9 @@
-import json, time
+import json, time, traceback, logging
 
 from util.email import Email
 from database import transaction, as_json, redis
+
+log = logging.getLogger(__name__)
 
 # TODO: move to config
 ALERT_EMAILS = ["b1naryth1ef@gmail.com"]
@@ -18,6 +20,7 @@ class Check(object):
             self.__class__.__name__))
 
     def send_message(self, level, sub_ctx=None, msg_ctx=None):
+        log.warning("Sending alert %s @ lvl %s" % (self.NAME, level))
         e = Email()
         e.to_addrs = ALERT_EMAILS
         e.subject = "CSGOE ALERT: %s %s (%s)" % (
@@ -44,9 +47,33 @@ class TradeQueueSizeCheck(Check):
                 "Queued Since (s)": time.time() - json.loads(queue[-1])["time"]
             })
 
-CHECKS = [TradeQueueSizeCheck()]
+class PostgresDBCheck(Check):
+    def run(self):
+        with transaction() as t:
+            try:
+                t.execute("SELECT 1337 AS v")
+                assert(t.fetchone().v == 1337)
+            except Exception as e:
+                self.send_message(AlertLevel.CRITICAL, [], {
+                    "Exception:": traceback.format_exc()
+                })
+
+class RedisDBCheck(Check):
+    def run(self):
+        try:
+            redis.ping()
+        except Exception as e:
+            self.send_message(AlertLevel.CRITICAL, [], {
+                "Exception:": traceback.format_exc()
+            })
+
+
+CHECKS = [TradeQueueSizeCheck(), PostgresDBCheck(), RedisDBCheck()]
 
 def run_alert_checks():
     for check in CHECKS:
-        check.run()
+        try:
+            check.run()
+        except:
+            log.exception("Failed to run check %s" % check.__class__.__name__)
 
