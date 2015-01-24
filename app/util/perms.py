@@ -12,12 +12,12 @@ def authed(group=UserGroup.NORMAL):
         @functools.wraps(f)
         def _f(*args, **kwargs):
             if not g.user or not g.group:
-                return UserError("You must be logged in for that!", "error")
+                raise UserError("You must be logged in for that!", "error")
 
             group_index = UserGroup.ORDER.index(g.group)
 
             if group_index < base_group_index:
-                return UserError("You don't have permission to see that!", "error")
+                raise UserError("You don't have permission to see that!", "error")
             return f(*args, **kwargs)
         return _f
     return deco

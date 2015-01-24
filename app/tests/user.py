@@ -38,3 +38,8 @@ class TestUserIntegration(IntegrationTest):
         self.assertEqual(data['user']['steamid'], TEST_STEAM_ID)
         self.assertGreaterEqual(data['user']['id'], 1)
 
+    def test_user_authed_route(self):
+        data = self.r.get(self.url("/auth/ping"))
+
+        self.assertNotIn('pong', data.content)
+        self.assertEqual(data.status_code, 200)

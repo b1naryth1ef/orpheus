@@ -2,6 +2,7 @@ import time, json
 from datetime import datetime
 
 from database import transaction, as_json, redis
+from util.custom import SteamItem
 
 class BetState(object):
     OFFERED = "offered"
@@ -23,7 +24,7 @@ def create_bet(user, match, team, items):
         'user': user,
         'match': match,
         'team': team,
-        'items': map(lambda i: i.split("_"), items),
+        'items': map(lambda i: SteamItem(*i.split("_")), items),
         'state': BetState.OFFERED,
     }
 

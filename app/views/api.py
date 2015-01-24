@@ -1,10 +1,13 @@
 import json
+
+from datetime import datetime
 from flask import Blueprint, request, g
 
 from database import select
 
 from helpers.match import match_to_json
 from helpers.account import get_bot_space
+from helpers.bet import create_bet
 
 from util.etc import paginate
 from util.perms import authed
@@ -59,8 +62,11 @@ def route_match_info(id):
 @api.route("/match/<int:match_id>/bet", methods=["POST"])
 @authed()
 def route_match_bet(match_id):
-    items = json.loads(request.values.get("items"))
-    team = request.values.get("team")
+    try:
+        items = json.loads(request.values.get("items"))
+        team = int(request.values.get("team"))
+    except:
+        raise APIError("Invalid Request")
 
     # Make sure this seems mildly valid
     apiassert(0 < len(items) <= 32, "Too many items")
@@ -74,8 +80,13 @@ def route_match_bet(match_id):
     # Make sure we have a valid match
     apiassert(match, "Invalid match ID")
     apiassert(match.active, "Invalid match ID")
-    apiassert(match.public_date < datetime.utcnow(), "Invalid match ID")
-    apiassert(match.lock_date < datetime.utcnow(), "Match is locked")
+    apiassert(match.public_date.replace(tzinfo=None) < datetime.utcnow(), "Invalid match ID")
+    apiassert(match.lock_date.replace(tzinfo=None) > datetime.utcnow(), "Match is locked")
+    apiassert(len(match.teams) > team, "Invalid Team")
+
+    # Make sure this user doesn't already have a bet on this match
+    g.cursor.execute("SELECT * FROM bets WHERE better=%s AND match=%s", (g.user, match.id))
+    apiassert(g.cursor.fetchone() == None, "Bet already created")
 
     # Ensure we have space for the items
     used, avail = get_bot_space()

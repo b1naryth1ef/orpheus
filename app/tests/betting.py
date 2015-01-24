@@ -17,10 +17,36 @@ class TestBetsIntegration(IntegrationTest):
         data = self.r.post(self.url("/api/match/1337/bet"), params={
             "items": json.dumps(["0_0"]), "team": 0}).json()
 
-        print data
+        self.assertFalse(data['success'])
 
     def test_create_bet_invalid_team(self):
-        pass
+        self.as_user(self.get_user())
+        data = self.r.post(self.url("/api/match/1/bet"), params={
+            "items": json.dumps(["0_0"]), "team": 500}).json()
+
+        self.assertFalse(data['success'])
 
     def test_create_bet_invalid_items(self):
-        pass
+        self.as_user(self.get_user())
+        data = self.r.post(self.url("/api/match/1/bet"), params={
+            "items": json.dumps([]), "team": 1}).json()
+
+        self.assertFalse(data['success'])
+
+    def test_create_bet(self):
+        self.as_user(self.get_user())
+        data = self.r.post(self.url("/api/match/1/bet"), params={
+            "items": json.dumps(["0_0"]), "team": 1}).json()
+
+        self.assertTrue(data['success'])
+
+    def test_create_multiple_bets(self):
+        self.as_user(self.get_user())
+        data = self.r.post(self.url("/api/match/2/bet"), params={
+            "items": json.dumps(["0_0"]), "team": 1}).json()
+        self.assertTrue(data['success'])
+
+        data = self.r.post(self.url("/api/match/2/bet"), params={
+            "items": json.dumps(["0_0"]), "team": 1}).json()
+        self.assertFalse(data['success'])
+

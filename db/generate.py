@@ -4,6 +4,17 @@ from psycopg2.extras import Json
 
 ONE_WEEK_FUTURE = datetime.utcnow() + relativedelta(weeks=1)
 
+ACCOUNTS = [
+    ("76561198172199447", "csgoebot1", "password", True)
+]
+
+def generate_accounts(t):
+    for acc in ACCOUNTS:
+        t.execute(
+        "INSERT INTO accounts (steamid, username, password, inventory, active, status)\
+        VALUES (%s, %s, %s, ARRAY[(1, 1)::steam_item], %s, 'AVAIL')",
+            acc)
+
 USERS = [
     ("76561198037632722", "super"),
     ("76561198031651584", "normal"),
@@ -48,6 +59,18 @@ MATCHES = [
         "lock_date": ONE_WEEK_FUTURE,
         "match_date": ONE_WEEK_FUTURE,
         "public_date": datetime.utcnow()
+    },
+    {
+        "game": 1,
+        "teams": [3, 4],
+        "meta": {
+            "league": "ESEA",
+            "type": "BO3",
+            "streams": ["http://mlg.tv/swag", "http://twitch.tv/esea"],
+        },
+        "lock_date": ONE_WEEK_FUTURE,
+        "match_date": ONE_WEEK_FUTURE,
+        "public_date": datetime.utcnow()
     }
 ]
 
@@ -65,6 +88,7 @@ def generate_bets(t):
     pass
 
 DATA_GENERATORS = [
+    generate_accounts,
     generate_users,
     generate_games,
     generate_teams,

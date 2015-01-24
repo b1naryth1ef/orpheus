@@ -4,6 +4,7 @@ from flask import Blueprint, g, redirect
 from datetime import datetime
 
 from util import flashy
+from util.perms import authed
 from util.errors import UserError, APIError
 from util.responses import APIResponse
 
@@ -51,6 +52,11 @@ def route_login():
 def route_logout():
     g.user = None
     return flashy("You have been logged out!")
+
+@auth.route("/ping")
+@authed()
+def route_ping():
+    return "pong"
 
 @auth.route("/info")
 def route_info():
