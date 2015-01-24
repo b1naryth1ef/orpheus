@@ -1,0 +1,22 @@
+#!/bin/bash
+
+export TESTING=1
+
+echo "Flushing and recreating the test database..."
+../db/manage.py -d emporium_test -u emporium_test -D -c -g -p=test
+
+echo "Flushing redis test database..."
+redis-cli -n 1 "flushall"
+
+echo "Forking test server..."
+./run web test &
+sleep 2
+
+echo "Running tests..."
+python -m unittest discover tests/ '*.py'
+RETURN_CODE=$?
+
+echo "Tests completed, killing test server..."
+pkill -TERM -P $(jobs -p)
+
+exit $RETURN_CODE

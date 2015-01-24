@@ -4,6 +4,16 @@ from psycopg2.extras import Json
 
 ONE_WEEK_FUTURE = datetime.utcnow() + relativedelta(weeks=1)
 
+USERS = [
+    ("76561198037632722", "super"),
+    ("76561198031651584", "normal"),
+]
+
+def generate_users(t):
+    for user in USERS:
+        t.execute("INSERT INTO users (steamid, active, ugroup) VALUES (%s, %s, %s)",
+            (user[0], True, user[1]))
+
 GAME = {
     "name": "CS:GO",
     "appid": 730,
@@ -55,6 +65,7 @@ def generate_bets(t):
     pass
 
 DATA_GENERATORS = [
+    generate_users,
     generate_games,
     generate_teams,
     generate_matches,

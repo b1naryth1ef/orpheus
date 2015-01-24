@@ -1,4 +1,4 @@
-import time
+import time, json
 from datetime import datetime
 
 from database import transaction, as_json, redis
@@ -13,17 +13,18 @@ class BetState(object):
 
 
 CREATE_BET_SQL = """
-INSERT INTO bets (better, match, team, items, value)
-VALUES (%(user)s, %(match)s, %(team)s, %(items), %(value)s, %(state)s);
+INSERT INTO bets (better, match, team, items, value, state)
+VALUES (%(user)s, %(match)s, %(team)s, %(items)s, %(value)s, %(state)s)
+RETURNING id;
 """
 
 def create_bet(user, match, team, items):
     data = {
-        user: user,
-        match: match,
-        team: team,
-        items: map(lambda i: i.split("_"), items),
-        state: BetState.OFFERED,
+        'user': user,
+        'match': match,
+        'team': team,
+        'items': map(lambda i: i.split("_"), items),
+        'state': BetState.OFFERED,
     }
 
     # TODO: calculate value from item cache
@@ -31,12 +32,13 @@ def create_bet(user, match, team, items):
 
     with transaction() as t:
         t.execute(CREATE_BET_SQL, data)
+        id = t.fetchone().id
 
         redis.rpush("trade-queue", json.dumps({
             "time": time.time(),
             "type": "INTAKE",
-            "id": t.lastrowid
+            "id": id
         }))
 
-    return t.lastrowid
+    return id
 

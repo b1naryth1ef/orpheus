@@ -31,13 +31,13 @@ def transaction():
         db.putconn(conn)
 
 def select(obj, *fields, **params):
-    query = "SELECT %s FROM obj" % ', '.join(fields)
+    query = "SELECT %s FROM %s" % (', '.join(fields), obj)
 
     if len(params):
         etc = ' AND '.join(map(lambda k: "{}=%({})s".format(k, k), params.keys()))
         query += " WHERE %s" % etc
 
-    return query
+    return query, params
 
 def map_db_values(obj):
     return ', '.join(map(lambda i: i+"=%("+i+")s", obj.keys()))
@@ -48,10 +48,12 @@ def tranf(f):
             return f(t, *args, **kwargs)
     return deco
 
-db = PostgresDatabase("host={host} port={port} dbname=emporium user=emporium password={pw}".format(
+db = PostgresDatabase("host={host} port={port} dbname={dbname} user={user} password={pw}".format(
     host=app.config.get("PG_HOST"),
     port=app.config.get("PG_PORT"),
-    pw=CRYPT.get("postgres")))
+    dbname=app.config.get("PG_DATABASE"),
+    user=app.config.get("PG_USERNAME"),
+    pw=app.config.get("PG_PASSWORD")))
 
-redis = redis.Redis(app.config.get("R_HOST"), port=app.config.get("R_PORT"))
+redis = redis.Redis(app.config.get("R_HOST"), port=app.config.get("R_PORT"), db=app.config.get("R_DB"))
 

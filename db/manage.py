@@ -4,12 +4,15 @@ import os, sys, getpass, argparse, psycopg2
 DIR = os.path.dirname(os.path.realpath(__file__))
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-d", "--dropall", help="Drop all databases before creating", action="store_true")
+parser.add_argument("-D", "--dropall", help="Drop all databases before creating", action="store_true")
 parser.add_argument("-c", "--create", help="Create all unknown tables", action="store_true")
 parser.add_argument("-m", "--migration", help="Run a migration", action="store_true")
 parser.add_argument("-u", "--username", help="PSQL Username", default="emporium")
 parser.add_argument("-s", "--server", help="PSQL Host", default="localhost")
+parser.add_argument("-d", "--database", help="PSQL Database", default="emporium")
+parser.add_argument("-p", "--password", help="PSQL Password", default=None)
 parser.add_argument("-g", "--generate", help="Generate fake data", action="store_true")
+
 args = parser.parse_args()
 
 # Lists all the tables in a database
@@ -31,9 +34,10 @@ AND     n.nspname NOT IN ('pg_catalog', 'information_schema')
 """
 
 def open_database_connection(pw):
-    return psycopg2.connect("host={host} port={port} dbname=emporium user={user} password='{pw}'".format(
+    return psycopg2.connect("host={host} port={port} dbname={db} user={user} password='{pw}'".format(
         host=args.server,
         user=args.username,
+        db=args.database,
         pw=pw,
         port=50432 if args.server != "localhost" else 5432))
 
@@ -42,11 +46,13 @@ def main():
         parser.print_help()
         sys.exit(0)
 
-    db = open_database_connection(getpass.getpass("DB Password > "))
+    password = args.password or getpass.getpass("DB Password > ")
+    db = open_database_connection(password)
+    is_prod_db = args.database == "emporium"
 
     if args.dropall:
         print "Dropping all tables and types..."
-        if raw_input("You are about to drop everything in production. Are you sure? ").lower()[0] != 'y':
+        if is_prod_db and raw_input("You are about to drop everything in production. Are you sure? ").lower()[0] != 'y':
             print "ERROR: Yeah right! Please confirm before dropping all tables!"
             return sys.exit(1)
 
@@ -75,11 +81,11 @@ def main():
         with db.cursor() as c:
             c.execute(LIST_TABLES_SQL)
             for table in c.fetchall():
-                c.execute("ALTER TABLE %s OWNER TO %s" % (table[0], 'emporium'))
+                c.execute("ALTER TABLE %s OWNER TO %s" % (table[0], args.username))
 
             c.execute(LIST_TYPES_SQL)
             for ttype in c.fetchall():
-                c.execute("ALTER TYPE %s OWNER TO %s" % (ttype[1], 'emporium'))
+                c.execute("ALTER TYPE %s OWNER TO %s" % (ttype[1], args.username))
 
         db.commit()
         print "  DONE!"

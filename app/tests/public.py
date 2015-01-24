@@ -1,19 +1,16 @@
 import unittest, json
 
-from tests import FlaskTestCase
+from tests import UnitTest, IntegrationTest
 
-
-class TestUserIntegration(FlaskTestCase):
+class TestUserIntegration(IntegrationTest):
     def test_match_list(self):
-        rv = self.app.get("/api/match/list")
-        data = json.loads(rv.data)
+        data = self.r.get(self.url("/api/match/list")).json()
 
         self.assertTrue(data['success'])
         self.assertGreaterEqual(len(data['matches']), 1)
 
     def test_single_match(self):
-        rv = self.app.get("/api/match/1/info")
-        data = json.loads(rv.data)
+        data = self.r.get(self.url("/api/match/1/info")).json()
 
         self.assertTrue(data['success'])
         self.assertNotEqual(data['match'], {})

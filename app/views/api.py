@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint, request, g
 
 from database import select
@@ -55,7 +56,7 @@ def route_match_info(id):
     except InvalidRequestError:
         raise APIError("Invalid match ID")
 
-@api.route("/match/<int:id>/bet", methods=["POST"])
+@api.route("/match/<int:match_id>/bet", methods=["POST"])
 @authed()
 def route_match_bet(match_id):
     items = json.loads(request.values.get("items"))
@@ -64,10 +65,10 @@ def route_match_bet(match_id):
     # Make sure this seems mildly valid
     apiassert(0 < len(items) <= 32, "Too many items")
 
-    SELECT_MATCH = select("matches",
+    SELECT_MATCH, params = select("matches",
         "id", "teams", "lock_date", "match_date", "public_date", "active", id=match_id)
 
-    g.cursor.execute(SELECT_MATCH)
+    g.cursor.execute(SELECT_MATCH, params)
     match = g.cursor.fetchone()
 
     # Make sure we have a valid match

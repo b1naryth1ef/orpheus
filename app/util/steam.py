@@ -223,7 +223,7 @@ class SteamMarketAPI(object):
     def get_parsed_inventory(self, steamid):
         """
         TODO: deprecate this fucking shit
-        """
+
         from maz.mazdb import MarketItem
 
         result = self.get_inventory(steamid)
@@ -256,6 +256,9 @@ class SteamMarketAPI(object):
 
             item_data.append(idata)
         return item_data
+        """
+
+        raise Exception("DEPRECATED!")
 
     def get_inventory(self, id):
         data = SteamAPI.new().getUserInfo(id)["profileurl"]
