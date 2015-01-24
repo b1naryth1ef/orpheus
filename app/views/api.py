@@ -1,8 +1,13 @@
 from flask import Blueprint, request, g
 
+from database import select
+
 from helpers.match import match_to_json
+from helpers.account import get_bot_space
+
 from util.etc import paginate
-from util.errors import UserError, APIError, InvalidRequestError
+from util.perms import authed
+from util.errors import UserError, APIError, InvalidRequestError, apiassert
 from util.responses import APIResponse
 
 api = Blueprint("api", __name__, url_prefix="/api")
@@ -50,6 +55,35 @@ def route_match_info(id):
     except InvalidRequestError:
         raise APIError("Invalid match ID")
 
+@api.route("/match/<int:id>/bet", methods=["POST"])
+@authed()
+def route_match_bet(match_id):
+    items = json.loads(request.values.get("items"))
+    team = request.values.get("team")
+
+    # Make sure this seems mildly valid
+    apiassert(0 < len(items) <= 32, "Too many items")
+
+    SELECT_MATCH = select("matches",
+        "id", "teams", "lock_date", "match_date", "public_date", "active", id=match_id)
+
+    g.cursor.execute(SELECT_MATCH)
+    match = g.cursor.fetchone()
+
+    # Make sure we have a valid match
+    apiassert(match, "Invalid match ID")
+    apiassert(match.active, "Invalid match ID")
+    apiassert(match.public_date < datetime.utcnow(), "Invalid match ID")
+    apiassert(match.lock_date < datetime.utcnow(), "Match is locked")
+
+    # Ensure we have space for the items
+    used, avail = get_bot_space()
+    apiassert(avail > len(items), "No space left for bet")
+
+    return APIResponse({
+        "bet": create_bet(g.user, match_id, team, items)
+    })
+
 GET_GAMES_SQL = """
 SELECT id, name, appid FROM games
 WHERE view_perm >= %s AND active = true
@@ -82,4 +116,5 @@ def route_team_list():
 @api.route("/team/<int:id>/info")
 def route_team_info():
     pass
+
 

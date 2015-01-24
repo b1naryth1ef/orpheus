@@ -30,6 +30,15 @@ def transaction():
     finally:
         db.putconn(conn)
 
+def select(obj, *fields, **params):
+    query = "SELECT %s FROM obj" % ', '.join(fields)
+
+    if len(params):
+        etc = ' AND '.join(map(lambda k: "{}=%({})s".format(k, k), params.keys()))
+        query += " WHERE %s" % etc
+
+    return query
+
 def map_db_values(obj):
     return ', '.join(map(lambda i: i+"=%("+i+")s", obj.keys()))
 

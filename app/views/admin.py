@@ -42,7 +42,8 @@ def admin_matches():
     return render_template("admin/matches.html")
 
 USERS_LIST_QUERY = """
-    SELECT id, steamid, email, active, date_part('epoch', last_login) as last_login FROM users ORDER BY id LIMIT %s OFFSET %s
+SELECT id, steamid, email, active, last_login
+FROM users ORDER BY id LIMIT %s OFFSET %s
 """
 
 @admin.route("/api/user/list")
@@ -149,11 +150,8 @@ def admin_edit_game():
     return APIResponse()
 
 MATCHES_LIST_QUERY = """
-SELECT id, game, teams, meta, results, active,
-    date_part('epoch', lock_date) as lock_date,
-    date_part('epoch', match_date) as match_date,
-    date_part('epoch', public_date) as public_date
-FROM matches;
+SELECT id, game, teams, meta, results, active, lock_date, match_date, public_date
+FROM matches ORDER BY id LIMIT %s OFFSET %s;
 """
 
 @admin.route("/api/match/list")

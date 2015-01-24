@@ -19,3 +19,4 @@ class APIResponse(Response):
 
         self.mimetype = "application/json"
 
+

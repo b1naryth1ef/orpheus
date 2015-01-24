@@ -155,7 +155,7 @@ CREATE TABLE matches (
   Represents a bet placed on a match
 */
 
-CREATE TYPE bet_state AS ENUM ('offered', 'accepted', 'won', 'lost');
+CREATE TYPE bet_state AS ENUM ('offered', 'confirmed', 'won', 'lost');
 
 CREATE TABLE bets (
     id SERIAL PRIMARY KEY,

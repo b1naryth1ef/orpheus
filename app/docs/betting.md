@@ -22,8 +22,10 @@ item ... {
 }
 ```
 - Placed into redis queue
+- Bot grabs off redis queue, queries postgres for bet info
 - Bot sends trade offer
 - User accepts trade offer
+- Bot publishes websocket notification and updates postgres bet info
 ```
 bets {
   state => accepted

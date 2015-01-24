@@ -42,3 +42,7 @@ class APIError(ResponseException):
     def to_response(self):
         return jsonify(self.obj)
 
+def apiassert(truthy, msg):
+    if not truthy:
+        raise APIError(msg)
+

@@ -9,7 +9,7 @@ CREATE_MATCH_SQL = """
 INSERT INTO matches (game, teams, meta, results, lock_date, match_date, public_date, view_perm, active, created_at, created_by)
 VALUES (%(game)s, %(teams)s, %(meta)s, %(results)s, %(lock_date)s, %(match_date)s, %(public_date)s,
 %(view_perm)s, %(active)s, %(created_at)s, %(created_by)s)
-RETURNING id;
+RETURNING id
 """
 
 def validate_match_team_data(obj):

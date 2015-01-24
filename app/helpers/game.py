@@ -6,7 +6,7 @@ from helpers.user import UserGroup
 CREATE_GAME_SQL = """
 INSERT INTO games (name, meta, appid, view_perm, active, created_by, created_at)
 VALUES (%(name)s, %(meta)s, %(appid)s, %(view_perm)s, %(active)s, %(created_by)s, %(created_at)s)
-RETURNING id;
+RETURNING id
 """
 
 def validate_game_metadata(obj):
