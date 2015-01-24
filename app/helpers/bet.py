@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 from database import transaction, as_json, redis
@@ -32,6 +33,7 @@ def create_bet(user, match, team, items):
         t.execute(CREATE_BET_SQL, data)
 
         redis.rpush("trade-queue", json.dumps({
+            "time": time.time(),
             "type": "INTAKE",
             "id": t.lastrowid
         }))

@@ -3,7 +3,6 @@ import os, sys
 from flask import Flask
 from flask.ext.openid import OpenID
 
-from util.log import setup_logging
 from util.steam import SteamAPI
 
 app = Flask(__name__)
@@ -50,7 +49,6 @@ def build_js_templates():
         f.write(TEMPLATES)
 
 def setup():
-    setup_logging()
     load_all_views()
     load_event_handlers()
     build_js_templates()
