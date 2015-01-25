@@ -19,14 +19,14 @@ REPOS = {
 
 BASE_PACKAGES = [
     "htop", "vim-nox", "iotop", "iftop", "iotop", "nethogs",
-    "screen", "git", "ufw", "tmux"
+    "screen", "git", "ufw", "tmux", "sudo"
 ]
 
 ROLE_PACKAGES = {
     "db": ["redis-server"],
     "app": [
         "python2.7", "python2.7-dev", "python-pip", "nginx", "libffi-dev",
-        "libxml2", "libxslt1-dev", "supervisor"
+        "libxml2", "libxslt1-dev", "supervisor", "libpq-dev"
     ]
 }
 

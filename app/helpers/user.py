@@ -45,3 +45,29 @@ def gache_nickname(steamid):
 
     return nick
 
+def get_user_info(uid):
+    if not uid:
+        return {
+            "authed": False
+        }
+
+    with transaction() as t:
+        t.execute("SELECT steamid, settings, ugroup FROM users WHERE id=%s", (uid, ))
+        resp = t.fetchone()
+
+    if not uid:
+        return {
+            "authed": False
+        }
+
+    return {
+        "authed": True,
+        "user": {
+            "id": uid,
+            "name": gache_nickname(resp.steamid),
+            "steamid": str(resp.steamid),
+            "settings": resp.settings,
+            "group": resp.ugroup
+        }
+    }
+

@@ -2,15 +2,43 @@
   <div class="col-lg-12">
     <div id="panelDemo7" class="panel panel-default">
       <div class="panel-heading">
-        <h2>
-        <% for (var team in match.teams) { %>
+        <h2 style="text-align: center">
+          <% for (var team in match.teams) { %>
           <%- match.teams[team].name %>
           <%- (team < (match.teams.length - 1)) ? "VS" : "" %>
-        <% } %>
+          <% } %>
         </h2>
       </div>
       <div class="panel-body">
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum tincidunt est vitae ultrices accumsan. Aliquam ornare lacus adipiscing, posuere lectus et, fringilla augue.</p>
+        <div class="row">
+          <div class="col-md-3">
+            <img src="<%= match.teams[0].logo %>" style="max-height: 200px; max-width: 350px" class="img-rounded" />
+          </div>
+
+          <div class="col-md-6">
+            <img src="<%= match.extra.league.splash %>" style="max-width: 600px; max-height: 200px; margin: 0 auto;" class="img-responsive">
+          </div>
+
+          <div class="col-md-3">
+            <img src="<%= match.teams[1].logo %>" style="max-height: 200px; max-width: 350px; display: block; float: right;" class="img-rounded" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6 col-md-offset-3">
+            <div class="row">
+              <div class="col-md-6"><h3>60%</h3></div>
+              <div class="col-md-6"><h3 style="text-align: right">40%</h3></div>
+            </div>
+            <div class="progress">
+              <div style="width: 60%" class="progress-bar bg-gray-darker">
+                <span class="sr-only">60%</span>
+              </div>
+              <div style="width: 40%; display: block; float: right;" class="progress-bar bg-gray">
+                <span class="sr-only">40%</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="panel-footer">Panel Footer</div>
     </div>

@@ -36,23 +36,28 @@ def generate_games(t):
         GAME)
 
 TEAMS = [
-    ("c9", "Cloud9", "http://i.imgur.com/HsqnrKf.png"),
-    ("torqued", "Torqued", ""),
-    ("CLG", "Counter Logic Gaming", ""),
-    ("NIP", "Ninjas In Pajamas", ""),
-    ("LDLC", "LDLC", "")
+    ("c9", "Cloud9", "http://i.imgur.com/HsqnrKf.png", {}),
+    ("torqued", "Torqued", "", {}),
+    ("CLG", "Counter Logic Gaming", "http://clgaming.net/interface/img/ogImage.jpg", {}),
+    ("NIP", "Ninjas In Pajamas", "http://i.imgur.com/7jN4sff.png", {}),
+    ("LDLC", "LDLC", "http://i.imgur.com/CaS8bD9.png", {})
 ]
 
 def generate_teams(t):
     for team in TEAMS:
-        t.execute("INSERT INTO teams (tag, name, logo) VALUES (%s, %s, %s)", team)
+        t.execute("INSERT INTO teams (tag, name, logo, meta) VALUES (%s, %s, %s, %s)", team[:3], Json(team[-1]))
 
 MATCHES = [
     {
         "game": 1,
-        "teams": [1, 2],
+        "teams": [1, 5],
         "meta": {
-            "league": "CEVO",
+            "league": {
+                "name": "CEVO",
+                "info": None,
+                "splash": "http://i.imgur.com/V8qBKgK.png",
+                "logo": "http://i.imgur.com/8VIcWM2.png"
+            },
             "type": "BO1",
             "streams": ["http://twitch.tv/test1", "http://twitch.tv/test2"],
         },
@@ -64,7 +69,12 @@ MATCHES = [
         "game": 1,
         "teams": [3, 4],
         "meta": {
-            "league": "ESEA",
+            "league": {
+                "name": "ESEA",
+                "info": None,
+                "splash": "http://i.imgur.com/cQ88n4A.png",
+                "logo": "http://i.imgur.com/KCZZVDH.jpg"
+            },
             "type": "BO3",
             "streams": ["http://mlg.tv/swag", "http://twitch.tv/esea"],
         },

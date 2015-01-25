@@ -114,7 +114,8 @@
 
     {% block script %}
     <script>
-app.run();
+      app.setup({{ user|jsonify|safe }});
+      app.run();
     </script>
     {% endblock %}
   </body>

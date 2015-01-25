@@ -23,7 +23,6 @@ App.prototype.view = function (name) {
 
 App.prototype.run = function () {
     var url = '/' + window.location.pathname.substr(1);
-    if (this.setup) { this.setup.call(this); }
 
     // Pattern match the route
     for (k in this.views) {
@@ -74,30 +73,31 @@ app.openWebSocket = function () {
     }).bind(this);
 
     this.ws.onclose = (function (eve) {
-        console.error("WS was closed, attempting reconnect in 10 seconds...");
+        console.error("WS was closed, attempting reconnect in " + this.wsDelay + " seconds...");
         setTimeout((function () {
             this.openWebSocket();
-        }).bind(this), 10000);
+        }).bind(this), this.wsDelay * 1000);
+
+        // Increment the retry delay
+        if (this.wsDelay < 120) {
+            this.wsDelay += 5
+        }
     }).bind(this);
 }
 
-app.setup = function () {
-    $.ajax("/auth/info", {
-        success: (function (data) {
-            if (data.authed) {
-                this.user = data.user;
-                $(".authed").show();
-                if (data.user.group === "super" || data.user.group === "admin") {
-                    $(".admin").show();
-                }
-            } else {
-                this.user = null;
-                $(".unauthed").show();
-            }
-
-        }).bind(this)
-    });
-
+app.setup = function (userData) {
+    this.wsDelay = 10;
     this.openWebSocket();
+
+    if (userData.authed) {
+        this.user = userData.user;
+        $(".authed").show();
+        if (this.user.group === "super" || this.user.group === "admin") {
+            $(".admin").show();
+        }
+    } else {
+        this.user = null;
+        $(".unauthed").show();
+    }
 };
 

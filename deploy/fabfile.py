@@ -7,13 +7,26 @@ from fabric.colors import *
 from data import USERS, REPOS, BASE_PACKAGES, ROLE_PACKAGES
 
 env.servers = {
-    "db": ["edb01"],
-    "app": ["eapp01"]
+    "db": [],
+    "app": ["eapp01", "eapp02"]
 }
 
+env.port = 43594
 env.hosts = []
 env.user = getpass.getuser()
 env.forward_agent = True
+
+def if_modified(lpath, remote):
+    if not exists(remote):
+        return True
+
+    remote_md5 = sudo("md5sum %s" % remote).split(" ")[0]
+    local_md5 = local("md5sum %s" % lpath, capture=True).split(" ")[0]
+
+    if remote_md5 != local_md5:
+        return True
+
+    return False
 
 def parse_hostname(name):
     return re.findall("e([a-zA-Z]+)([0-9]+)", name)[0]
@@ -120,9 +133,17 @@ def sync_supervisor():
 def sync_repos():
     refresh = False
 
+    if not exists('/var/www'):
+        sudo("mkdir /var/www")
+        sudo("chown emporium: /var/www")
+
     if not exists("/var/repos"):
         sudo("mkdir /var/repos")
         sudo("chmod 777 /var/repos")
+
+    if exists("/tmp/clone"):
+        # TODO: this could fuck us?
+        sudo("rm -rf /tmp/clone")
 
     for repo, etc in REPOS.items():
         name, diro = etc
@@ -149,16 +170,16 @@ def sync_requirements():
     sudo("pip install -r /var/www/emporium/app/requirements.txt")
 
 def sync_rush():
-    remote_md5 = run("md5sum /var/www/emporium/rush").split(" ")[0]
-    local_md5 = local("md5sum binaries/rush", capture=True).split(" ")[0]
+    if if_modified("binaries/rush", "/var/www/emporium/rush"):
+        put("binaries/rush", remote_path="/var/www/emporium/rush", use_sudo=True)
+        sudo("chmod 744 /var/www/emporium/rush")
+        sudo("chown emporium: /var/www/emporium/rush")
 
-    if remote_md5 == local_md5:
-        print "Rush binary matches, not uploading..."
-        return
-
-    put("binaries/rush", remote_path="/var/www/emporium/rush", use_sudo=True)
-    sudo("chmod 744 /var/www/emporium/rush")
-    sudo("chown emporium: /var/www/emporium/rush")
+def sync_secret():
+    if if_modified("configs/secret.json", "/etc/secret.json"):
+        put("configs/secret.json", remote_path="/etc/secret.json", use_sudo=True)
+        sudo("chmod 600 /etc/secret.json")
+        sudo("chown emporium: /etc/secret.json")
 
 def deploy():
     env.role, env.num = parse_hostname(env.host)
@@ -166,6 +187,7 @@ def deploy():
         print red("ERROR: Cannot deploy to server with role %s!" % role)
         return
 
+    sync_secret()
     sync_repos()
     sync_requirements()
     sync_rush()
@@ -174,15 +196,17 @@ def deploy():
 def bootstrap():
     env.role, env.num = parse_hostname(env.host)
     env.user = "root"
+    env.port = 22
 
     print blue("Updating apt...")
-    sudo("apt-get update", quiet=True)
-
-    print blue("Nuking bad packages...")
-    sudo("apt-get purge --yes apache2", quiet=True)
+    run("apt-get update")
+    run("apt-get install sudo")
 
     print blue("Setting up packages...")
-    ensure_installed(BASE_PACKAGES + ROLE_PACKAGES[env.role])
+    ensure_installed(*(BASE_PACKAGES + ROLE_PACKAGES[env.role]))
+
+    print blue("Correcting pip installation...")
+    sudo("easy_install -U pip")
 
     print blue("Setting up users...")
     setup_users()
@@ -205,8 +229,14 @@ def bootstrap():
         deploy()
 
 def db():
-    env.hosts = env.servers['db']
+    env.hosts = map(lambda i: i + ".csgoemporium.com", env.servers['db'])
 
 def app():
-    env.hosts = env.servers['app']
+    env.hosts = map(lambda i: i + ".csgoemporium.com", env.servers['app'])
+
+def hosts(hosts):
+    env.hosts = hosts.split(",")
+
+def user(user):
+    env.user = user
 

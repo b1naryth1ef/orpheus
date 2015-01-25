@@ -1,11 +1,26 @@
+import json
+
 from flask import request, g, redirect
 from psycopg2 import OperationalError
 
 from emporium import app
 from database import db
+
+from helpers.user import get_user_info
+
 from util.sessions import Session
 from util.errors import ResponseException, GenericError
 from util.responses import APIResponse
+
+@app.context_processor
+def app_context_processor():
+    return {
+        "user": get_user_info(g.user)
+    }
+
+@app.template_filter("jsonify")
+def jsonify_filter(x):
+    return json.dumps(x)
 
 @app.before_request
 def app_before_request():
@@ -40,6 +55,7 @@ def app_before_request():
         g.db = db.getconn()
         g.cursor = g.db.cursor()
     except OperationalError:
+        # Questionable?
         g.db = None
         raise GenericError("The site is currently experiencing issues.", code=500)
 
