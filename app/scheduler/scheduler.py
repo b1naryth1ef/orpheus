@@ -36,7 +36,7 @@ class Scheduler(object):
     def __init__(self):
         # Write PID to a file
         try:
-            with open("/var/run/pysched.pid", "w") as f:
+            with open("/var/run/emporium/scheduler.pid", "w") as f:
                 f.write(str(os.getpid()))
         except:
             log.exception("Failed to create PID file: ")

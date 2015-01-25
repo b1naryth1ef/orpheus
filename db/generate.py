@@ -36,16 +36,16 @@ def generate_games(t):
         GAME)
 
 TEAMS = [
-    ("c9", "Cloud9", "http://i.imgur.com/HsqnrKf.png", {}),
-    ("torqued", "Torqued", "", {}),
-    ("CLG", "Counter Logic Gaming", "http://clgaming.net/interface/img/ogImage.jpg", {}),
-    ("NIP", "Ninjas In Pajamas", "http://i.imgur.com/7jN4sff.png", {}),
-    ("LDLC", "LDLC", "http://i.imgur.com/CaS8bD9.png", {})
+    ("c9", "Cloud9", "http://i.imgur.com/HsqnrKf.png"),
+    ("torqued", "Torqued", ""),
+    ("CLG", "Counter Logic Gaming", "http://clgaming.net/interface/img/ogImage.jpg"),
+    ("NIP", "Ninjas In Pajamas", "http://i.imgur.com/7jN4sff.png"),
+    ("LDLC", "LDLC", "http://i.imgur.com/CaS8bD9.png")
 ]
 
 def generate_teams(t):
     for team in TEAMS:
-        t.execute("INSERT INTO teams (tag, name, logo, meta) VALUES (%s, %s, %s, %s)", team[:3], Json(team[-1]))
+        t.execute("INSERT INTO teams (tag, name, logo) VALUES (%s, %s, %s)", team)
 
 MATCHES = [
     {

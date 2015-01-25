@@ -4,7 +4,7 @@ from flask import request, g, redirect
 from psycopg2 import OperationalError
 
 from emporium import app
-from database import db
+from database import get_connection
 
 from helpers.user import get_user_info
 
@@ -52,7 +52,7 @@ def app_before_request():
 
     # Setup DB transaction
     try:
-        g.db = db.getconn()
+        g.db = get_connection()
         g.cursor = g.db.cursor()
     except OperationalError:
         # Questionable?
@@ -78,7 +78,7 @@ def app_after_request(response):
     if g.db:
         if not g.db.closed:
             g.db.commit()
-        db.putconn(g.db)
+            g.db.close()
 
     return response
 

@@ -31,6 +31,11 @@ def if_modified(lpath, remote):
 def parse_hostname(name):
     return re.findall("e([a-zA-Z]+)([0-9]+)", name)[0]
 
+def setup_redis():
+    if env.role == "app":
+        upload_template("configs/redis/app.conf", "/etc/redis/redis.conf")
+        sudo("service redis-server restart")
+
 def setup_ufw():
     sudo("ufw default deny incoming")
     sudo("ufw default allow outgoing")
@@ -47,20 +52,20 @@ def setup_ufw():
 
 def setup_postgres():
     sudo("wget -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | apt-key add -")
-    upload_template("configs/apt/pgdg.list", "/etc/apt/sources.list.d/pgdg.list", use_sudo=True)
+    upload_template("configs/apt/pgdg.list", "/etc/apt/sources.list.d/pgdg.list", use_sudo=True, backup=False)
 
     sudo("apt-get update", quiet=True)
     ensure_installed("postgresql-9.4", "postgresql-client-9.4", "postgresql-common", "postgresql-server-dev-9.4")
 
-    upload_template("configs/postgres/postgresql.conf", "/etc/postgresql/9.4/main/postgresql.conf", use_sudo=True)
-    upload_template("configs/postgres/pg_hba.conf", "/etc/postgresql/9.4/main/pg_hba.conf", use_sudo=True)
+    upload_template("configs/postgres/postgresql.conf", "/etc/postgresql/9.4/main/postgresql.conf", use_sudo=True, backup=False)
+    upload_template("configs/postgres/pg_hba.conf", "/etc/postgresql/9.4/main/pg_hba.conf", use_sudo=True, backup=False)
     sudo("chown -R postgres: /etc/postgresql/9.4/main/")
     sudo("service postgresql restart")
 
     pg_users = {k: v["pg"] for (k, v) in USERS.iteritems() if v["pg"]}
     upload_template("configs/postgres/bootstrap.sql", "/tmp/bootstrap.sql", use_sudo=True, context={
         "users": pg_users,
-    }, use_jinja=True)
+    }, use_jinja=True, backup=False)
 
     sudo('su postgres -c "psql -a -f /tmp/bootstrap.sql"')
     sudo("shred -n 200 /tmp/bootstrap.sql")
@@ -113,22 +118,32 @@ def sync_ssh_keys(user):
     if not exists("/home/%s/.ssh" % user):
         sudo("mkdir /home/%s/.ssh" % user)
         sudo("chown %s: /home/%s/.ssh" % (user, user))
-    upload_template("keys/%s" % user, "/home/%s/.ssh/authorized_keys" % user, use_jinja=False, backup=False, use_sudo=True)
+    upload_template("keys/%s" % user, "/home/%s/.ssh/authorized_keys" % user,
+            use_jinja=False, backup=False, use_sudo=True)
     sudo('chown %s: /home/%s/.ssh/authorized_keys' % (user, user))
 
 def setup_sshd():
-    upload_template("configs/sshd_config", "/etc/ssh/sshd_config", use_sudo=True)
+    upload_template("configs/sshd_config", "/etc/ssh/sshd_config", use_sudo=True, backup=False)
     sudo("chmod 644 /etc/ssh/sshd_config")
     sudo("chown root: /etc/ssh/sshd_config")
     sudo("service ssh restart", warn_only=True)
 
+def setup_pgbouncer():
+    upload_template("configs/postgres/pgbouncer.ini", "/etc/pgbouncer/pgbouncer.ini", use_sudo=True, backup=False)
+    sudo("chmod 600 /etc/pgbouncer/pgbouncer.ini")
+    sudo("chown emporium: /etc/pgbouncer/pgbouncer.ini")
+
 def sync_supervisor():
     for template in os.listdir("configs/supervisor/"):
-        upload_template("configs/supervisor/%s" % template, "/etc/supervisor/conf.d/%s" % template, use_sudo=True)
+        upload_template("configs/supervisor/%s" % template, "/etc/supervisor/conf.d/%s" % template, use_sudo=True, backup=False)
 
     sudo("service supervisor start", warn_only=True)
     sudo("supervisorctl reread")
     sudo("supervisorctl update")
+
+def sync_nginx():
+    upload_template("configs/nginx/emporium", "/etc/nginx/sites-enabled/emporium", use_sudo=True, backup=False)
+    sudo("service nginx reload")
 
 def sync_repos():
     refresh = False
@@ -155,10 +170,12 @@ def sync_repos():
             refresh = True
         else:
             with cd(diro):
+                sudo("chmod -R 777 .git")
                 v = run("git rev-parse HEAD").strip()
                 run("git reset --hard origin/master")
                 run("git pull origin master")
-                sudo("chown -R www-data: app/static/")
+                sudo("chown -R emporium: .")
+                # sudo("chown -R www-data: app/static/")
                 if v != run("git rev-parse HEAD").strip():
                     refresh = True
 
@@ -181,7 +198,28 @@ def sync_secret():
         sudo("chmod 600 /etc/secret.json")
         sudo("chown emporium: /etc/secret.json")
 
-def deploy():
+def sync_paths():
+    if not exists("/var/run/emporium"):
+        sudo("mkdir /var/run/emporium")
+        sudo("chown emporium: /var/run/emporium")
+        sudo("chmod 744 /var/run/emporium")
+
+    if not exists("/var/log/emporium"):
+        sudo("mkdir /var/log/emporium")
+        sudo("chown emporium: /var/log/emporium")
+        sudo("chmod 744 /var/log/emporium")
+
+def sync_uwsgi(denv):
+    upload_template("configs/uwsgi.bin", "/var/www/emporium/uwsgi.bin", context={
+        'env': denv
+    }, use_jinja=True, use_sudo=True, mode="644")
+    sudo("chmod +x /var/www/emporium/uwsgi.bin")
+
+def deploy(denv="PROD"):
+    if denv not in ["DEV", "PROD"]:
+        print red("ERROR: Unknown env: %s" % denv)
+        return
+
     env.role, env.num = parse_hostname(env.host)
     if env.role not in ["app"]:
         print red("ERROR: Cannot deploy to server with role %s!" % role)
@@ -192,6 +230,8 @@ def deploy():
     sync_requirements()
     sync_rush()
     sync_supervisor()
+    sync_uwsgi(denv)
+    sync_nginx()
 
 def bootstrap():
     env.role, env.num = parse_hostname(env.host)
@@ -217,6 +257,9 @@ def bootstrap():
     print blue("Setting up UFW...")
     setup_ufw()
 
+    print blue("Setting up Redis...")
+    setup_redis()
+
     print blue("Setting up look and feel...")
     setup_looknfeel()
 
@@ -225,7 +268,11 @@ def bootstrap():
         setup_postgres()
 
     if env.role == "app":
+        print "Setting up PGBouncer..."
+        setup_pgbouncer()
+
         print "Deploying initial code..."
+        sync_paths()
         deploy()
 
 def db():
