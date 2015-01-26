@@ -170,7 +170,7 @@ def sync_repos():
             refresh = True
         else:
             with cd(diro):
-                sudo("chmod -R 777 .git")
+                sudo("chmod -R 777 .")
                 v = run("git rev-parse HEAD").strip()
                 run("git reset --hard origin/master")
                 run("git pull origin master")
@@ -225,6 +225,7 @@ def deploy(denv="PROD"):
         print red("ERROR: Cannot deploy to server with role %s!" % role)
         return
 
+    setup_pgbouncer()
     sync_secret()
     sync_repos()
     sync_requirements()
