@@ -1,3 +1,4 @@
 *.pyc
+*.lprof
 design/
 templates.js
