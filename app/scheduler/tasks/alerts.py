@@ -1,6 +1,6 @@
 import json, time, traceback, logging
 
-from util.email import Email
+from util.uemail import Email
 from database import transaction, as_json, redis
 
 log = logging.getLogger(__name__)

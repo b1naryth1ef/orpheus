@@ -1,130 +1,129 @@
 """
+This is sort of not the best, but it works so #shipit
 TODO:
-    - remove peewee
-    - unittests plzzzzz
     - create function to aggregate/load data from schema
-    - figure out how to do multiple drafts for different games
-    - figure out how to store drafts
-    - figure out how to draft both possible results at the SAME DAMN TIME
-    - make it fasterified plz
 """
 
-import time
-from peewee import *
+# TODO: fuck this
+import os.path, sys, time
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 
-db = PostgresqlDatabase("emporium_draft", user="emporium", password="1")
+from database import transaction, tranf, get_connection
 
-class Better(Model):
-    class Meta:
-        database = db
-        indexes = (
-            (('id', ), True),
-            (('need', ), False),
-            (('current', ), False)
-        )
+def create_tables():
+    with transaction("emporium_draft") as t:
+        t.execute("""
+        CREATE TABLE IF NOT EXISTS betters (
+            id SERIAL PRIMARY KEY,
+            iid INTEGER,
+            mid INTEGER,
+            tid INTEGER,
+            value REAL,
+            needed REAL,
+            current REAL
+        );
 
-    id = IntegerField(primary_key=True)
-    need = FloatField()
-    current = FloatField(default=0)
+        CREATE UNIQUE INDEX ON betters (iid, mid, tid);
+        CREATE INDEX ON betters (needed);
 
-class Item(Model):
-    class Meta:
-        database = db
+        CREATE TABLE IF NOT EXISTS items (
+            id SERIAL PRIMARY KEY,
+            iid INTEGER,
+            mid INTEGER,
+            tid INTEGER,
+            value REAL,
+            better INTEGER REFERENCES betters
+        );
 
-    indexes = (
-        (('id', ), True),
-        (('value'), False),
-        (('better'), False)
-    )
+        CREATE UNIQUE INDEX ON items (iid, mid, tid);
+        """)
 
-    id = IntegerField(primary_key=True)
-    value = FloatField()
-    better = ForeignKeyField(Better, null=True)
+CREATE_BETTER_SQL = """INSERT INTO betters
+(iid, mid, tid, value, needed, current)
+VALUES (%s, %s, %s, %s, %s, %s)"""
+CREATE_ITEM_SQL = """INSERT INTO items
+(iid, mid, tid, value, better)
+VALUES (%s, %s, %s, %s, %s)"""
 
-Item.drop_table(True)
-Better.drop_table(True)
-Better.create_table()
-Item.create_table()
-
-def pre_draft(betters, items):
-    with db.transaction():
-        print "Inserting betters..."
+def pre_draft(match_id, team_id, betters, items):
+    with transaction("emporium_draft") as t:
+        print "Inserting %s betters..." % len(betters)
         for (id, need) in betters:
-            Better.create(id=id, need=need)
+            t.execute(CREATE_BETTER_SQL, (id, match_id, team_id, need, need, 0))
 
-        print "Inserting items..."
+        print "Inserting %s items..." % len(items)
         for (id, value) in items:
-            Item.create(id=id, value=value)
+            t.execute(CREATE_ITEM_SQL, (id, match_id, team_id, value, None))
 
 
-def run_draft():
-    for i, item in enumerate(Item.select().where(Item.better == None)):
+ITEMS_FOR_DRAFT_QUERY = """
+SELECT id, value FROM items WHERE mid=%s AND tid=%s AND better IS NULL ORDER BY value DESC
+"""
+
+def run_draft(match_id, team_id):
+    db = get_connection("emporium_draft")
+    t = db.cursor()
+    t.execute(ITEMS_FOR_DRAFT_QUERY, (match_id, team_id))
+    for i, item in enumerate(t.fetchall()):
         if not i % 100:
-            print "Handling item %s" % i
-        draft_item(item)
+            print "  processing item #%s" % i
+        draft_item(db, match_id, team_id, item)
 
-def draft_item(item):
-    c = db.get_cursor()
+GET_BETTER_FOR_ITEM = """
+SELECT * FROM betters
+WHERE needed >= %s
+ORDER BY needed DESC LIMIT 1
+"""
 
-    # This is slow, but super accurate
-    # approx 35 items a second
-    QUERY = """
-    SELECT better.*, count(item.better_id) as num_items
-    FROM better LEFT JOIN item ON (better.id = item.better_id)
-    WHERE better.current <= %s
-    GROUP BY better.id ORDER BY num_items, need DESC LIMIT 1
-    """
+def draft_item(db, match_id, team_id, item):
+    t = db.cursor()
+    t.execute(GET_BETTER_FOR_ITEM, (item.value, ))
 
-    # This is hella fast, but is greedy (making it somewhat inaccurate)
-    # approx 300 items a second
-    QUERY_2 = """
-    SELECT better.* FROM better
-    WHERE better.current <= %s
-    ORDER BY need DESC LIMIT 1
-    """
+    entry = t.fetchone()
+    if not entry:
+        return
 
-    c.execute(QUERY_2 % item.value)
+    current = entry.current + item.value
+    needed = entry.value - current
 
-    entry = c.fetchone()
-    item.better = entry[0]
-    item.save()
+    # Update item, we've now allocated it
+    t.execute("UPDATE items SET better=%s WHERE id=%s", (entry.id, item.id, ))
 
-    c.execute("UPDATE better SET current=%s WHERE id=%s" % ((entry[2] + item.value), entry[0]))
+    # Update better
+    t.execute("UPDATE betters SET current=%s, needed=%s WHERE id=%s", (
+        current, needed, entry.id,
+    ))
     db.commit()
+
 
 if __name__ == "__main__":
     import random, time, sys
 
-    # 25,000 people placed 250,000 items for bet
+    create_tables()
 
-    low_bins = map(lambda i: (i, random.randint(3, 500) / 100), range(1, 15000))
-    med_bins = map(lambda i: (i + 15000, random.randint(5, 25)), range(1, 10000))
-    high_bins = map(lambda i: (i + 25000, random.randint(25, 900)), range(1, 5000))
-    all_bins = low_bins + med_bins + high_bins
+    low_bins = map(lambda i: random.randint(50, 500) / 100.0, range(1, 10000))
+    med_bins = map(lambda i: random.randint(5, 25), range(1, 45000))
+    high_bins = map(lambda i: random.randint(25, 900), range(1, 5000))
+    all_bins = map(lambda i: (i[0], i[1]), enumerate(low_bins + med_bins + high_bins))
 
-    low_items = map(lambda i: (i, random.randint(3, 500) / 100), range(1, 150000))
-    med_items = map(lambda i: (i + 150000, random.randint(5, 20)), range(1, 50000))
-    high_items = map(lambda i: (i + 200000, random.randint(20, 300)), range(1, 50000))
-    all_items = low_items + med_items + high_items
+    low_items = map(lambda i: random.randint(3, 500) / 100.0, range(1, 150000))
+    med_items = map(lambda i: random.randint(5, 20), range(1, 90000))
+    high_items = map(lambda i: random.randint(20, 300), range(1, 10000))
+    all_items = map(lambda i: (i[0], i[1]), enumerate(low_items + med_items + high_items))
 
     if sum(map(lambda i: i[1], all_bins)) > sum(map(lambda i: i[1], all_items)):
         print "Won't work with random data..."
         sys.exit(1)
 
+    with transaction("emporium_draft") as t:
+        t.execute("SELECT max(mid) as m FROM betters")
+        match_id = team_id = (t.fetchone().m or 0) + 1
+
     start = time.time()
-    pre_draft(all_bins, all_items)
+    pre_draft(match_id, team_id, all_bins, all_items)
     print "Pre-draft took %ss" % (time.time() - start)
 
     start = time.time()
-    run_draft()
+    run_draft(match_id, team_id)
     print "Draft Took %ss" % (time.time() - start)
-    """
-    item_weights = map(lambda i: i.weight, leftover_items)
-    bin_weights = map(lambda i: i.current_weight(), sorted_bins)
-    print "%s leftovers" % len(leftover_items)
-    print "Most value stolen: %s" % max(bin_weights)
-    print "Average value stolen: %s" % (sum(bin_weights) / len(bin_weights))
-    print "Max leftover item: %s" % max(item_weights)
-    print "Min leftover item: %s" % min(item_weights)
-    """
 

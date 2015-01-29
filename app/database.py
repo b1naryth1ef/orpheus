@@ -9,11 +9,11 @@ from settings import CRYPT
 class ValidationError(Exception):
     pass
 
-def get_connection():
+def get_connection(database=None):
     return psycopg2.connect("host={host} port={port} dbname={dbname} user={user} password={pw}".format(
         host=app.config.get("PG_HOST"),
         port=app.config.get("PG_PORT"),
-        dbname=app.config.get("PG_DATABASE"),
+        dbname=database or app.config.get("PG_DATABASE"),
         user=app.config.get("PG_USERNAME"),
         pw=app.config.get("PG_PASSWORD")), cursor_factory=NamedTupleCursor)
 
@@ -21,8 +21,8 @@ def as_json(ctx):
     return Json(ctx)
 
 @contextmanager
-def transaction():
-    conn = get_connection()
+def transaction(database=None):
+    conn = get_connection(database)
     cursor = conn.cursor()
     try:
         yield cursor
