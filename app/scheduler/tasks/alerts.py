@@ -1,7 +1,8 @@
 import json, time, traceback, logging
 
 from util.uemail import Email
-from database import transaction, as_json, redis
+
+from database import Cursor, redis
 
 log = logging.getLogger(__name__)
 
@@ -49,10 +50,10 @@ class TradeQueueSizeCheck(Check):
 
 class PostgresDBCheck(Check):
     def run(self):
-        with transaction() as t:
+        with Cursor() as c:
             try:
-                t.execute("SELECT 1337 AS v")
-                assert(t.fetchone().v == 1337)
+                c.execute("SELECT 1337 AS v")
+                assert(c.fetchone().v == 1337)
             except Exception as e:
                 self.send_message(AlertLevel.CRITICAL, [], {
                     "Exception:": traceback.format_exc()

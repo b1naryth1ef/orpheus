@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from flask import Blueprint, request, g
 
-from database import select
+from database import Cursor
 
 from helpers.match import match_to_json
 from helpers.account import get_bot_space
@@ -40,13 +40,12 @@ ORDER BY id LIMIT %s OFFSET %s
 def route_match_list():
     page = int(request.values.get("page", 1))
 
-    g.cursor.execute("SELECT count(*) as c FROM matches")
-    pages = (g.cursor.fetchone().c / 25) + 1
-
+    pages = (g.cursor.count("matches", "now() > public_date AND active=true") / 25) + 1
     g.cursor.execute(MATCH_LIST_QUERY, paginate(page, per_page=25))
+    matches = map(match_to_json, g.cursor.fetchall(as_list=True))
 
     return APIResponse({
-        "matches": map(match_to_json, g.cursor.fetchall())
+        "matches": matches
     })
 
 @api.route("/match/<int:id>/info")
@@ -71,11 +70,8 @@ def route_match_bet(match_id):
     # Make sure this seems mildly valid
     apiassert(0 < len(items) <= 32, "Too many items")
 
-    SELECT_MATCH, params = select("matches",
-        "id", "teams", "lock_date", "match_date", "public_date", "active", id=match_id)
-
-    g.cursor.execute(SELECT_MATCH, params)
-    match = g.cursor.fetchone()
+    match = g.cursor.select("matches",
+        "id", "teams", "lock_date", "match_date", "public_date", "active", id=match_id).fetchone()
 
     # Make sure we have a valid match
     apiassert(match, "Invalid match ID")

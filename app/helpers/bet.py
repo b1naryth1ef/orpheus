@@ -1,7 +1,7 @@
 import time, json
 from datetime import datetime
 
-from database import transaction, as_json, redis
+from database import Cursor, redis
 from util.custom import SteamItem
 
 class BetState(object):
@@ -31,9 +31,8 @@ def create_bet(user, match, team, items):
     # TODO: calculate value from item cache
     data['value'] = 0
 
-    with transaction() as t:
-        t.execute(CREATE_BET_SQL, data)
-        id = t.fetchone().id
+    with Cursor() as c:
+        id = c.execute(CREATE_BET_SQL, data).fetchone()
 
         redis.rpush("trade-queue", json.dumps({
             "time": time.time(),

@@ -8,11 +8,11 @@ TODO:
 import os.path, sys, time
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 
-from database import transaction, tranf, get_connection
+from database import Cursor
 
 def create_tables():
-    with transaction("emporium_draft") as t:
-        t.execute("""
+    with Cursor("emporium_draft") as c:
+        c.execute("""
         CREATE TABLE IF NOT EXISTS betters (
             id SERIAL PRIMARY KEY,
             iid INTEGER,
@@ -46,14 +46,14 @@ CREATE_ITEM_SQL = """INSERT INTO items
 VALUES (%s, %s, %s, %s, %s)"""
 
 def pre_draft(match_id, team_id, betters, items):
-    with transaction("emporium_draft") as t:
+    with Cursor("emporium_draft") as c:
         print "Inserting %s betters..." % len(betters)
         for (id, need) in betters:
-            t.execute(CREATE_BETTER_SQL, (id, match_id, team_id, need, need, 0))
+            c.execute(CREATE_BETTER_SQL, (id, match_id, team_id, need, need, 0))
 
         print "Inserting %s items..." % len(items)
         for (id, value) in items:
-            t.execute(CREATE_ITEM_SQL, (id, match_id, team_id, value, None))
+            c.execute(CREATE_ITEM_SQL, (id, match_id, team_id, value, None))
 
 
 ITEMS_FOR_DRAFT_QUERY = """
@@ -61,13 +61,12 @@ SELECT id, value FROM items WHERE mid=%s AND tid=%s AND better IS NULL ORDER BY 
 """
 
 def run_draft(match_id, team_id):
-    db = get_connection("emporium_draft")
-    t = db.cursor()
-    t.execute(ITEMS_FOR_DRAFT_QUERY, (match_id, team_id))
-    for i, item in enumerate(t.fetchall()):
+    c = Cursor("emporium_draft")
+    items = c.execute(ITEMS_FOR_DRAFT_QUERY, (match_id, team_id)).fetchall()
+    for i, item in enumerate(items):
         if not i % 100:
             print "  processing item #%s" % i
-        draft_item(db, match_id, team_id, item)
+        draft_item(c, match_id, team_id, item)
 
 GET_BETTER_FOR_ITEM = """
 SELECT * FROM betters
@@ -75,11 +74,9 @@ WHERE needed >= %s
 ORDER BY needed DESC LIMIT 1
 """
 
-def draft_item(db, match_id, team_id, item):
-    t = db.cursor()
-    t.execute(GET_BETTER_FOR_ITEM, (item.value, ))
+def draft_item(c, match_id, team_id, item):
+    entry = c.execute(GET_BETTER_FOR_ITEM, (item.value, )).fetchone()
 
-    entry = t.fetchone()
     if not entry:
         return
 
@@ -87,13 +84,12 @@ def draft_item(db, match_id, team_id, item):
     needed = entry.value - current
 
     # Update item, we've now allocated it
-    t.execute("UPDATE items SET better=%s WHERE id=%s", (entry.id, item.id, ))
+    c.execute("UPDATE items SET better=%s WHERE id=%s", (entry.id, item.id, ))
 
     # Update better
-    t.execute("UPDATE betters SET current=%s, needed=%s WHERE id=%s", (
+    c.execute("UPDATE betters SET current=%s, needed=%s WHERE id=%s", (
         current, needed, entry.id,
     ))
-    db.commit()
 
 
 if __name__ == "__main__":
@@ -115,9 +111,9 @@ if __name__ == "__main__":
         print "Won't work with random data..."
         sys.exit(1)
 
-    with transaction("emporium_draft") as t:
-        t.execute("SELECT max(mid) as m FROM betters")
-        match_id = team_id = (t.fetchone().m or 0) + 1
+    with Cursor("emporium_draft") as c:
+        base_id = c.execute("SELECT max(mid) as m FROM betters").fetchone().m or 0
+        match_id = team_id = (base_id) + 1
 
     start = time.time()
     pre_draft(match_id, team_id, all_bins, all_items)

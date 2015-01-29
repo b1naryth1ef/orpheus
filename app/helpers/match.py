@@ -1,9 +1,9 @@
 from datetime import datetime
 from collections import namedtuple
+from psycopg2.extras import Json
 from flask import g
 
-
-from database import transaction, tranf, as_json
+from database import Cursor
 from util.errors import InvalidRequestError, ValidationError
 from helpers.user import UserGroup
 
@@ -38,12 +38,12 @@ def validate_match_meta_data(obj):
 def create_match(user, game, teams, meta, lock_date, match_date, public_date, view_perm=UserGroup.NORMAL):
     validate_match_team_data(teams)
 
-    with transaction() as t:
-        t.execute(CREATE_MATCH_SQL, {
+    with Cursor() as c:
+        c.execute(CREATE_MATCH_SQL, {
             "game": game,
             "teams": teams,
             "meta": meta,
-            "results": as_json({}),
+            "results": Cursor.json({}),
             "lock_date": lock_date,
             "match_date": match_date,
             "public_date": public_date,
@@ -53,21 +53,22 @@ def create_match(user, game, teams, meta, lock_date, match_date, public_date, vi
             "created_by": user
         })
 
-        return t.fetchone().id
+        return c.fetchone().id
 
 
 MATCH_SELECT_SQL = "SELECT * FROM matches WHERE id=%s"
 
-@tranf
-def match_to_json(t, m):
+def match_to_json(m):
     """
     Right now this function is a performance clusterfuck. Almost all of the data in
     here can be gathered with a single query and windowed multi-join, but lets wait
     until shit breaks, eh?
     """
+    c = Cursor()
+
     if not isinstance(m, tuple):
-        t.execute(MATCH_SELECT_SQL, (m, ))
-        m = t.fetchone()
+        c.execute(MATCH_SELECT_SQL, (m, ))
+        m = c.fetchone()
 
     if not m:
         raise InvalidRequestError("Failed to match_to_json with arg %s" % m)
@@ -81,15 +82,15 @@ def match_to_json(t, m):
     match['extra'] = {}
 
     # This will most definitily require some fucking caching at some point
-    t.execute("SELECT * FROM bets WHERE match=%s", (m.id, ))
-    bets = t.fetchall()
+    c.execute("SELECT * FROM bets WHERE match=%s", (m.id, ))
+    bets = c.fetchall()
 
     match['value'] = sum(map(lambda i: i.value, bets))
     match['bets'] = len(bets)
 
     # Grab team information, including bets (this should be a join)
-    t.execute("SELECT * FROM teams WHERE id IN %s", (tuple(m.teams), ))
-    teams = t.fetchall()
+    c.execute("SELECT * FROM teams WHERE id IN %s", (tuple(m.teams), ))
+    teams = c.fetchall()
 
     for index, team in enumerate(teams):
         team_data = {
@@ -114,6 +115,5 @@ def match_to_json(t, m):
             match['extra'][key] = m.meta[key]
 
     match['results'] = m.results
-
     return match
 

@@ -1,6 +1,8 @@
 from datetime import datetime
+from psycopg2.extras import Json
 
-from database import transaction, as_json, ValidationError
+from database import Cursor
+from util.errors import ValidationError
 from helpers.user import UserGroup
 
 CREATE_GAME_SQL = """
@@ -18,8 +20,8 @@ def validate_game_metadata(obj):
 def create_game(user, name, appid, meta=None, view_perm=UserGroup.NORMAL):
     validate_game_metadata(meta)
 
-    with transaction() as t:
-        t.execute(CREATE_GAME_SQL, {
+    with Cursor() as c:
+        return c.execute(CREATE_GAME_SQL, {
             "name": name,
             "meta": as_json(meta or {}),
             "appid": appid,
@@ -27,7 +29,5 @@ def create_game(user, name, appid, meta=None, view_perm=UserGroup.NORMAL):
             "active": True,
             "created_by": user,
             "created_at": datetime.utcnow()
-        })
-
-        return t.fetchone().id
+        }).fetchone().id
 

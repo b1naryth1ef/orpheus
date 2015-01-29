@@ -4,7 +4,7 @@ from flask import request, g, redirect
 from psycopg2 import OperationalError
 
 from emporium import app
-from database import get_connection
+from database import Cursor
 
 from helpers.user import get_user_info
 
@@ -51,13 +51,7 @@ def app_before_request():
         g.group = g.session.get("g")
 
     # Setup DB transaction
-    try:
-        g.db = get_connection()
-        g.cursor = g.db.cursor()
-    except OperationalError:
-        # Questionable?
-        g.db = None
-        raise GenericError("The site is currently experiencing issues.", code=500)
+    g.cursor = Cursor()
 
 @app.after_request
 def app_after_request(response):
@@ -74,12 +68,7 @@ def app_after_request(response):
     else:
         g.session.end()
 
-    # Commit DB changes for request
-    if g.db:
-        if not g.db.closed:
-            g.db.commit()
-            g.db.close()
-
+    g.cursor.close()
     return response
 
 @app.errorhandler(ResponseException)

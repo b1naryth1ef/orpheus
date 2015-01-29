@@ -1,6 +1,6 @@
 import unittest, emporium, os, requests
 
-from database import transaction
+from database import Cursor
 
 B1N_STEAM_ID = "76561198037632722"
 TEST_STEAM_ID = "76561198031651584"
@@ -12,15 +12,13 @@ class UserHelper(object):
         self.r.headers.update({"FAKE_USER": uid})
 
     def get_user(self, id=B1N_STEAM_ID):
-        with transaction() as t:
-            t.execute("SELECT id FROM users WHERE steamid=%s", (id, ))
-            return t.fetchone().id
+        with Cursor() as c:
+            return c.execute("SELECT id FROM users WHERE steamid=%s", (id, )).fetchone().id
 
 class MatchHelper(object):
     def get_match(self):
-        with transaction() as t:
-            t.execute("SELECT id FROM matches LIMIT 1")
-            return t.fetchone().id
+        with Cursor() as c:
+            return c.execute("SELECT id FROM matches LIMIT 1").fetchone().id
 
 class MetaHelper(UserHelper, MatchHelper):
     pass

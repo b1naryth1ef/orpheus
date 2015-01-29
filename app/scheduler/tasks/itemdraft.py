@@ -1,4 +1,4 @@
-from database import transaction
+from database import Cursor
 from datetime import datetime
 
 RUN_MATCH_DRAFT_QUERY = """
@@ -14,9 +14,8 @@ def run_item_drafts():
     TODO: run this on a background box eventually
     """
 
-    with transaction() as t:
-        t.execute(RUN_MATCH_DRAFT_QUERY, (datetime.utcnow(), ))
-        results = t.fetchall()
+    with Cursor() as c::
+        results = c.execute(RUN_MATCH_DRAFT_QUERY, (datetime.utcnow(), )).fetchall()
 
         if not len(results):
             return
@@ -42,11 +41,8 @@ def use_item_drafts():
     item lock date.
     """
 
-    with transaction() as t:
-        t.execute(USE_MATCH_QUERY, (datetime.utcnow(), ))
-
-        results = t.fetchall()
-
+    with Cursor() as c:
+        results = c.execute(USE_MATCH_QUERY, (datetime.utcnow(), )).fetchall()
         if not len(results):
             return
 

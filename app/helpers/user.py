@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from emporium import steam
-from database import transaction, as_json, redis
+from database import Cursor, redis
 
 class UserGroup(object):
     NORMAL = 'normal'
@@ -25,10 +25,9 @@ def create_user(steamid, group=UserGroup.NORMAL):
     This expectes to fail if the steamid already exists, and will raise `psycopg2.IntegrityError`
     when it does.
     """
-    with transaction() as t:
+    with Cursor() as c:
         now = datetime.utcnow()
-        t.execute(CREATE_USER_QUERY, (steamid, True, now, now, group, as_json(DEFAULT_SETTINGS)))
-        return t.fetchone().id
+        return c.execute(CREATE_USER_QUERY, (steamid, True, now, now, group, Cursor.json(DEFAULT_SETTINGS))).fetchone().id
 
 def gache_nickname(steamid):
     """
@@ -51,9 +50,8 @@ def get_user_info(uid):
             "authed": False
         }
 
-    with transaction() as t:
-        t.execute("SELECT steamid, settings, ugroup FROM users WHERE id=%s", (uid, ))
-        resp = t.fetchone()
+    with Cursor() as c:
+        resp = c.execute("SELECT steamid, settings, ugroup FROM users WHERE id=%s", (uid, )).fetchone()
 
     if not uid:
         return {

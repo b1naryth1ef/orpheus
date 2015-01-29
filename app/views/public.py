@@ -6,6 +6,6 @@ public = Blueprint("public", __name__)
 def route_index():
     return render_template("index.html")
 
-@public.route("/bet/<int:matchid>")
+@public.route("/match/<int:matchid>")
 def route_bet_mid(matchid):
-    return render_template("index.html")
+    return render_template("match.html")

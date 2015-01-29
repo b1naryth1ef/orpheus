@@ -1,8 +1,7 @@
 from flask import Blueprint, g, render_template, request
 
-from database import map_db_values
+from database import Cursor
 
-from helpers import get_count
 from helpers.user import UserGroup, gache_nickname
 from helpers.game import create_game
 from helpers.match import create_match
@@ -24,10 +23,10 @@ def admin_before_request():
 @admin.route("/")
 def admin_dashboard():
     return render_template("admin/index.html",
-        users_count=get_count("users"),
-        games_count=get_count("games"),
-        matches_count=get_count("matches"),
-        bets_count=get_count("bets"))
+        users_count=g.cursor.count("users"),
+        games_count=g.cursor.count("games"),
+        matches_count=g.cursor.count("matches"),
+        bets_count=g.cursor.count("bets"))
 
 @admin.route("/users")
 def admin_users():
@@ -84,7 +83,7 @@ def admin_user_edit():
     if not len(query):
         raise APIError("Nothing to change!")
 
-    sql = "UPDATE users SET {} WHERE id=%(id)s".format(map_db_values(query))
+    sql = "UPDATE users SET {} WHERE id=%(id)s".format(Cursor.map_values(query))
 
     query['id'] = user
     g.cursor.execute(sql, query)
@@ -142,7 +141,7 @@ def admin_edit_game():
     if not len(query):
         raise APIError("Nothing to change!")
 
-    sql = "UPDATE games SET {} WHERE id=%(id)s".format(map_db_values(query))
+    sql = "UPDATE games SET {} WHERE id=%(id)s".format(Cursor.map_values(query))
 
     query['id'] = game
     g.cursor.execute(sql, query)

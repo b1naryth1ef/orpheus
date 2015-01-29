@@ -5,7 +5,7 @@ from psycopg2 import IntegrityError
 import emporium
 from tests import UnitTest, IntegrationTest, TEST_STEAM_ID
 from helpers.user import create_user
-from database import transaction
+from database import Cursor 
 
 FAKE_STEAM_ID = "76561198031554200"
 
@@ -14,9 +14,8 @@ class TestUsersUnit(UnitTest):
         uid = create_user(FAKE_STEAM_ID)
         self.assertGreaterEqual(uid, 1)
 
-        with transaction() as t:
-            t.execute("SELECT count(*) as count FROM users")
-            count = t.fetchone().count
+        with Cursor() as c:
+            count = c.count("users")
             self.assertGreaterEqual(count, 1)
 
         self.assertRaises(IntegrityError, create_user, (FAKE_STEAM_ID, ))
