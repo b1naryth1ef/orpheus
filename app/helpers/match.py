@@ -1,5 +1,7 @@
 from datetime import datetime
 from collections import namedtuple
+from flask import g
+
 
 from database import transaction, tranf, as_json
 from util.errors import InvalidRequestError, ValidationError

@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 
 import redis, psycopg2
+from flask import g
 from psycopg2.extras import NamedTupleCursor, Json
 
 from emporium import app
@@ -22,8 +23,13 @@ def as_json(ctx):
 
 @contextmanager
 def transaction(database=None):
-    conn = get_connection(database)
+    try:
+        conn = g.db
+        assert(not g.db.closed)
+    except:
+        conn = get_connection(database)
     cursor = conn.cursor()
+
     try:
         yield cursor
     except Exception as e:
@@ -49,6 +55,17 @@ def tranf(f):
     def deco(*args, **kwargs):
         with transaction() as t:
             return f(t, *args, **kwargs)
+    return deco
+
+def connf(database=None):
+    def deco(f):
+        def replace(*args, **kwargs):
+            try:
+                db = g.db
+            except:
+                db = get_connection(database)
+            return f(db, *args, **kwargs)
+        return replace
     return deco
 
 redis = redis.Redis(app.config.get("R_HOST"), port=app.config.get("R_PORT"), db=app.config.get("R_DB"))
