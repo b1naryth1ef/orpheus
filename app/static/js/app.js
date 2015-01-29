@@ -27,7 +27,14 @@ App.prototype.run = function () {
     // Pattern match the route
     for (k in this.views) {
         for (match in this.views[k].routes) {
-            if (match == url) {
+            var regEx = this.views[k].routes[match]._regex;
+            if (regEx) {
+                var regMatch = url.match(regEx);
+                if (regMatch) {
+                    regMatch.shift();
+                    return this.views[k].call(match, regMatch);
+                }
+            } else if (match == url) {
                 return this.views[k].call(match);
             }
         }
@@ -47,9 +54,14 @@ View.prototype.route = function (route, f) {
     this.routes[route] = f;
 }
 
+View.prototype.routeRegex = function (regex, f) {
+    f._regex = regex;
+    this.routes[regex] = f;
+}
+
 View.prototype.call = function (route) {
     if (this.setup) this.setup();
-    return this.routes[route].call(this);
+    return this.routes[route].apply(this, arguments);
 }
 
 var app = new App();

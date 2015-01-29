@@ -55,7 +55,7 @@ MATCHES = [
             "league": {
                 "name": "CEVO",
                 "info": None,
-                "splash": "http://i.imgur.com/V8qBKgK.png",
+                "splash": "http://i.imgur.com/x9zkVjg.png",
                 "logo": "http://i.imgur.com/8VIcWM2.png"
             },
             "type": "BO1",

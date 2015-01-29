@@ -146,6 +146,7 @@ CREATE TABLE matches (
     created_at timestamp with time zone,
     results_by integer REFERENCES users(id),
     results_at timestamp with time zone,
+    items_at timestamp with time zone,
     draft_started_at timestamp with time zone,
     draft_finished_at timestamp with time zone
 );

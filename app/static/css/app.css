@@ -9988,3 +9988,8 @@ body .jvectormap-zoomout {
   margin-right: 0px;
   margin-left: 0px;
 }
+
+.clickable {
+  cursor: pointer;
+}
+

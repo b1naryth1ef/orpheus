@@ -17,4 +17,10 @@ home.renderMatches = function () {
 
 home.route("/", function () {
     this.renderMatches();
+
+    $(".matches-container").delegate(".match-row", "click", (function (ev) {
+        var matchID = $(ev.target).closest(".match-row").attr("data-id");
+        window.location = "/bet/" + matchID;
+    }).bind(this));
 });
+
