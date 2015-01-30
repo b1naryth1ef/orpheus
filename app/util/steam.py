@@ -75,6 +75,9 @@ class SteamAPI(object):
     def __init__(self, key):
         self.key = key
 
+    def market(self, appid):
+        return SteamMarketAPI(self, appid)
+
     def request(self, url, data, verb="GET", **kwargs):
         url = "http://api.steampowered.com/%s" % url
         data['key'] = self.key
@@ -203,8 +206,10 @@ class SteamAPI(object):
                 wc.files.append(self.getWorkshopFile(id))
             return wc
 
+
 class SteamMarketAPI(object):
-    def __init__(self, appid, retries=5):
+    def __init__(self, steam, appid, retries=5):
+        self.steam = steam
         self.appid = appid
         self.retries = retries
 
@@ -219,6 +224,17 @@ class SteamMarketAPI(object):
         }, timeout=10))
 
         return r.json()["result"]
+
+    def get_inventory(self, id):
+        data = self.steam.getUserInfo(id)["profileurl"]
+        url = INVENTORY_QUERY.format(url=data, appid=self.appid)
+
+        r = retry_request(lambda f: f.get(url, timeout=10))
+        if not r:
+            raise SteamAPIError("Failed to get inventory for steamid %s" % id)
+
+        return r.json()['rgInventory']
+
 
     def get_parsed_inventory(self, steamid):
         """
@@ -259,16 +275,6 @@ class SteamMarketAPI(object):
         """
 
         raise Exception("DEPRECATED!")
-
-    def get_inventory(self, id):
-        data = SteamAPI.new().getUserInfo(id)["profileurl"]
-        url = INVENTORY_QUERY.format(url=data, appid=self.appid)
-
-        r = retry_request(lambda f: f.get(url, timeout=10))
-        if not r:
-            raise SteamAPIError("Failed to get inventory for steamid %s" % id)
-
-        return r.json()
 
     def parse_item_name(self, name):
         # Strip out unicode

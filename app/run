@@ -14,7 +14,7 @@ def main():
 
     if sys.argv[1] == "web":
         from emporium import app, setup, get_js_templates
-        
+
         if len(sys.argv) > 2 and sys.argv[2] == "test":
             print "Enabling test mode..."
             app.config["TESTING"] = True
@@ -22,6 +22,10 @@ def main():
         setup()
         app.run("0.0.0.0", debug=True, extra_files=list(get_js_templates()))
         sys.exit(0)
+
+    if sys.argv[1] == "queue":
+        from util.queue import start_queues
+        start_queues()
 
     if sys.argv[1] == "sched":
         from scheduler.run import sched

@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 
-import redis, psycopg2
+import logging, redis, psycopg2
 from flask import g
 from psycopg2.extras import NamedTupleCursor, Json
 
@@ -9,14 +9,15 @@ from settings import CRYPT
 
 CONNECTIONS = {}
 
+log = logging.getLogger(__name__)
 redis = redis.Redis(app.config.get("R_HOST"), port=app.config.get("R_PORT"), db=app.config.get("R_DB"))
 
-# TODO: use pooling
 def get_connection(database=None):
     """
     Attempts to get a cached connection, or create a brand new connection to the database `database`
     """
     if database not in CONNECTIONS or CONNECTIONS[database].closed:
+        log.info("Connecting to database %s" % database)
         dbc = psycopg2.connect("host={host} port={port} dbname={dbname} user={user} password={pw}".format(
             host=app.config.get("PG_HOST"),
             port=app.config.get("PG_PORT"),
@@ -41,7 +42,7 @@ class ResultSetIterable(object):
         return self
 
     def next(self):
-        if self.index <= self.size:
+        if self.index >= self.size:
             raise StopIteration()
 
         self.index += 1

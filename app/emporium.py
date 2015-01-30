@@ -3,7 +3,7 @@ import os, sys
 from flask import Flask
 from flask.ext.openid import OpenID
 
-from util.steam import SteamAPI
+from util.steam import SteamAPI, SteamMarketAPI
 
 app = Flask(__name__)
 

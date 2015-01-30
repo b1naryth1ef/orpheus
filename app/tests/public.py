@@ -9,6 +9,9 @@ class TestUserIntegration(IntegrationTest):
         self.assertTrue(data['success'])
         self.assertGreaterEqual(len(data['matches']), 1)
 
+        for entry in data['matches']:
+            self.assertGreaterEqual(len(entry['teams']), 2)
+
     def test_single_match(self):
         data = self.r.get(self.url("/api/match/1/info")).json()
 

@@ -10,13 +10,20 @@ redis-cli -n 1 "flushall"
 
 echo "Forking test server..."
 ./run web test &
+TEST_SERVER_PID=$!
+
+echo "Forking queue manager..."
+./run queue &
+QUEUE_MANAGER_PID=$!
+
 sleep 2
 
 echo "Running tests..."
 python -m unittest discover tests/ '*.py'
 RETURN_CODE=$?
 
-echo "Tests completed, killing test server..."
-pkill -TERM -P $(jobs -p)
+echo "Tests completed, killing test server... ($TEST_SERVER_PID, $QUEUE_MANAGER_PID)"
+pkill -TERM -P $TEST_SERVER_PID
+kill $QUEUE_MANAGER_PID
 
 exit $RETURN_CODE

@@ -33,14 +33,17 @@ class UserError(ResponseException):
         return flashy(self.response, self.mtype, self.redirect)
 
 class APIError(ResponseException):
-    def __init__(self, msg):
+    def __init__(self, msg, status_code=400):
         self.obj = {
             "message": msg,
             "success": False
         }
+        self.status_code = status_code
 
     def to_response(self):
-        return jsonify(self.obj)
+        resp = jsonify(self.obj)
+        resp.status_code = self.status_code
+        return resp
 
 def apiassert(truthy, msg):
     if not truthy:

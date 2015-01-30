@@ -11,6 +11,7 @@ from helpers.bet import create_bet
 
 from util.etc import paginate
 from util.perms import authed
+from util.queue import JobQueue
 from util.errors import UserError, APIError, InvalidRequestError, apiassert
 from util.responses import APIResponse
 
@@ -42,7 +43,7 @@ def route_match_list():
 
     pages = (g.cursor.count("matches", "now() > public_date AND active=true") / 25) + 1
     g.cursor.execute(MATCH_LIST_QUERY, paginate(page, per_page=25))
-    matches = map(match_to_json, g.cursor.fetchall(as_list=True))
+    matches = map(match_to_json, g.cursor.fetchall())
 
     return APIResponse({
         "matches": matches
@@ -125,4 +126,16 @@ def route_team_list():
 def route_team_info():
     pass
 
+
+@api.route("/user/<int:id>/inventory")
+@authed(api=True)
+def route_user_inventory(id):
+    with Cursor() as c:
+        user = c.execute("SELECT steamid FROM users WHERE id=%s", (id, )).fetchone()
+
+        if not user:
+            raise APIError("Invalid User ID")
+
+        JobQueue("inventory").fire({"steamid": user.steamid, "user": g.user})
+        return APIResponse()
 

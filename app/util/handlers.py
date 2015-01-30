@@ -1,4 +1,4 @@
-import json
+import json, logging
 
 from flask import request, g, redirect
 from psycopg2 import OperationalError
@@ -11,6 +11,8 @@ from helpers.user import get_user_info
 from util.sessions import Session
 from util.errors import ResponseException, GenericError
 from util.responses import APIResponse
+
+log = logging.getLogger(__name__)
 
 @app.context_processor
 def app_context_processor():
@@ -41,9 +43,11 @@ def app_before_request():
     # Set a user for testing
     if app.config.get("TESTING"):
         if 'FAKE_USER' in request.headers:
+            log.debug("TESTING: Faking user %s", request.headers.get("FAKE_USER"))
             g.user = int(request.headers.get("FAKE_USER"))
             g.group = "normal"
         if 'FAKE_GROUP' in request.headers:
+            log.debug("TESTING: Faking group %s", request.headers.get("FAKE_GROUP"))
             g.group = request.headers.get("FAKE_GROUP")
     else:
         # Set uid
