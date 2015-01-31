@@ -43,7 +43,7 @@ class UnitTest(unittest.TestCase, MetaHelper):
     pass
 
 class IntegrationTest(unittest.TestCase, MetaHelper):
-    URL = "http://localhost:5000"
+    URL = "http://localhost:8321"
 
     def url(self, suffix):
         return self.URL + suffix
