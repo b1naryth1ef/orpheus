@@ -22,11 +22,18 @@ def admin_before_request():
 
 @admin.route("/")
 def admin_dashboard():
+    bot_capacity = g.cursor.execute("""
+        SELECT count(*) * 999 as c, sum(array_length(inventory, 1)) as s FROM accounts
+        """).fetchone()
+    b_cap = 100 - (((float(bot_capacity.s or 0) / bot_capacity.c)) * 100)
     return render_template("admin/index.html",
         users_count=g.cursor.count("users"),
         games_count=g.cursor.count("games"),
         matches_count=g.cursor.count("matches"),
-        bets_count=g.cursor.count("bets"))
+        bets_count=g.cursor.count("bets"),
+        b_used=bot_capacity.s or 0,
+        b_total=bot_capacity.c,
+        b_cap=b_cap)
 
 @admin.route("/users")
 def admin_users():
@@ -60,7 +67,7 @@ def admin_users_list():
             "id": entry.id,
             "steamid": entry.steamid,
             "username": gache_nickname(entry.steamid),
-            "last_login": entry.last_login,
+            "last_login": entry.last_login.strftime("%s") if entry.last_login else 0,
             "active": entry.active
         })
 
@@ -167,13 +174,13 @@ def admin_match_list():
         matches.append({
             "id": entry.id,
             "game": entry.game,
-            "teams": teams,
-            "meta": meta,
-            "results": results,
-            "active": active,
-            "lock_date": lock_date,
-            "match_date": match_date,
-            "public_date": public_date
+            "teams": entry.teams,
+            "meta": entry.meta,
+            "results": entry.results,
+            "active": entry.active,
+            "lock_date": entry.lock_date.strftime("%s"),
+            "match_date": entry.match_date.strftime("%s"),
+            "public_date": entry.public_date.strftime("%s")
         })
 
     return APIResponse({"matches": matches, "pages": pages})

@@ -52,7 +52,7 @@ def route_match_list():
 @api.route("/match/<int:id>/info")
 def route_match_info(id):
     try:
-        match = match_to_json(id)
+        match = match_to_json(id, user=g.user)
         return APIResponse({
             "match": match
         })
@@ -127,11 +127,11 @@ def route_team_info():
     pass
 
 
-@api.route("/user/<int:id>/inventory")
+@api.route("/user/inventory")
 @authed(api=True)
-def route_user_inventory(id):
+def route_user_inventory():
     with Cursor() as c:
-        user = c.execute("SELECT steamid FROM users WHERE id=%s", (id, )).fetchone()
+        user = c.execute("SELECT steamid FROM users WHERE id=%s", (g.user, )).fetchone()
 
         if not user:
             raise APIError("Invalid User ID")

@@ -2,8 +2,8 @@
   <td><%- match.id %></td>
   <td><%- match.game %></td>
   <td><%- teams %></td>
-  <td><%- moment.unix(user.match_date).format('MMMM Do YYYY, h:mm:ss a') %></td>
-  <td><%- moment.unix(user.public_date).format('MMMM Do YYYY, h:mm:ss a') %></td>
-  <td><%- moment.unix(user.lock_date).format('MMMM Do YYYY, h:mm:ss a') %></td>
+  <td><%- moment.unix(match.match_date).format('MMMM Do YYYY, h:mm:ss a') %></td>
+  <td><%- moment.unix(match.public_date).format('MMMM Do YYYY, h:mm:ss a') %></td>
+  <td><%- moment.unix(match.lock_date).format('MMMM Do YYYY, h:mm:ss a') %></td>
   <td><a href="#" class="btn btn-info btn-sm game-edit">Edit</a></td>
 </tr>

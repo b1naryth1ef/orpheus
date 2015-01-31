@@ -12,17 +12,17 @@ def handle_inventory_jobs(job):
     inv_key = 'inv:%s' % job['steamid']
 
     if redis.exists(inv_key):
-        result = {"success": True, "inventory": json.loads(redis.get(inv_key))}
+        result = {"success": True, "inventory": json.loads(redis.get(inv_key)), "type": "inventory"}
         log.debug('inventory job hit cache')
     else:
         try:
             log.debug('inventory job missed cache')
             inv = steam.market(730).get_inventory(job["steamid"])
             redis.set(inv_key, json.dumps(inv))
-            result = {"success": True, "inventory": inv}
+            result = {"success": True, "inventory": inv, "type": "inventory"}
         except:
             log.exception("Failed to process job %s")
-            result = {"success": False, "inventory": {}}
+            result = {"success": False, "inventory": {}, "type": "inventory"}
 
     WebPush(job['user']).send(result)
 

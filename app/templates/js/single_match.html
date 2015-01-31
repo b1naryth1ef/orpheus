@@ -1,4 +1,9 @@
 <div class="row">
+  <% if (match.extra.note) { %>
+  <div role="alert" class="alert alert-warning">
+    <strong>Match Note: </strong> <%= match.extra.note %>
+  </div>
+  <% } %>
   <div class="col-lg-3 col-sm-6">
     <div class="panel widget bg-primary">
       <div class="row row-table">
@@ -55,4 +60,56 @@
       </div>
     </div>
   </div>
+</div>
+<div class="row">
+  <div class="col-lg-4">
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <% if (app.user) { %>
+          <button id="bet-btn" type="button" class="btn btn-large btn-square btn-success">
+            <%- match.me ? "Change Bet" : "Place Bet" %>
+          </button>
+        <% } else { %>
+          <h2>Login to place a bet!</h2>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div id="panelDemo14" class="panel panel-default">
+      <div class="panel-body">
+        <div role="tabpanel">
+          <ul role="tablist" class="nav nav-tabs">
+            <li role="presentation" class="active">
+              <a href="#matchinfo" aria-controls="home" role="tab" data-toggle="tab" aria-expanded="true">Match Info</a>
+            </li>
+            <% for (stream in match.extra.streams) { %>
+            <li role="presentation" class="">
+              <a href="#stream-<%- stream %>" role="tab" data-toggle="tab"><%- match.extra.streams[stream] %></a>
+            </li>
+            <% } %>
+          </ul>
+          <div class="tab-content">
+            <div id="matchinfo" role="tabpanel" class="tab-pane active">TODO :)</div>
+            <% for (stream in match.extra.streams) { %>
+            <div id="stream-<%- stream %>" role="tabpanel" class="tab-pane">
+              <div class="embed-responsive embed-responsive-16by9">
+                <% var streamUrl = match.extra.streams[stream] %>
+                <% if (streamUrl.indexOf("http://twitch.tv/") == 0) { %>
+                  <iframe src="<%- streamUrl %>/embed" frameborder="0" scrolling="no"></iframe>
+                <% } else { %>
+                  <iframe src="<%- streamUrl %>" frameborder="0" scrolling="no"></iframe>
+                <% } %>
+              </div>
+            </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bet-modal-container">
+
 </div>

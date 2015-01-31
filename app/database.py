@@ -7,6 +7,8 @@ from psycopg2.extras import NamedTupleCursor, Json
 from emporium import app
 from settings import CRYPT
 
+from util.custom import bind_custom_types
+
 CONNECTIONS = {}
 
 log = logging.getLogger(__name__)
@@ -24,6 +26,7 @@ def get_connection(database=None):
             dbname=database or app.config.get("PG_DATABASE"),
             user=app.config.get("PG_USERNAME"),
             pw=app.config.get("PG_PASSWORD")), cursor_factory=NamedTupleCursor)
+        bind_custom_types(dbc)
         dbc.autocommit = True
         CONNECTIONS[database] = dbc
 

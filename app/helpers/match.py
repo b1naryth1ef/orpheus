@@ -58,7 +58,7 @@ def create_match(user, game, teams, meta, lock_date, match_date, public_date, vi
 
 MATCH_SELECT_SQL = "SELECT * FROM matches WHERE id=%s"
 
-def match_to_json(m):
+def match_to_json(m, user=None):
     """
     Right now this function is a performance clusterfuck. Almost all of the data in
     here can be gathered with a single query and windowed multi-join, but lets wait
@@ -81,6 +81,17 @@ def match_to_json(m):
     match['teams'] = []
     match['extra'] = {}
     match['stats'] = {}
+
+    if user:
+        match['me'] = {}
+
+        mybet = c.execute("SELECT id, team, items::steam_item[], state, value FROM bets WHERE match=%s AND better=%s", (m.id, user)).fetchone()
+        match['me']['id'] = mybet.id
+        match['me']['team'] = mybet.team
+        match['me']['items'] = map(lambda i: i.to_string(), mybet.items)
+        match['me']['state'] = mybet.state
+        match['me']['value'] = mybet.value
+
 
     # This will most definitily require some fucking caching at some point
     bet_stats = c.execute("""SELECT
@@ -123,7 +134,7 @@ def match_to_json(m):
 
         match['teams'].append(team_data)
 
-    for key in ['league', 'type', 'event', 'streams']:
+    for key in ['league', 'type', 'event', 'streams', 'note']:
         if key in m.meta:
             match['extra'][key] = m.meta[key]
 

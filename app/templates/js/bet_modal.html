@@ -1,0 +1,61 @@
+<style>
+  .slot {
+    left: 18%;
+    float: left;
+    position: relative;
+    width: 125px;
+    height: 125px;
+    display: block;
+    background-color: #dde6e9;
+    border: 2px solid #ffffff;
+    border-radius: 8px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+  }
+
+  .slot-ul {
+    margin-bottom: 125px;
+    text-align: center;
+  }
+</style>
+
+<div id="bet-modal" tabindex="-1" role="dialog" class="modal fade" style="display: block; padding-right: 17px;"><div class="modal-backdrop fade in" style="height: 969px;"></div>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" data-dismiss="modal" class="close">×</button>
+        <h2 id="bet-modal-header" class="modal-title" style="text-align: center;">
+          <%- match.teams.map(function (item) { return item.name }).join(" VS ") %>
+        </h4>
+      </div>
+      <div class="modal-body slot-ul">
+        <div style="margin-bottom: 150px;">
+          <ul>
+            <li class="slot">
+              <em style="font-size: 9em;" class="fa fa-question"></em>
+            </li>
+            <li class="slot">
+              <em style="font-size: 9em;" class="fa fa-question"></em>
+            </li>
+            <li class="slot">
+              <em style="font-size: 9em;" class="fa fa-question"></em>
+            </li>
+            <li class="slot">
+              <em style="font-size: 9em;" class="fa fa-question"></em>
+            </li>
+          </ul>
+        </div>
+        <h2>Inventory</h2>
+        <div id="bet-inventory">
+          <div role="alert" class="alert alert-danger" style="display: none;" id="bet-inventory-load-failed">
+            <strong>Uh Oh!</strong> There was an error loading your inventory. Make sure it's public (LINK!?) and try again in a few!
+          </div>
+          <div id="bet-inventory-loader" class="whirl traditional" style="margin-top: 25px;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" data-dismiss="modal" class="btn btn-default">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

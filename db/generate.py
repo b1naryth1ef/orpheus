@@ -79,6 +79,7 @@ MATCHES = [
                 "splash": "http://i.imgur.com/cQ88n4A.png",
                 "logo": "http://i.imgur.com/KCZZVDH.jpg"
             },
+            "note": "This is a test note!",
             "type": "BO3",
             "streams": ["http://mlg.tv/swag", "http://twitch.tv/esea"],
         },

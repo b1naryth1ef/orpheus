@@ -188,10 +188,11 @@ admin.loadMatches = function () {
 
     $.ajax("/admin/api/match/list", {
         success: (function (data) {
-            $("#matchs-content").empty();
-            _.each(data.matchs, (function (v) {
-                this.matchsCache[v.id] = v;
-                $("#matchs-content").append(this.app.render("admin_match_row", {
+            $("#matches-content").empty();
+            _.each(data.matches, (function (v) {
+                this.matchCache[v.id] = v;
+                console.log(v);
+                $("#matches-content").append(this.app.render("admin_match_row", {
                     match: v,
                     teams: "test vs test",
                     hidden: true,

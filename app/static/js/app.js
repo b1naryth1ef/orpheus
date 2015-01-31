@@ -6,9 +6,20 @@ var App = function () {
     this.templates = T || {};
     this.views = {};
     this.setup = null;
+    this.socketEventHandlers = {};
+}
+
+App.prototype.waitForEvent = function (name, f) {
+    if (this.socketEventHandlers[name]) {
+        this.socketEventHandlers[name].push(f)
+    } else {
+        this.socketEventHandlers[name] = [f]
+    }
 }
 
 App.prototype.render = function (name, obj) {
+    obj.app = this;
+
     if (!this.templates[name]) {
         console.error("Failed to find template with name: " + name);
         return "";
@@ -82,6 +93,15 @@ app.openWebSocket = function () {
 
     this.ws.onmessage = (function (eve) {
         console.log(eve);
+
+        var data = JSON.parse(eve.data);
+        if (this.socketEventHandlers[data.type]) {
+            this.socketEventHandlers[data.type] = this.socketEventHandlers[data.type].map((function (item) {
+                if (item && item.call(this, data) != false) {
+                    return item;
+                }
+            }).bind(this));
+        }
     }).bind(this);
 
     this.ws.onclose = (function (eve) {

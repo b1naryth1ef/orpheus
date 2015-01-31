@@ -10,7 +10,7 @@
           </div>
           <div class="col-xs-9 text-right">
             <div class="text-lg">{{ users_count }}</div>
-            <h2 class="unmargin">Users</h3>
+            <h2 class="unmargin">Users</h2>
           </div>
         </div>
       </div>
@@ -31,7 +31,7 @@
           </div>
           <div class="col-xs-9 text-right">
             <div class="text-lg">{{ games_count }}</div>
-            <h2 class="unmargin">Games</h3>
+            <h2 class="unmargin">Games</h2>
           </div>
         </div>
       </div>
@@ -52,12 +52,12 @@
             <em class="fa fa-shopping-cart fa-5x"></em>
           </div>
           <div class="col-xs-9 text-right">
-            <div class="text-lg">124</div>
-            <p class="m0">New Orders!</p>
+            <div class="text-lg">{{ matches_count }}</div>
+            <h2 class="m0">Matches</h2>
           </div>
         </div>
       </div>
-      <a href="#" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
+      <a href="/admin/matches" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
         <span class="pull-left">View Details</span>
         <span class="pull-right">
           <em class="fa fa-chevron-circle-right"></em>
@@ -75,12 +75,12 @@
             <em class="fa fa-support fa-5x"></em>
           </div>
           <div class="col-xs-9 text-right">
-            <div class="text-lg">13</div>
-            <p class="m0">Support Tickets!</p>
+            <div class="text-lg">{{ bets_count }}</div>
+            <h2 class="m0">Bets</h2>
           </div>
         </div>
       </div>
-      <a href="#" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
+      <a href="/admin/bets" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
         <span class="pull-left">View Details</span>
         <span class="pull-right">
           <em class="fa fa-chevron-circle-right"></em>
@@ -88,6 +88,21 @@
       </a>
     </div>
     <!-- END panel-->
+  </div>
+</div>
+
+<div class="row">
+  <div class="panel panel-default">
+    <div class="panel-heading">Bot Capacity
+      <div class="btn-group pull-right"></div>
+    </div>
+    <div class="panel-body">
+      <div class="progress">
+        <div role="progressbar" style="width: {{ b_cap }}%" class="progress-bar progress-bar-success">
+        </div>
+      </div>
+      <h3>{{ b_used }} out of {{ b_total }} used</h3>
+    </div>
   </div>
 </div>
 
