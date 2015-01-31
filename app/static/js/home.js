@@ -20,7 +20,7 @@ home.route("/", function () {
 
     $(".matches-container").delegate(".match-row", "click", (function (ev) {
         var matchID = $(ev.target).closest(".match-row").attr("data-id");
-        window.location = "/bet/" + matchID;
+        window.location = "/match/" + matchID;
     }).bind(this));
 });
 

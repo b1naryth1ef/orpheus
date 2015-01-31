@@ -80,13 +80,20 @@ def match_to_json(m):
     match['when'] = int(m.match_date.strftime("%s"))
     match['teams'] = []
     match['extra'] = {}
+    match['stats'] = {}
 
     # This will most definitily require some fucking caching at some point
-    c.execute("SELECT * FROM bets WHERE match=%s", (m.id, ))
-    bets = c.fetchall()
+    bet_stats = c.execute("""SELECT
+            sum(array_length(items, 1)) as skins_count,
+            count(*) as count,
+            sum(value) as value,
+            team
+        FROM bets WHERE match=%s GROUP BY team""", (m.id, )).fetchall(as_list=True)
 
-    match['value'] = sum(map(lambda i: i.value, bets))
-    match['bets'] = len(bets)
+    match['stats']['players'] = sum(map(lambda i: i.count, bet_stats))
+    match['stats']['skins'] = sum(map(lambda i: i.skins_count, bet_stats))
+    match['stats']['value'] = sum(map(lambda i: i.value, bet_stats))
+    bet_stats = { i.team: i for i in bet_stats}
 
     # Grab team information, including bets (this should be a join)
     c.execute("SELECT * FROM teams WHERE id IN %s", (tuple(m.teams), ))
@@ -98,11 +105,17 @@ def match_to_json(m):
             "name": team.name,
             "tag": team.tag,
             "logo": team.logo,
+            "stats": {
+                "players": 0,
+                "skins": 0,
+                "value": 0,
+            }
         }
 
-        team_bets = filter(lambda i: i.team == team.id, bets)
-        team_data['bets'] = len(team_bets)
-        team_data['value'] = sum(map(lambda i: i.value, team_bets))
+        if index in bet_stats:
+            team_data['stats']['players'] = bet_stats[index].count
+            team_data['stats']['skins'] = bet_stats[index].skins_count
+            team_data['stats']['value'] = bet_stats[index].value
 
         # TODO: do this shit
         team_data['payout'] = 0

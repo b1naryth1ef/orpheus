@@ -1,0 +1,58 @@
+<div class="row">
+  <div class="col-lg-3 col-sm-6">
+    <div class="panel widget bg-primary">
+      <div class="row row-table">
+        <div class="col-xs-4 text-center bg-primary-dark pv-lg">
+          <em class="fa fa-key fa-3x"></em>
+        </div>
+        <div class="col-xs-8 pv-lg">
+          <div class="h2 mt0"><%- match.stats.skins %></div>
+          <div class="text-uppercase">Skins Bet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-sm-6">
+    <div class="panel widget bg-purple">
+      <div class="row row-table">
+        <div class="col-xs-4 text-center bg-purple-dark pv-lg">
+          <em class="fa fa-group fa-3x"></em>
+        </div>
+        <div class="col-xs-8 pv-lg">
+          <div class="h2 mt0"><%- match.stats.players %></div>
+          <div class="text-uppercase">Players Placed Bets</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-md-6 col-sm-12">
+    <div class="panel widget bg-green">
+      <div class="row row-table">
+        <div class="col-xs-4 text-center bg-green-dark pv-lg">
+          <em class="fa fa-dollar fa-3x"></em>
+        </div>
+        <div class="col-xs-8 pv-lg">
+          <div class="h2 mt0"><%- match.stats.value %></div>
+          <div class="text-uppercase">Value Placed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-md-6 col-sm-12">
+    <div class="panel widget">
+      <div class="row row-table">
+        <div class="col-xs-4 text-center bg-warning pv-lg">
+          <div data-now="" data-format="MMMM" class="text-sm"><%- time.format("MMMM") %></div>
+          <br>
+          <div data-now="" data-format="D" class="h2 mt0"><%- time.format("D") %></div>
+        </div>
+        <div class="col-xs-8 pv-lg">
+          <div data-now="" data-format="dddd" class="text-uppercase"><%- time.format("dddd") %></div>
+          <br>
+          <div data-now="" data-format="h:mm" class="h2 mt0"><%- time.format("h:mm") %></div>
+          <div data-now="" data-format="a" class="text-muted text-sm"><%- time.format("a") %></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
