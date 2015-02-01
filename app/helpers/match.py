@@ -137,7 +137,7 @@ def match_to_json(m, user=None):
 
         match['teams'].append(team_data)
 
-    for key in ['league', 'type', 'event', 'note']:
+    for key in ['league', 'type', 'event', 'streams', 'note']:
         if key in m.meta:
             match['extra'][key] = m.meta[key]
 
