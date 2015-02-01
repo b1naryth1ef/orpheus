@@ -233,7 +233,7 @@ class SteamMarketAPI(object):
         if not r:
             raise SteamAPIError("Failed to get inventory for steamid %s" % id)
 
-        return r.json()['rgInventory']
+        return r.json()
 
 
     def get_parsed_inventory(self, steamid):

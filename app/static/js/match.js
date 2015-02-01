@@ -1,13 +1,13 @@
 var match = app.view("match");
 
-match.inventoryReadyEvent = function (data) {
+match.inventoryReadyEvent = (function (data) {
     clearTimeout(this.waitingForInventory);
 
     if ($("#bet-modal").data("bs.modal").isShown) {
-        console.log("would do stuff here");
+        this.inventoryView.render(data.inventory);
     }
     return false;
-}
+}).bind(match);
 
 match.queueInventoryLoad = function () {
     app.waitForEvent("inventory", this.inventoryReadyEvent);
@@ -27,6 +27,8 @@ match.queueInventoryLoad = function () {
         success: (function (data) {
             if (!data.success) {
                 // TODO: error :)
+                console.error("Failed to load inventory!");
+                return;
             }
         }).bind(this)
     });
@@ -47,6 +49,8 @@ match.renderSingleMatch = function (id) {
 
 match.routeRegex(/^\/match\/(\d+)$/, function (route, id) {
     this.renderSingleMatch(id);
+    this.inventoryView = new InventoryView(this.app, "#bet-inventory");
+
 
     $(".matches-container").delegate("#bet-btn", "click", (function (ev) {
         if (!this.cachedMatch) { return; }

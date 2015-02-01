@@ -26,7 +26,7 @@ def main():
         sys.exit(0)
 
     if sys.argv[1] == "queue":
-        from util.queue import start_queues
+        from queue.queue import start_queues
         start_queues()
 
     if sys.argv[1] == "sched":

@@ -3,9 +3,24 @@
 */
 
 CREATE TYPE steam_item AS (
+  item_id integer,
   class_id integer,
   instance_id integer
 );
+
+
+/*
+  Represents steam items in the database
+*/
+
+CREATE TABLE items (
+  id SERIAL PRIMARY KEY,
+  name text NOT NULL UNIQUE,
+  price decimal,
+  meta jsonb
+);
+
+CREATE INDEX ON items (name);
 
 
 /*
@@ -48,7 +63,7 @@ CREATE INDEX ON users (steamid);
 
 CREATE TYPE bot_status AS ENUM ('COOLDOWN', 'NOAUTH', 'AVAIL', 'USED');
 
-CREATE TABLE accounts (
+CREATE TABLE bots (
     id SERIAL PRIMARY KEY,
     steamid character varying(255),
     username character varying(255),
@@ -60,7 +75,7 @@ CREATE TABLE accounts (
     active boolean
 );
 
-CREATE INDEX ON ACCOUNTS (inventory);
+CREATE INDEX ON bots (inventory);
 
 
 /*
@@ -182,7 +197,7 @@ CREATE TYPE trade_state AS ENUM ('offered', 'declined', 'accepted', 'cancelled')
 
 CREATE TABLE trades (
     id SERIAL PRIMARY KEY,
-    account integer REFERENCES accounts(id),
+    account integer REFERENCES bots(id),
     trader integer REFERENCES users(id),
     bet integer REFERENCES bets(id),
     bot_out steam_item[],

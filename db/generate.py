@@ -8,17 +8,6 @@ cur_dir = os.path.dirname(__file__)
 
 ONE_WEEK_FUTURE = datetime.utcnow() + relativedelta(weeks=1)
 
-ACCOUNTS = [
-    ("76561198172199447", "csgoebot1", "password", True)
-]
-
-def generate_accounts(t):
-    for acc in ACCOUNTS:
-        t.execute(
-        "INSERT INTO accounts (steamid, username, password, inventory, active, status)\
-        VALUES (%s, %s, %s, ARRAY[(1, 1)::steam_item], %s, 'AVAIL')",
-            acc)
-
 USERS = [
     ("76561198037632722", "super"),
     ("76561198031651584", "normal"),
@@ -117,8 +106,9 @@ BET_QUERY = """
 INSERT INTO bets (better, match, team, value, items, state) VALUES
 (%(better)s, %(match)s, %(team)s, %(value)s, ARRAY[{}], %(state)s);
 """
-
+# TODO
 def generate_bets(t):
+    return
     for entry in BETS:
         data = entry['items']
         del entry['items']
@@ -126,7 +116,6 @@ def generate_bets(t):
         t.execute(q, entry)
 
 DATA_GENERATORS = [
-    generate_accounts,
     generate_users,
     generate_games,
     generate_teams,

@@ -1,21 +1,17 @@
 <style>
-  .slot {
-    left: 18%;
-    float: left;
-    position: relative;
-    width: 125px;
-    height: 125px;
-    display: block;
+  .row-centered {
+    text-align: center;
+  }
+
+  .col-centered {
+    display:inline-block;
+    float:none;
+    margin-right:-4px;
     background-color: #dde6e9;
     border: 2px solid #ffffff;
     border-radius: 8px;
     -moz-border-radius: 8px;
     -webkit-border-radius: 8px;
-  }
-
-  .slot-ul {
-    margin-bottom: 125px;
-    text-align: center;
   }
 </style>
 
@@ -26,26 +22,29 @@
         <button type="button" data-dismiss="modal" class="close">×</button>
         <h2 id="bet-modal-header" class="modal-title" style="text-align: center;">
           <%- match.teams.map(function (item) { return item.name }).join(" VS ") %>
-        </h4>
+          </h4>
       </div>
-      <div class="modal-body slot-ul">
-        <div style="margin-bottom: 150px;">
-          <ul>
-            <li class="slot">
-              <em style="font-size: 9em;" class="fa fa-question"></em>
-            </li>
-            <li class="slot">
-              <em style="font-size: 9em;" class="fa fa-question"></em>
-            </li>
-            <li class="slot">
-              <em style="font-size: 9em;" class="fa fa-question"></em>
-            </li>
-            <li class="slot">
-              <em style="font-size: 9em;" class="fa fa-question"></em>
-            </li>
-          </ul>
+      <div class="modal-body">
+        <div class="row row-centered">
+          <div class="col-md-2 col-centered">
+            <em style="font-size: 9em;" class="fa fa-question"></em>
+          </div>
+          <div class="col-md-2 col-centered">
+            <em style="font-size: 9em;" class="fa fa-question"></em>
+          </div>
+          <div class="col-md-2 col-centered">
+            <em style="font-size: 9em;" class="fa fa-question"></em>
+          </div>
+          <div class="col-md-2 col-centered">
+            <em style="font-size: 9em;" class="fa fa-question"></em>
+          </div>
         </div>
-        <h2>Inventory</h2>
+        <div class="row-centered" style="margin-top: 10px;">
+          <% for (team in match.teams) { %>
+          <button type="button" class="mb-sm btn btn-success"><h4>Place bet on <%= match.teams[team].name %></h4></button>
+          <% } %>
+        </div>
+        <h2 style="text-align: center">Inventory</h2>
         <div id="bet-inventory">
           <div role="alert" class="alert alert-danger" style="display: none;" id="bet-inventory-load-failed">
             <strong>Uh Oh!</strong> There was an error loading your inventory. Make sure it's public (LINK!?) and try again in a few!

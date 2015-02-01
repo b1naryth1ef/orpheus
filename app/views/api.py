@@ -6,7 +6,7 @@ from flask import Blueprint, request, g
 from database import Cursor
 
 from helpers.match import match_to_json
-from helpers.account import get_bot_space
+from helpers.bot import get_bot_space
 from helpers.bet import create_bet
 
 from util.etc import paginate

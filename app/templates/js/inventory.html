@@ -1,0 +1,27 @@
+<style>
+  .inventory-item {
+    background-color: #dde6e9;
+    border: 2px solid #ffffff;
+    border-radius: 8px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+  }
+
+  .inventory-row {
+    text-align: center;
+  }
+</style>
+
+<div class="inventory">
+  <% for (row in rows) { %>
+    <div class="row inventory-row">
+      <% for (item in rows[row]) { %>
+        <% var item = rows[row][item] %>
+        <div class="col-lg-2 inventory-item">
+          <img src="https://steamcommunity-a.akamaihd.net/economy/image/<%= item.image %>" style="max-height: 125px; max-width: 125px;"/>
+          <p>$<%= item.price %></p>
+        </div>
+      <% } %>
+    </div>
+  <% } %>
+</div>

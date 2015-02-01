@@ -1,3 +1,4 @@
+import base64
 from flask import Blueprint, g, render_template, request
 
 from database import Cursor
@@ -5,6 +6,7 @@ from database import Cursor
 from helpers.user import UserGroup, gache_nickname
 from helpers.game import create_game
 from helpers.match import create_match
+from helpers.bot import get_bot_space
 
 from util.etc import paginate
 from util.errors import UserError, APIError
@@ -22,17 +24,15 @@ def admin_before_request():
 
 @admin.route("/")
 def admin_dashboard():
-    bot_capacity = g.cursor.execute("""
-        SELECT count(*) * 999 as c, sum(array_length(inventory, 1)) as s FROM accounts
-        """).fetchone()
-    b_cap = 100 - (((float(bot_capacity.s or 0) / bot_capacity.c)) * 100)
+    bot_used, bot_total = get_bot_space()
+    b_cap = 100 - (((float(bot_used or 0) / bot_total)) * 100)
     return render_template("admin/index.html",
         users_count=g.cursor.count("users"),
         games_count=g.cursor.count("games"),
         matches_count=g.cursor.count("matches"),
         bets_count=g.cursor.count("bets"),
-        b_used=bot_capacity.s or 0,
-        b_total=bot_capacity.c,
+        b_used=bot_used,
+        b_total=bot_total,
         b_cap=b_cap)
 
 @admin.route("/users")
@@ -188,4 +188,24 @@ def admin_match_list():
 @admin.route("/api/match/create", methods=["POST"])
 def admin_match_create():
     pass
+
+@admin.route("/api/bots/export")
+def admin_bots_export():
+    # lol yeah...
+    assert(g.user == 1)
+
+    bots = g.cursor.execute("""
+        SELECT steamid, username, password, sentry FROM bots
+    """).fetchall()
+
+    res = []
+    for bot in bots:
+        res.append({
+            "steamid": bot.steamid,
+            "username": bot.username,
+            "password": bot.password,
+            "sentry": base64.b64encode(bot.sentry)
+        })
+
+    return APIResponse({"bots": res})
 

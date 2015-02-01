@@ -66,9 +66,11 @@
     <div class="panel panel-default">
       <div class="panel-body">
         <% if (app.user) { %>
-          <button id="bet-btn" type="button" class="btn btn-large btn-square btn-success">
-            <%- match.me ? "Change Bet" : "Place Bet" %>
-          </button>
+          <% if (!match.me.length) { %>
+            <button id="bet-btn" type="button" class="btn btn-large btn-square btn-success">
+              <h2>Place a Bet</h2>
+            </button>
+          <% } %>
         <% } else { %>
           <h2>Login to place a bet!</h2>
         <% } %>
