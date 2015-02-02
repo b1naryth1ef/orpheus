@@ -70,7 +70,6 @@ def route_match_bet(match_id):
 
     # Make sure this seems mildly valid
     apiassert(0 < len(items) <= 4, "Too many items")
-    print items
     apiassert(all(map(lambda i: i.isdigit(), items)), "Invalid Items")
 
     match = g.cursor.select("matches",
