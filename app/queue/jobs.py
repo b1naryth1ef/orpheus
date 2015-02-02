@@ -1,4 +1,4 @@
-import json, logging
+import json, logging, uuid
 
 from emporium import steam
 from database import redis, Cursor
@@ -46,6 +46,7 @@ def process_inventory(data):
 
         inv.append({
             "id": id,
+            "uid": str(uuid.uuid4()),
             "price": price,
             "image": item_image
         })
