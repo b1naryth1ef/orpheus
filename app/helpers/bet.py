@@ -24,7 +24,7 @@ def create_bet(user, match, team, items):
         'user': user,
         'match': match,
         'team': team,
-        'items': map(lambda i: SteamItem(*i.split("_")), items),
+        'items': map(lambda i: SteamItem(i, None, None), items),
         'state': BetState.OFFERED,
     }
 

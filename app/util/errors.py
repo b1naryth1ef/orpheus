@@ -33,7 +33,7 @@ class UserError(ResponseException):
         return flashy(self.response, self.mtype, self.redirect)
 
 class APIError(ResponseException):
-    def __init__(self, msg, status_code=400):
+    def __init__(self, msg, status_code=200):
         self.obj = {
             "message": msg,
             "success": False

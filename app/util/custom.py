@@ -2,12 +2,14 @@ import psycopg2
 
 # TODO: find a better spot
 class SteamItem(object):
-    def __init__(self, class_id, instance_id):
+    def __init__(self, item_id, class_id, instance_id):
+        self.item_id = item_id
         self.class_id = class_id
         self.instance_id = instance_id
 
     def to_dict(self):
         return {
+            "item_id": self.item_id,
             "class_id": self.class_id,
             "instance_id": self.instance_id
         }
@@ -17,7 +19,7 @@ class SteamItem(object):
 
 class SteamItemAdapter:
     def __init__(self, obj):
-        self.adapted = psycopg2.extensions.SQL_IN((obj.class_id, obj.instance_id))
+        self.adapted = psycopg2.extensions.SQL_IN((obj.item_id, obj.class_id, obj.instance_id))
 
     def prepare(self, conn):
         self.adapted.prepare(conn)

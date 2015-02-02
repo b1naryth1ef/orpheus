@@ -65,11 +65,13 @@ def route_match_bet(match_id):
     try:
         items = json.loads(request.values.get("items"))
         team = int(request.values.get("team"))
-    except:
-        raise APIError("Invalid Request")
+    except Exception as e:
+        raise APIError("Invalid Request: %s" % e)
 
     # Make sure this seems mildly valid
-    apiassert(0 < len(items) <= 32, "Too many items")
+    apiassert(0 < len(items) <= 4, "Too many items")
+    print items
+    apiassert(all(map(lambda i: i.isdigit(), items)), "Invalid Items")
 
     match = g.cursor.select("matches",
         "id", "teams", "lock_date", "match_date", "public_date", "active", id=match_id).fetchone()

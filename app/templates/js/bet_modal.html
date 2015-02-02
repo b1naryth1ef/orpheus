@@ -41,7 +41,9 @@
         </div>
         <div class="row-centered" style="margin-top: 10px;">
           <% for (team in match.teams) { %>
-          <button type="button" class="mb-sm btn btn-success"><h4>Place bet on <%= match.teams[team].name %></h4></button>
+          <button type="button" class="mb-sm btn btn-success btn-placebet" data-team="<%= team %>">
+            <h4>Place bet on <%= match.teams[team].name %></h4>
+          </button>
           <% } %>
         </div>
         <h2 style="text-align: center">Inventory</h2>

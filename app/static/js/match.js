@@ -36,26 +36,33 @@ match.queueInventoryLoad = function () {
 }
 
 match.renderSingleMatch = function (id) {
+    $(".matches-container").addClass("whirl");
+
     $.ajax("/api/match/" + id + "/info", {
         success: (function (data) {
             this.cachedMatch = data.match;
 
+
             $(".matches-container").html(this.app.render("single_match", {
                 match: data.match,
                 time: moment.unix(data.match.when),
-            }));
+            })).removeClass("whirl");
         }).bind(this)
     });
 }
 
-match.getEmptyBetSlots = function () {
+match.getBetSlots = function (empty) {
     return _.filter($(".bet-slot:visible"), function (item) {
-        return $(item).has("em").length;
+        var isEmptySlot = $(item).has("em").length;
+
+        if (empty) return isEmptySlot
+        else return !isEmptySlot
     });
 }
 
+
 match.addItemToSlot = function ($item) {
-    var slot = $(this.getEmptyBetSlots()[0]);
+    var slot = $(this.getBetSlots(true)[0]);
     slot.closest(".row").prepend($item);
     slot.hide();
     $item.addClass("bet-slot").addClass("col-centered");
@@ -87,12 +94,37 @@ match.routeRegex(/^\/match\/(\d+)$/, function (route, id) {
             $(".bet-slot:hidden").first().show();
             this.ignored = _.without(this.ignored, target.attr("data-uid"));
             this.inventoryView.render(this.cachedInventory, {refresh: false, filtered: this.ignored});
-        } else if (this.getEmptyBetSlots().length > 0) {
+        } else if (this.getBetSlots(true).length > 0) {
             this.ignored.push(target.attr("data-uid"));
             this.inventoryView.render(this.cachedInventory, {refresh: false, filtered: this.ignored});
             this.addItemToSlot(target);
         }
     }).bind(this));
 
-    // $(ev.target).empty().append('<em style="font-size: 9em;" class="fa fa-question"></em>');
+    $(".matches-container").delegate(".btn-placebet", "click", (function (ev) {
+        var team = $(ev.target).closest("button").attr("data-team");
+
+        var items = _.map(this.getBetSlots(), function (item) {
+            console.log(item);
+            return $(item).attr("data-id");
+        });
+
+        $.ajax("/api/match/" + this.cachedMatch.id + "/bet", {
+            type: "POST",
+            data: {
+                team: team,
+                items: JSON.stringify(items)
+            },
+            success: (function (data) {
+                if (!data.success) {
+                    // TODO: error alert
+                    console.error(data.message);
+                } else {
+                    // TODO: success alert
+                    $("#bet-modal").modal("hide");
+                    this.renderSingleMatch(this.cachedMatch.id);
+                }
+            }).bind(this)
+        });
+    }).bind(this));
 });

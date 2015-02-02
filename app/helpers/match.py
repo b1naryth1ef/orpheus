@@ -86,7 +86,8 @@ def match_to_json(m, user=None):
         match['me'] = {}
 
         mybet = c.execute("""
-            SELECT id, team, items::steam_item[], state, value FROM bets WHERE match=%s AND better=%s
+            SELECT id, team, items::steam_item[], state, value
+            FROM bets WHERE match=%s AND better=%s AND state >= 'confirmed'
         """, (m.id, user)).fetchone()
 
         if mybet:
@@ -102,7 +103,7 @@ def match_to_json(m, user=None):
             count(*) as count,
             sum(value) as value,
             team
-        FROM bets WHERE match=%s GROUP BY team""", (m.id, )).fetchall(as_list=True)
+        FROM bets WHERE match=%s AND state >= 'confirmed' GROUP BY team""", (m.id, )).fetchall(as_list=True)
 
     match['stats']['players'] = sum(map(lambda i: i.count, bet_stats))
     match['stats']['skins'] = sum(map(lambda i: i.skins_count, bet_stats))
