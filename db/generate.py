@@ -88,16 +88,13 @@ def generate_matches(t):
         match['meta'] = Json(match['meta'])
         t.execute(MATCH_QUERY, match)
 
-skins = json.load(open(os.path.join(cur_dir, "skins.json"), "r"))
-
 BETS = [
     {
-        "better": 1,
+        "better": 2,
         "match": 1,
         "team": random.choice([0, 1]),
         "value": random.randint(1, 60),
-        "items": map(lambda i: (i['classid'], i['instanceid']), [
-                skins[random.choice(skins.keys())] for i in range(4)]),
+        "items": [(random.randint(1, 25), 'NULL', 'NULL') for i in range(4)],
         "state": "confirmed"
     } for i in range(300)
 ]
@@ -106,13 +103,13 @@ BET_QUERY = """
 INSERT INTO bets (better, match, team, value, items, state) VALUES
 (%(better)s, %(match)s, %(team)s, %(value)s, ARRAY[{}], %(state)s);
 """
+
 # TODO
 def generate_bets(t):
-    return
     for entry in BETS:
         data = entry['items']
         del entry['items']
-        q = BET_QUERY.format(', '.join(map(lambda i: ("(%s, %s)" % i) + "::steam_item", data)))
+        q = BET_QUERY.format(', '.join(map(lambda i: ("(%s, %s, %s, '{}')" % i) + "::steam_item", data)))
         t.execute(q, entry)
 
 DATA_GENERATORS = [

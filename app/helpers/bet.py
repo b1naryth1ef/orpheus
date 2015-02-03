@@ -24,12 +24,13 @@ def create_bet(user, match, team, items):
         'user': user,
         'match': match,
         'team': team,
-        'items': map(lambda i: SteamItem(i, None, None), items),
+        'items': map(lambda i: SteamItem(i.id, None, None, {
+            "price": float(i.price)
+        }), items),
         'state': BetState.OFFERED,
     }
 
-    # TODO: calculate value from item cache
-    data['value'] = 0
+    data['value'] = sum(map(lambda i: i.price, items))
 
     with Cursor() as c:
         id = c.execute(CREATE_BET_SQL, data).fetchone()

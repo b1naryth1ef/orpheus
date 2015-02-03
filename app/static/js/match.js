@@ -42,11 +42,15 @@ match.renderSingleMatch = function (id) {
         success: (function (data) {
             this.cachedMatch = data.match;
 
-
             $(".matches-container").html(this.app.render("single_match", {
                 match: data.match,
                 time: moment.unix(data.match.when),
             })).removeClass("whirl");
+
+            $('[data-toggle="tooltip"]').tooltip({
+                html: true,
+                container: 'body'
+            });
         }).bind(this)
     });
 }

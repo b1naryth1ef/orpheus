@@ -1,3 +1,20 @@
+<style>
+  .row-centered {
+    text-align: center;
+  }
+
+  .col-centered {
+    display:inline-block;
+    float:none;
+    background-color: #dde6e9;
+    width: 165px;
+    border: 2px solid #ffffff;
+    border-radius: 8px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+  }
+</style>
+
 <div class="row">
   <% if (match.extra.note) { %>
   <div role="alert" class="alert alert-warning">
@@ -66,14 +83,36 @@
     <div class="panel panel-default">
       <div class="panel-body">
         <% if (app.user) { %>
-          <% if (!match.me.length) { %>
+          <% if (_.isEmpty(match.me)) { %>
             <button id="bet-btn" type="button" class="btn btn-large btn-square btn-success">
               <h2>Place a Bet</h2>
             </button>
+            <% } else { %>
+              <% if (match.me.state == "offered") { %>
+                <div role="alert" class="alert alert-warning">
+                  You have a pending bet placed on team <%- match.teams[match.me.team].name %>!
+                </div>
+              <% } %>
+              <h3 style='text-align: center'>$<%- match.me.value %> for $<%- match.me.return %> return</h3>
+              <div class="row row-centered">
+              <% for (index in _.range(4)) { %>
+                <% var item = match.me.items[index] %>
+                <% if (!item) { %>
+                  <div class="col-sm-2 col-centered bet-slot">
+                    <em style="font-size: 9em;" class="fa fa-question"></em>
+                  </div>
+                <% } else { %>
+                  <div class="col-sm-2 col-centered bet-slot" data-toggle="tooltip" title="<h4><%= item.name %></h4>" data-placement="right">
+                    <img src="https://steamcommunity-a.akamaihd.net/economy/image/<%= item.image %>" style="max-height: 125px; max-width: 125px;"/>
+                    <p><%= item.price %></p>
+                  </div>
+                <% } %>
+              <% } %>
+              </div>
+            <% } %>
+          <% } else { %>
+            <h2>Login to place a bet!</h2>
           <% } %>
-        <% } else { %>
-          <h2>Login to place a bet!</h2>
-        <% } %>
       </div>
     </div>
   </div>
@@ -92,7 +131,17 @@
             <% } %>
           </ul>
           <div class="tab-content">
-            <div id="matchinfo" role="tabpanel" class="tab-pane active">TODO :)</div>
+            <div id="matchinfo" role="tabpanel" class="tab-pane active">
+              <div class="row">
+                <% for (team in match.teams) { %>
+                  <% var team = match.teams[team] %>
+                  <div class="col-md-6">
+                    <h1><%= team.name %></h1>
+                    <h3><%= team.odds %>%</h3>
+                  </div>
+                <% } %>
+              </div>
+            </div>
             <% for (stream in match.extra.streams) { %>
             <div id="stream-<%- stream %>" role="tabpanel" class="tab-pane">
               <div class="embed-responsive embed-responsive-16by9">

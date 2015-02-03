@@ -59,21 +59,40 @@ def route_match_info(id):
     except InvalidRequestError:
         raise APIError("Invalid match ID")
 
+@api.route("/match/<int:id>/items")
+def route_match_items(id):
+    match = g.cursor.select("matches", "id", id=match_id).fetchone()
+
+    if not match:
+        return APIError("Invalid match ID")
+
 @api.route("/match/<int:match_id>/bet", methods=["POST"])
 @authed()
 def route_match_bet(match_id):
     try:
-        items = json.loads(request.values.get("items"))
+        items = map(int, json.loads(request.values.get("items")))
         team = int(request.values.get("team"))
     except Exception as e:
         raise APIError("Invalid Request: %s" % e)
 
     # Make sure this seems mildly valid
     apiassert(0 < len(items) <= 4, "Too many items")
-    apiassert(all(map(lambda i: i.isdigit(), items)), "Invalid Items")
 
     match = g.cursor.select("matches",
-        "id", "teams", "lock_date", "match_date", "public_date", "active", id=match_id).fetchone()
+        "id", "teams", "lock_date", "match_date", "public_date", "active",
+        "max_value_item", "max_value_total",
+    id=match_id).fetchone()
+
+    itemvs = g.cursor.execute("SELECT id, name, price FROM items WHERE id IN %s", (tuple(items), )).fetchall(as_list=True)
+    apiassert(len(itemvs) == len(items), "Invalid Item ID's")
+
+    # Make sure we haven't bet too much shit
+    if match.max_value_item:
+        for item in itemvs:
+            apiassert(item.price < match.max_value_item, "Price of item %s is too high!" % item.name)
+
+    if match.max_value_total:
+        apiassert(sum(map(lambda i: i.price, itemvs)) < match.max_value_total, "Total value placed is too high!")
 
     # Make sure we have a valid match
     apiassert(match, "Invalid match ID")
@@ -91,7 +110,7 @@ def route_match_bet(match_id):
     apiassert(avail > len(items), "No space left for bet")
 
     return APIResponse({
-        "bet": create_bet(g.user, match_id, team, items)
+        "bet": create_bet(g.user, match_id, team, itemvs)
     })
 
 GET_GAMES_SQL = """

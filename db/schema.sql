@@ -5,7 +5,8 @@
 CREATE TYPE steam_item AS (
   item_id integer,
   class_id integer,
-  instance_id integer
+  instance_id integer,
+  item_meta jsonb
 );
 
 
@@ -152,6 +153,8 @@ CREATE TABLE matches (
     teams integer[],
     meta jsonb,
     results jsonb,
+    max_value_item decimal,
+    max_value_total decimal,
     lock_date timestamp with time zone,
     match_date timestamp with time zone,
     public_date timestamp with time zone,

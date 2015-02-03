@@ -75,6 +75,9 @@ class Cursor(object):
     def fetchone(self, *args, **kwargs):
         return self.cursor.fetchone()
 
+    def mogrify(self, *args, **kwargs):
+        return self.cursor.mogrify(*args, **kwargs)
+
     def fetchall(self, as_list=False):
         if as_list:
             return self.cursor.fetchall()

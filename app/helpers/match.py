@@ -6,6 +6,7 @@ from flask import g
 from database import Cursor
 from util.errors import InvalidRequestError, ValidationError
 from helpers.user import UserGroup
+from helpers.bet import BetState
 
 CREATE_MATCH_SQL = """
 INSERT INTO matches (game, teams, meta, results, lock_date, match_date, public_date, view_perm, active, created_at, created_by)
@@ -82,21 +83,6 @@ def match_to_json(m, user=None):
     match['extra'] = {}
     match['stats'] = {}
 
-    if user:
-        match['me'] = {}
-
-        mybet = c.execute("""
-            SELECT id, team, items::steam_item[], state, value
-            FROM bets WHERE match=%s AND better=%s AND state >= 'confirmed'
-        """, (m.id, user)).fetchone()
-
-        if mybet:
-            match['me']['id'] = mybet.id
-            match['me']['team'] = mybet.team
-            match['me']['items'] = map(lambda i: i.to_string(), mybet.items)
-            match['me']['state'] = mybet.state
-            match['me']['value'] = mybet.value
-
     # This will most definitily require some fucking caching at some point
     bet_stats = c.execute("""SELECT
             sum(array_length(items, 1)) as skins_count,
@@ -113,6 +99,9 @@ def match_to_json(m, user=None):
     # Grab team information, including bets (this should be a join)
     c.execute("SELECT * FROM teams WHERE id IN %s", (tuple(m.teams), ))
     teams = c.fetchall()
+
+    total_bets = sum(map(lambda i: i.count, bet_stats.values())) * 1.0
+    total_value = sum(map(lambda i: i.value, bet_stats.values()))
 
     for index, team in enumerate(teams):
         team_data = {
@@ -131,12 +120,44 @@ def match_to_json(m, user=None):
             team_data['stats']['players'] = bet_stats[index].count
             team_data['stats']['skins'] = bet_stats[index].skins_count
             team_data['stats']['value'] = bet_stats[index].value
-
-        # TODO: do this shit
-        team_data['payout'] = 0
-        team_data['odds'] = 0
+            team_data['odds'] = float("{0:.2f}".format(bet_stats[index].count / total_bets))
 
         match['teams'].append(team_data)
+
+    if user:
+        match['me'] = {}
+
+        mybet = c.execute("""
+            SELECT id, team, items::steam_item[], state, value
+            FROM bets WHERE match=%s AND better=%s
+        """, (m.id, user)).fetchone()
+
+        if mybet:
+            match['me']['id'] = mybet.id
+            match['me']['team'] = mybet.team
+            match['me']['state'] = mybet.state
+            match['me']['value'] = mybet.value
+            match['me']['state'] = mybet.state
+
+            if mybet.state != 'offered':
+                match['me']['return'] = (total_value / mybet.value) - 1
+            else:
+                match['me']['return'] = 0
+
+            # Load items in sub query :(
+            match['me']['items'] = []
+
+            items = c.execute("SELECT id, name, price, meta FROM items WHERE id IN %s", (tuple(
+                map(lambda i: i.item_id, mybet.items)), ))
+
+            for item in items.fetchall():
+                match['me']['items'].append({
+                    "id": item.id,
+                    "name": item.name,
+                    "price": float(item.price),
+                    "image": item.meta['image']
+                })
+
 
     for key in ['league', 'type', 'event', 'streams', 'note']:
         if key in m.meta:

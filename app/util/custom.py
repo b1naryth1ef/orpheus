@@ -1,17 +1,20 @@
 import psycopg2
+from psycopg2.extras import Json
 
 # TODO: find a better spot
 class SteamItem(object):
-    def __init__(self, item_id, class_id, instance_id):
+    def __init__(self, item_id, class_id, instance_id, item_meta={}):
         self.item_id = item_id
         self.class_id = class_id
         self.instance_id = instance_id
+        self.item_meta = item_meta
 
     def to_dict(self):
         return {
             "item_id": self.item_id,
             "class_id": self.class_id,
-            "instance_id": self.instance_id
+            "instance_id": self.instance_id,
+            "item_meta": self.item_meta
         }
 
     def to_string(self):
@@ -19,7 +22,7 @@ class SteamItem(object):
 
 class SteamItemAdapter:
     def __init__(self, obj):
-        self.adapted = psycopg2.extensions.SQL_IN((obj.item_id, obj.class_id, obj.instance_id))
+        self.adapted = psycopg2.extensions.SQL_IN((obj.item_id, obj.class_id, obj.instance_id, Json(obj.item_meta)))
 
     def prepare(self, conn):
         self.adapted.prepare(conn)
