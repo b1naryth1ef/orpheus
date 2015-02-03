@@ -53,11 +53,21 @@ def process_inventory(data):
 
     return inv
 
+def get_pending_items(uid):
+    with Cursor() as c:
+        pending = c.execute("SELECT unnest(items) as items FROM bets WHERE better=%s AND state='offered'", (uid, )).fetchall()
+        return map(lambda i: i.item_id, map(lambda i: i.items, pending))
+
 def handle_inventory_job(job):
     inv_key = 'inv:%s' % job['steamid']
 
     if redis.exists(inv_key):
-        result = {"success": True, "inventory": json.loads(redis.get(inv_key)), "type": "inventory"}
+        inv = json.loads(redis.get(inv_key))
+        pending = get_pending_items(job['user'])
+
+        inv = filter(lambda i: (False and pending.remove(i['id'])) if i['id'] in pending else True, inv)
+
+        result = {"success": True, "inventory": inv, "type": "inventory"}
         return WebPush(job['user']).send(result)
 
     try:

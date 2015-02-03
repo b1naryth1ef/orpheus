@@ -1,4 +1,4 @@
-import getpass, os, re
+import getpass, os, re, uuid
 
 from fabric.contrib.files import upload_template, exists
 from fabric.api import *
@@ -16,25 +16,48 @@ env.hosts = []
 env.user = getpass.getuser()
 env.forward_agent = True
 
-def if_modified(lpath, remote):
-    if not exists(remote):
-        return True
+env.to_change = {}
 
-    remote_md5 = sudo("md5sum %s" % remote).split(" ")[0]
-    local_md5 = local("md5sum %s" % lpath, capture=True).split(" ")[0]
+def sync_file(localf, remote, owner="emporium", mode="600", refresh=[], context={}, exe=False, jinja=False):
+    tmp_name = "/tmp/%s.tmp" % uuid.uuid4()
 
-    if remote_md5 != local_md5:
-        return True
+    if jinja:
+        upload_template(localf, tmp_name, use_jinja=jinja, use_sudo=True, backup=False, context=context)
 
-    return False
+    # TODO: check mode/owner
+    if exists(remote):
+        org_md5 = sudo("md5sum %s" % remote, quiet=True).split(" ")[0]
 
-def parse_hostname(name):
-    return re.findall("e([a-zA-Z]+)([0-9]+)", name)[0]
+        if jinja:
+            new_md5 = sudo("md5sum %s" % tmp_name).split(" ")[0]
+        else:
+            new_md5 = local("md5sum %s" % localf, capture=True).split(" ")[0]
 
-def setup_redis():
-    if env.role == "app":
-        upload_template("configs/redis/app.conf", "/etc/redis/redis.conf")
-        sudo("service redis-server restart")
+        if org_md5 != new_md5:
+            if not jinja:
+                upload_template(localf, tmp_name, use_jinja=jinja, use_sudo=True, backup=False, context=context)
+
+            print cyan("File `%s` changed (%s vs %s)..." % (remote, org_md5, new_md5))
+            if 'ASCII' in run("file %s" % tmp_name):
+                sudo("diff -u --ignore-all-space %s %s | colordiff" % (tmp_name, remote))
+        else:
+                return
+
+    for command in refresh:
+        print red("  Would trigger refresh: %s" % command)
+
+    env.to_change[tmp_name] = {
+        "dest": remote,
+        "owner": owner,
+        "mode": mode,
+        "refresh": refresh,
+        "exec": exe
+    }
+
+def deploy_redis():
+    sync_file("configs/redis/app.conf", "/etc/redis/redis.conf", owner="root", mode="644", refresh=[
+        "service redis-server restart"
+    ])
 
 def setup_ufw():
     sudo("ufw default deny incoming")
@@ -128,22 +151,22 @@ def setup_sshd():
     sudo("chown root: /etc/ssh/sshd_config")
     sudo("service ssh restart", warn_only=True)
 
-def setup_pgbouncer():
-    upload_template("configs/postgres/pgbouncer.ini", "/etc/pgbouncer/pgbouncer.ini", use_sudo=True, backup=False)
-    sudo("chmod 600 /etc/pgbouncer/pgbouncer.ini")
-    sudo("chown emporium: /etc/pgbouncer/pgbouncer.ini")
+def deploy_pgbouncer():
+    sync_file("configs/postgres/pgbouncer.ini",
+        "/etc/pgbouncer/pgbouncer.ini", owner="emporium", mode="600",
+        refresh=["supervisorctl restart pgbouncer"])
 
-def sync_supervisor():
+def deploy_supervisor():
     for template in os.listdir("configs/supervisor/"):
-        upload_template("configs/supervisor/%s" % template, "/etc/supervisor/conf.d/%s" % template, use_sudo=True, backup=False)
+        sync_file("configs/supervisor/%s" % template, "/etc/supervisor/conf.d/%s" % template, refresh=[
+            "supervisorctl reread",
+            "supervisorctl update"
+        ])
 
-    sudo("service supervisor start", warn_only=True)
-    sudo("supervisorctl reread")
-    sudo("supervisorctl update")
-
-def sync_nginx():
-    upload_template("configs/nginx/emporium", "/etc/nginx/sites-enabled/emporium", use_sudo=True, backup=False)
-    sudo("service nginx reload")
+def deploy_nginx():
+    sync_file("configs/nginx/emporium", "/etc/nginx/sites-enabled/emporium", refresh=[
+        "service nginx reload"
+    ])
 
 def sync_repos():
     refresh = False
@@ -183,20 +206,9 @@ def sync_repos():
         # TODO
         print "Would restart shit..."
 
+# TODO: venv
 def sync_requirements():
     sudo("pip install -r /var/www/emporium/app/requirements.txt")
-
-def sync_rush():
-    if if_modified("binaries/rush", "/var/www/emporium/rush"):
-        put("binaries/rush", remote_path="/var/www/emporium/rush", use_sudo=True)
-        sudo("chmod 744 /var/www/emporium/rush")
-        sudo("chown emporium: /var/www/emporium/rush")
-
-def sync_secret():
-    if if_modified("configs/secret.json", "/etc/secret.json"):
-        put("configs/secret.json", remote_path="/etc/secret.json", use_sudo=True)
-        sudo("chmod 600 /etc/secret.json")
-        sudo("chown emporium: /etc/secret.json")
 
 def sync_paths():
     if not exists("/var/run/emporium"):
@@ -209,37 +221,64 @@ def sync_paths():
         sudo("chown emporium: /var/log/emporium")
         sudo("chmod 744 /var/log/emporium")
 
-def sync_uwsgi(denv):
-    upload_template("configs/uwsgi/emporium.json", "/etc/emporium.json", context={
-        "env": denv
-    }, use_jinja=True, use_sudo=True, mode="644")
-    upload_template("configs/uwsgi/uwsgi.bin", "/var/www/emporium/uwsgi.bin", use_sudo=True, mode="644")
-    sudo("chmod +x /var/www/emporium/uwsgi.bin")
+def deploy_uwsgi():
+    sync_file("configs/uwsgi/emporium.json", "/etc/emporium.json", context={"env": "PROD"},
+        mode="644", owner="emporium", jinja=True)
+    sync_file("configs/uwsgi/uwsgi.bin", "/var/www/emporium/uwsgi.bin", mode="644", owner="emporium",
+        exe=True)
 
-def deploy(denv="PROD"):
-    if denv not in ["DEV", "PROD"]:
-        print red("ERROR: Unknown env: %s" % denv)
-        return
+def refresh_uwsgi():
+    sudo("kill -SIGHUP $(cat /var/run/emporium/uwsgi.pid)")
 
-    env.role = "app"
-    env.num = "0"
+def checkout_sha(sha):
+    with cd("/var/www/emporium"):
+        run("git checkout %s" % sha)
 
-    # env.role, env.num = parse_hostname(env.host)
-    if env.role not in ["app"]:
-        print red("ERROR: Cannot deploy to server with role %s!" % role)
-        return
+def code(sha=None):
+    sync_repos()
+    if sha:
+        checkout_sha(sha)
+    refresh_uwsgi()
 
-    setup_pgbouncer()
-    sync_secret()
+def deploy():
+    if env.role in ["app", "cdn"]:
+        deploy_cdn()
+
+    if env.role in ["app"]:
+        deploy_app()
+
+def deploy_cdn():
+    print green("Deploying CDN Server: %s" % env.host)
+
+def deploy_app():
+    """
+    A full deploy makes sure all configs are up-to-snuff
+    """
+    print green("Deploying App Server: %s" % env.host)
+
+    # Deploy pgbouncer
+    deploy_pgbouncer()
+
+    # Deploy redis
+    deploy_redis()
+
+    # Sync secret file
+    sync_file("configs/secret.json", "/etc/secret.json", owner="emporium", mode="600")
+
+    # Python stuff
     sync_repos()
     sync_requirements()
-    sync_rush()
-    sync_supervisor()
-    sync_uwsgi(denv)
-    sync_nginx()
+
+    # Sync rush binary
+    sync_file("binaries/rush", "/var/www/emporium/rush", owner='emporium', mode='744')
+
+    deploy_supervisor()
+    deploy_uwsgi()
+    deploy_nginx()
+
+    print cyan("  %s to be applied" % len(env.to_change))
 
 def bootstrap():
-    env.role, env.num = parse_hostname(env.host)
     env.user = "root"
     env.port = 22
 
@@ -280,6 +319,28 @@ def bootstrap():
         sync_paths()
         deploy()
 
+def apply():
+    refreshes = set()
+
+    for src, info in env.to_change.items():
+        sudo("mv %s %s" % (src, info['dest']))
+
+        if 'owner' in info:
+            sudo("chown %s: %s" % (info['owner'], info['dest']))
+
+        if 'mode' in info:
+            sudo("chmod %s %s" % (info['mode'], info['dest']))
+
+        if info.get('exec'):
+            sudo("chmod +x %s" % info['dst'])
+
+        if info.get('refresh'):
+            for command in info.get('refresh'):
+                refreshes.add(command)
+
+    print red("Refreshing %s services..." % (len(refreshes), ))
+    map(sudo, refreshes)
+
 def db():
     env.hosts = map(lambda i: i + ".csgoemporium.com", env.servers['db'])
 
@@ -289,6 +350,8 @@ def app():
 def mona():
     env.hosts = ['mona.hydr0.com']
     env.port = 50000
+    env.role = "app"
+    env.num = "0"
 
 def hosts(hosts):
     env.hosts = hosts.split(",")
