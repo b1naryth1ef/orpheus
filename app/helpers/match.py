@@ -138,11 +138,7 @@ def match_to_json(m, user=None):
             match['me']['state'] = mybet.state
             match['me']['value'] = mybet.value
             match['me']['state'] = mybet.state
-
-            if mybet.state != 'offered':
-                match['me']['return'] = (total_value / mybet.value) - 1
-            else:
-                match['me']['return'] = 0
+            match['me']['return'] = (total_value / mybet.value) - 1
 
             # Load items in sub query :(
             match['me']['items'] = []
