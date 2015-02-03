@@ -18,7 +18,7 @@ def get_connection(database=None):
     """
     Attempts to get a cached connection, or create a brand new connection to the database `database`
     """
-    if database not in CONNECTIONS or CONNECTIONS[database].closed:
+    if True: #database not in CONNECTIONS or CONNECTIONS[database].closed:
         log.info("Connecting to database %s" % database)
         dbc = psycopg2.connect("host={host} port={port} dbname={dbname} user={user} password={pw}".format(
             host=app.config.get("PG_HOST"),
@@ -28,8 +28,8 @@ def get_connection(database=None):
             pw=app.config.get("PG_PASSWORD")), cursor_factory=NamedTupleCursor)
         bind_custom_types(dbc)
         dbc.autocommit = True
-        CONNECTIONS[database] = dbc
-
+        # CONNECTIONS[database] = dbc
+        return dbc
     return CONNECTIONS[database]
 
 class ResultSetIterable(object):
