@@ -15,6 +15,8 @@ parser.add_argument("-g", "--generate", help="Generate fake data", action="store
 
 args = parser.parse_args()
 
+args.username = args.username if args.username.startswith("emporium_") else "emporium"
+
 # Lists all the tables in a database
 LIST_TABLES_SQL = """
 SELECT table_name

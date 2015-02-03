@@ -8,7 +8,7 @@ from util.perms import authed
 from util.errors import UserError, APIError
 from util.responses import APIResponse
 
-from emporium import oid
+from emporium import oid, steam
 from helpers.user import create_user, gache_nickname
 
 auth = Blueprint("auth", __name__, url_prefix="/auth")
@@ -23,6 +23,10 @@ def create_or_login(resp):
     user = g.cursor.fetchone()
 
     if user:
+        allowed = steam.getGroupMembers("emporiumbeta")
+        if str(id) not in allowed:
+            raise UserError("Sorry, your not part of the beta! :(")
+
         if user.active:
             g.user = user.id
             g.group = user.ugroup

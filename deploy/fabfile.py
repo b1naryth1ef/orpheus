@@ -8,7 +8,7 @@ from data import USERS, REPOS, BASE_PACKAGES, ROLE_PACKAGES
 
 env.servers = {
     "db": [],
-    "app": ["eapp01", "eapp02"]
+    "app": ["mona"]
 }
 
 env.port = 43594
@@ -220,7 +220,10 @@ def deploy(denv="PROD"):
         print red("ERROR: Unknown env: %s" % denv)
         return
 
-    env.role, env.num = parse_hostname(env.host)
+    env.role = "app"
+    env.num = "0"
+
+    # env.role, env.num = parse_hostname(env.host)
     if env.role not in ["app"]:
         print red("ERROR: Cannot deploy to server with role %s!" % role)
         return
@@ -281,6 +284,10 @@ def db():
 
 def app():
     env.hosts = map(lambda i: i + ".csgoemporium.com", env.servers['app'])
+
+def mona():
+    env.hosts = ['mona.hydr0.com']
+    env.port = 50000
 
 def hosts(hosts):
     env.hosts = hosts.split(",")
