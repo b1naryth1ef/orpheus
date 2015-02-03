@@ -29,11 +29,13 @@ def generate_games(t):
         GAME)
 
 TEAMS = [
-    ("c9", "Cloud9", "http://i.imgur.com/HsqnrKf.png"),
-    ("torqued", "Torqued", ""),
-    ("CLG", "Counter Logic Gaming", "http://clgaming.net/interface/img/ogImage.jpg"),
-    ("NIP", "Ninjas In Pajamas", "http://i.imgur.com/7jN4sff.png"),
-    ("LDLC", "LDLC", "http://i.imgur.com/CaS8bD9.png")
+    ("c9", "Cloud9", "/static/img/teams/cloud9.png"),
+    ("fnatic", "Fnatic", "/static/img/teams/fnatic.png"),
+    ("HellRaisers", "HellRaisers", "/static/img/teams/hellraisers.png"),
+    ("dignitas", "Team Dignitas", "/static/img/teams/dignitas.png"),
+    ("nip", "Ninjas In Pajamas", "/static/img/teams/nip.png"),
+    ("virtus.pro", "Virtus Pro", "/static/img/teams/virtuspro.png"),
+    ("CLG", "Counter Logic Gaming", "http://clgaming.net/interface/img/ogImage.jpg")
 ]
 
 def generate_teams(t):
@@ -53,6 +55,7 @@ MATCHES = [
             },
             "type": "BO1",
             "streams": ["http://twitch.tv/test1", "http://twitch.tv/test2"],
+            "maps": ["de_nuke"]
         },
         "lock_date": ONE_WEEK_FUTURE,
         "match_date": ONE_WEEK_FUTURE,
@@ -71,6 +74,7 @@ MATCHES = [
             "note": "This is a test note!",
             "type": "BO3",
             "streams": ["http://mlg.tv/swag", "http://twitch.tv/esea"],
+            "maps": ["de_nuke", "de_mirage", "de_dust2"]
         },
         "lock_date": ONE_WEEK_FUTURE,
         "match_date": ONE_WEEK_FUTURE,

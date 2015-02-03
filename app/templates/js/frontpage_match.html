@@ -26,21 +26,19 @@
         <div class="row">
           <div class="col-md-6 col-md-offset-3">
             <div class="row">
-              <div class="col-md-6"><h3>60%</h3></div>
-              <div class="col-md-6"><h3 style="text-align: right">40%</h3></div>
+              <div class="col-md-6"><h3><%= match.teams[0].odds * 100 %>%</h3></div>
+              <div class="col-md-6"><h3 style="text-align: right"><%= match.teams[1].odds * 100 %>%</h3></div>
             </div>
             <div class="progress">
-              <div style="width: 60%" class="progress-bar bg-gray-darker">
-                <span class="sr-only">60%</span>
-              </div>
-              <div style="width: 40%; display: block; float: right;" class="progress-bar bg-gray">
-                <span class="sr-only">40%</span>
-              </div>
+              <div style="width: <%= match.teams[0].odds * 100 %>%" class="progress-bar bg-gray-darker"></div>
+              <div style="width: <%= match.teams[1].odds * 100 %>%; display: block; float: right;" class="progress-bar bg-gray"></div>
             </div>
+            <% if (match.extra.maps) { %>
+              <h4 style="text-align: center">Maps: <%= match.extra.maps.join(', ') %></h4>
+            <% } %>
           </div>
         </div>
       </div>
-      <div class="panel-footer">Panel Footer</div>
     </div>
   </div>
 </div>

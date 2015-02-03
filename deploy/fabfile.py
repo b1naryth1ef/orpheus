@@ -210,9 +210,10 @@ def sync_paths():
         sudo("chmod 744 /var/log/emporium")
 
 def sync_uwsgi(denv):
-    upload_template("configs/uwsgi.bin", "/var/www/emporium/uwsgi.bin", context={
-        'env': denv
+    upload_template("configs/uwsgi/emporium.json", "/etc/emporium.json", context={
+        "env": denv
     }, use_jinja=True, use_sudo=True, mode="644")
+    upload_template("configs/uwsgi/uwsgi.bin", "/var/www/emporium/uwsgi.bin", use_sudo=True, mode="644")
     sudo("chmod +x /var/www/emporium/uwsgi.bin")
 
 def deploy(denv="PROD"):

@@ -19,7 +19,6 @@ match.queueInventoryLoad = function () {
 
     this.waitingForInventory = setTimeout((function () {
         if ($("#bet-inventory-loader").length) {
-            $("#bet-inventory-loader").fadeOut();
             $("#bet-inventory-load-failed").fadeIn();
         }
     }).bind(this), 10000);

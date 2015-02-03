@@ -1,0 +1,21 @@
+{
+  "emporium": {
+    "socket": ["127.0.0.1:3035"],
+    "lazy": true,
+    "wsgi-file": "uwsgi.py",
+    "callable": "app",
+    "harakiri": 30,
+    "processes": 8,
+    "threads": 2,
+    "stats": "127.0.0.1:9191",
+    "env": {
+      "UWSGI": 1,
+      "ENV": "{{ env }}"
+    },
+    "logto": "/var/log/emporium/uwsgi.log",
+    "pidfile": "/var/run/emporium/uwsgi.pid",
+    "thunder-lock": true,
+    "die-on-term": true,
+    "py-tracebacker": "/tmp/emporium-tb."
+  }
+}

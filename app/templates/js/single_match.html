@@ -13,6 +13,11 @@
     -moz-border-radius: 8px;
     -webkit-border-radius: 8px;
   }
+
+  .close-header {
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
 </style>
 
 <div class="row">
@@ -79,7 +84,7 @@
   </div>
 </div>
 <div class="row">
-  <div class="col-lg-4">
+  <div class="col-lg-2">
     <div class="panel panel-default">
       <div class="panel-body">
         <% if (app.user) { %>
@@ -116,7 +121,7 @@
       </div>
     </div>
   </div>
-  <div class="col-lg-8">
+  <div class="col-lg-10">
     <div id="panelDemo14" class="panel panel-default">
       <div class="panel-body">
         <div role="tabpanel">
@@ -136,8 +141,23 @@
                 <% for (team in match.teams) { %>
                   <% var team = match.teams[team] %>
                   <div class="col-md-6">
+                    <img src="<%- team.logo %>" style="max-height: 256px"/>
                     <h1><%= team.name %></h1>
-                    <h3><%= team.odds %>%</h3>
+                    <h3><%= team.odds * 100 %>%</h3>
+                    <h3 class="close-header">Bets: <%= team.stats.players %></h3>
+                    <h3 class="close-header">Skins: <%= team.stats.skins %></h3>
+                    <h3 class="close-header">Value: $<%= team.stats.value %></h3>
+                  </div>
+                <% } %>
+              </div>
+              <hr>
+              <div class="row">
+                <% if (match.extra.maps) { %>
+                  <div class="col-md-12">
+                    <h1>Map Pool</h1>
+                    <% for (map in match.extra.maps) { %>
+                      <h3><%= match.extra.maps[map] %></h3>
+                    <% } %>
                   </div>
                 <% } %>
               </div>

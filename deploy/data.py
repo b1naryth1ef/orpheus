@@ -26,7 +26,8 @@ ROLE_PACKAGES = {
     "db": [],
     "app": [
         "python2.7", "python2.7-dev", "python-pip", "nginx", "libffi-dev",
-        "libxml2", "libxslt1-dev", "supervisor", "libpq-dev", "pgbouncer"
+        "libxml2", "libxslt1-dev", "supervisor", "libpq-dev", "pgbouncer",
+        "libjansson-dev"
     ]
 }
 

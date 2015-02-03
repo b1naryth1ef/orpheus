@@ -184,12 +184,13 @@ CREATE TABLE bets (
     value integer,
     items steam_item[],
     winnings steam_item[],
-    state bet_state
+    state bet_state,
+    created_at timestamp with time zone
 );
 
 CREATE INDEX ON bets (items);
 CREATE INDEX ON bets (winnings);
-
+CREATE INDEX on bets (state);
 
 /*
   Represents steam trades in the database
