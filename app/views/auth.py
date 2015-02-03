@@ -1,4 +1,4 @@
-import re
+import re, logging
 
 from flask import Blueprint, g, redirect
 from datetime import datetime
@@ -14,6 +14,7 @@ from helpers.user import create_user, gache_nickname
 auth = Blueprint("auth", __name__, url_prefix="/auth")
 steam_id_re = re.compile('steamcommunity.com/openid/id/(.*?)$')
 auto_admin_steamids = ["76561198037632722", "76561198063284164", "76561198057181896"]
+log = logging.getLogger(__name__)
 
 @oid.after_login
 def create_or_login(resp):
@@ -23,10 +24,6 @@ def create_or_login(resp):
     user = g.cursor.fetchone()
 
     if user:
-        allowed = steam.getGroupMembers("emporiumbeta")
-        if str(id) not in allowed:
-            raise UserError("Sorry, your not part of the beta! :(")
-
         if user.active:
             g.user = user.id
             g.group = user.ugroup
@@ -34,6 +31,11 @@ def create_or_login(resp):
         else:
             raise UserError("Account Disabled. Please contact support for more information")
     else:
+        allowed = steam.getGroupMembers("emporiumbeta")
+        if int(id) not in allowed:
+            log.warning("User %s is not allowed in beta (%s)" % (id, allowed))
+            raise UserError("Sorry, your not part of the beta! :(")
+
         if id in auto_admin_steamids:
             group = 'super'
         else:
