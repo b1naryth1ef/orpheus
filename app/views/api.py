@@ -1,13 +1,16 @@
-import json
+import json, requests
 
+from cStringIO import StringIO
 from datetime import datetime
-from flask import Blueprint, request, g
+from flask import Blueprint, request, g, send_file
 
-from database import Cursor
+from emporium import steam
+from database import Cursor, redis
 
 from helpers.match import match_to_json
 from helpers.bot import get_bot_space
-from helpers.bet import create_bet
+from helpers.bet import BetState, create_bet
+from helpers.user import UserGroup, gache_nickname
 
 from util.etc import paginate
 from util.perms import authed
@@ -158,4 +161,52 @@ def route_user_inventory():
 
         JobQueue("inventory").fire({"steamid": user.steamid, "user": g.user})
         return APIResponse()
+
+USER_BETS_QUERY = """
+SELECT match, team, value, state, winnings FROM bets WHERE better=%s
+ORDER BY created_at LIMIT 250
+"""
+
+@api.route("/user/<int:id>/info")
+def route_user_info(id):
+    with Cursor() as c:
+        user = c.execute("SELECT steamid FROM users WHERE id=%s", (id, )).fetchone()
+        bets = c.execute(USER_BETS_QUERY, (id, )).fetchall()
+
+        if g.user != id:
+            return APIResponse({
+                "id": id,
+                "username": gache_nickname(user.steamid),
+                "bets": {
+                    "placed": len(bets),
+                    "won": len(filter(lambda i: i.state == BetState.WON, bets)),
+                    "lost": len(filter(lambda i: i.state == BetState.LOST, bets))
+                }})
+
+@api.route("/user/<int:id>/avatar")
+def auth_route_avatar(id):
+    key = "avatar:%s" % id
+    if redis.exists(key):
+        buffered = StringIO(redis.get(key))
+    else:
+        with Cursor() as c:
+           user = c.execute("SELECT steamid FROM users WHERE id=%s", (id, )).fetchone()
+
+           if not user:
+               raise APIError("Invalid User ID")
+
+        data = steam.getUserInfo(user.steamid)
+
+        try:
+            r = requests.get(data.get('avatarfull'))
+            r.raise_for_status()
+        except Exception:
+            return "", 500
+
+        # Cached for 1 hour
+        buffered = StringIO(r.content)
+        redis.setex(key, r.content, (60 * 60))
+
+    buffered.seek(0)
+    return send_file(buffered, mimetype="image/jpeg")
 
