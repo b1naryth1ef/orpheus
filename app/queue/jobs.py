@@ -44,6 +44,10 @@ def process_inventory(data):
         item_image = obj['icon_url_large']
         id, price = process_item(item_name, item_image, obj.get('descriptions', []))
 
+        # Overpriced items make us sad
+        if price == 0:
+            continue
+
         inv.append({
             "id": id,
             "uid": str(uuid.uuid4()),

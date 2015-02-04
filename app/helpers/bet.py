@@ -14,8 +14,8 @@ class BetState(object):
 
 
 CREATE_BET_SQL = """
-INSERT INTO bets (better, match, team, items, value, state)
-VALUES (%(user)s, %(match)s, %(team)s, %(items)s, %(value)s, %(state)s)
+INSERT INTO bets (better, match, team, items, value, state, created_at)
+VALUES (%(user)s, %(match)s, %(team)s, %(items)s, %(value)s, %(state)s, %(created_at)s)
 RETURNING id;
 """
 
@@ -28,6 +28,7 @@ def create_bet(user, match, team, items):
             "price": float(i.price)
         }), items),
         'state': BetState.OFFERED,
+        'created_at': datetime.utcnow(),
     }
 
     data['value'] = sum(map(lambda i: i.price, items))

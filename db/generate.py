@@ -99,13 +99,14 @@ BETS = [
         "team": random.choice([0, 1]),
         "value": random.randint(1, 60),
         "items": [(random.randint(1, 25), 'NULL', 'NULL') for i in range(4)],
-        "state": "confirmed"
+        "state": "confirmed",
+        "created_at": datetime.utcnow(),
     } for i in range(300)
 ]
 
 BET_QUERY = """
-INSERT INTO bets (better, match, team, value, items, state) VALUES
-(%(better)s, %(match)s, %(team)s, %(value)s, ARRAY[{}], %(state)s);
+INSERT INTO bets (better, match, team, value, items, state, created_at) VALUES
+(%(better)s, %(match)s, %(team)s, %(value)s, ARRAY[{}], %(state)s, %(created_at)s);
 """
 
 # TODO

@@ -113,7 +113,8 @@ def match_to_json(m, user=None):
                 "players": 0,
                 "skins": 0,
                 "value": 0,
-            }
+            },
+            "odds": 0
         }
 
         if index in bet_stats:
@@ -138,7 +139,13 @@ def match_to_json(m, user=None):
             match['me']['state'] = mybet.state
             match['me']['value'] = mybet.value
             match['me']['state'] = mybet.state
-            match['me']['return'] = (total_value / mybet.value) - 1
+
+            if total_value > mybet.value:
+                my_return = ((total_value * 1.0) / match['teams'][mybet.team]['stats']['value']) * mybet.value
+            else:
+                my_return = mybet.value
+
+            match['me']['return'] = float("{0:.2f}".format(my_return))
 
             # Load items in sub query :(
             match['me']['items'] = []

@@ -9,28 +9,20 @@ from settings import CRYPT
 
 from util.custom import bind_custom_types
 
-CONNECTIONS = {}
 
 log = logging.getLogger(__name__)
 redis = redis.Redis(app.config.get("R_HOST"), port=app.config.get("R_PORT"), db=app.config.get("R_DB"))
 
 def get_connection(database=None):
-    """
-    Attempts to get a cached connection, or create a brand new connection to the database `database`
-    """
-    if True: #database not in CONNECTIONS or CONNECTIONS[database].closed:
-        log.info("Connecting to database %s" % database)
-        dbc = psycopg2.connect("host={host} port={port} dbname={dbname} user={user} password={pw}".format(
-            host=app.config.get("PG_HOST"),
-            port=app.config.get("PG_PORT"),
-            dbname=database or app.config.get("PG_DATABASE"),
-            user=app.config.get("PG_USERNAME"),
-            pw=app.config.get("PG_PASSWORD")), cursor_factory=NamedTupleCursor)
-        bind_custom_types(dbc)
-        dbc.autocommit = True
-        # CONNECTIONS[database] = dbc
-        return dbc
-    return CONNECTIONS[database]
+    dbc = psycopg2.connect("host={host} port={port} dbname={dbname} user={user} password={pw}".format(
+        host=app.config.get("PG_HOST"),
+        port=app.config.get("PG_PORT"),
+        dbname=database or app.config.get("PG_DATABASE"),
+        user=app.config.get("PG_USERNAME"),
+        pw=app.config.get("PG_PASSWORD")), cursor_factory=NamedTupleCursor)
+    bind_custom_types(dbc)
+    dbc.autocommit = True
+    return dbc
 
 class ResultSetIterable(object):
     def __init__(self, cursor):
