@@ -3,7 +3,7 @@ import sys, os
 
 from util.log import setup_logging
 
-USAGE = "Usage: ./run <web|sched|once>"
+USAGE = "Usage: ./run <web|sched|once|queue|js>"
 
 def main():
     setup_logging()
@@ -32,6 +32,11 @@ def main():
     if sys.argv[1] == "sched":
         from scheduler.run import sched
         sched.run()
+        sys.exit(0)
+
+    if sys.argv[1] == "js":
+        from emporium import build_js_templates
+        build_js_templates()
         sys.exit(0)
 
     if sys.argv[1] == "once":
