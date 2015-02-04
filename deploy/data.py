@@ -19,7 +19,8 @@ REPOS = {
 
 BASE_PACKAGES = [
     "htop", "vim-nox", "iotop", "iftop", "iotop", "nethogs",
-    "screen", "git", "ufw", "tmux", "sudo", "redis-server"
+    "screen", "git", "ufw", "tmux", "sudo", "redis-server",
+    "file", "colordiff"
 ]
 
 ROLE_PACKAGES = {

@@ -7,7 +7,7 @@ from fabric.colors import *
 from data import USERS, REPOS, BASE_PACKAGES, ROLE_PACKAGES
 
 env.servers = {
-    "db": [],
+    "cdn": ["eapp01.csgoemporium.com", "eapp02.csgoemporium.com"],
     "app": ["mona"]
 }
 
@@ -39,14 +39,16 @@ def sync_file(localf, remote, owner="emporium", mode="600", refresh=[], context=
 
             print cyan("File `%s` changed (%s vs %s)..." % (remote, org_md5, new_md5))
             if 'ASCII' in run("file %s" % tmp_name):
-                sudo("diff -u --ignore-all-space %s %s | colordiff" % (tmp_name, remote))
+                sudo("diff -u --ignore-all-space %s %s | colordiff" % (remote, tmp_name))
         else:
                 return
+    elif not jinja:
+        upload_template(localf, tmp_name, use_jinja=jinja, use_sudo=True, backup=False, context=context)
 
     for command in refresh:
         print red("  Would trigger refresh: %s" % command)
 
-    env.to_change[tmp_name] = {
+    env.to_change[env.host_string][tmp_name] = {
         "dest": remote,
         "owner": owner,
         "mode": mode,
@@ -163,8 +165,13 @@ def deploy_supervisor():
             "supervisorctl update"
         ])
 
-def deploy_nginx():
+def deploy_app_nginx():
     sync_file("configs/nginx/emporium", "/etc/nginx/sites-enabled/emporium", refresh=[
+        "service nginx reload"
+    ])
+
+def deploy_cdn_nginx():
+    sync_file("configs/nginx/cdn", "/etc/nginx/sites-enabled/cdn", refresh=[
         "service nginx reload"
     ])
 
@@ -241,14 +248,25 @@ def code(sha=None):
     refresh_uwsgi()
 
 def deploy():
+    env.to_change[env.host_string] = {}
     if env.role in ["app", "cdn"]:
         deploy_cdn()
 
     if env.role in ["app"]:
         deploy_app()
 
+def build_js():
+    with cd("/var/www/emporium/app"):
+        sudo("./run js")
+
 def deploy_cdn():
     print green("Deploying CDN Server: %s" % env.host)
+
+    sync_repos()
+    build_js()
+
+    deploy_cdn_nginx()
+    print cyan("  %s to be applied" % len(env.to_change[env.host_string]))
 
 def deploy_app():
     """
@@ -274,9 +292,9 @@ def deploy_app():
 
     deploy_supervisor()
     deploy_uwsgi()
-    deploy_nginx()
+    deploy_app_nginx()
 
-    print cyan("  %s to be applied" % len(env.to_change))
+    print cyan("  %s to be applied" % len(env.to_change[env.host_string]))
 
 def bootstrap():
     env.user = "root"
@@ -322,7 +340,7 @@ def bootstrap():
 def apply():
     refreshes = set()
 
-    for src, info in env.to_change.items():
+    for src, info in env.to_change[env.host_string].items():
         sudo("mv %s %s" % (src, info['dest']))
 
         if 'owner' in info:
@@ -341,11 +359,9 @@ def apply():
     print red("Refreshing %s services..." % (len(refreshes), ))
     map(sudo, refreshes)
 
-def db():
-    env.hosts = map(lambda i: i + ".csgoemporium.com", env.servers['db'])
-
-def app():
-    env.hosts = map(lambda i: i + ".csgoemporium.com", env.servers['app'])
+def cdn():
+    env.hosts = env.servers["cdn"]
+    env.role = "cdn"
 
 def mona():
     env.hosts = ['mona.hydr0.com']
