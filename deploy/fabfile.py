@@ -175,6 +175,16 @@ def deploy_cdn_nginx():
         "service nginx reload"
     ])
 
+def build_rush():
+    ensure_installed("golang")
+    sudo("rm -rf /tmp/gopath; mkdir /tmp/gopath")
+
+    for dep in ["gopkg.in/redis.v2", "github.com/gorilla/websocket"]:
+        sudo("GOPATH=/tmp/gopath go get %s" % dep)
+
+    with cd("/var/www/emporium/rush"):
+        sudo("GOPATH=/tmp/gopath go build -o rush.bin main.go")
+
 def sync_repos():
     refresh = False
 
@@ -245,11 +255,12 @@ def code(sha=None):
     sync_repos()
     if sha:
         checkout_sha(sha)
+    build_rush()
     refresh_uwsgi()
 
 def deploy():
     env.to_change[env.host_string] = {}
-    if env.role in ["app", "cdn"]:
+    if env.role in ["cdn"]:
         deploy_cdn()
 
     if env.role in ["app"]:
@@ -287,8 +298,7 @@ def deploy_app():
     sync_repos()
     sync_requirements()
 
-    # Sync rush binary
-    sync_file("binaries/rush", "/var/www/emporium/rush", owner='emporium', mode='744')
+    build_rush()
 
     deploy_supervisor()
     deploy_uwsgi()
