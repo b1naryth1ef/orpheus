@@ -14,7 +14,7 @@ def run_item_drafts():
     TODO: run this on a background box eventually
     """
 
-    with Cursor() as c::
+    with Cursor() as c:
         results = c.execute(RUN_MATCH_DRAFT_QUERY, (datetime.utcnow(), )).fetchall()
 
         if not len(results):
@@ -22,13 +22,15 @@ def run_item_drafts():
 
         print "Found %s matches that can have item drafts ran!" % len(results)
 
-        for entry in results:
-            # TODO: update match.draft_started_at
-            # TODO: queue draft shit
-            # TODO: update match.draft_finished_at
-            # TODO: run some sanity checks
-            # yay :D
 
+        for entry in results:
+            c.execute("UPDATE matches SET draft_started_at=%s WHERE id=%s", (datetime.utcnow(), entry.id))
+
+            BETTERS = c.execute("""
+                SELECT id, better, value, items FROM bets WHERE match=%s
+            """, (entry.id))
+
+            c.execute("UPDATE matches SET draft_finished_at=%s WHERE id=%s", (datetime.utcnow(), entry.id))
 
 USE_MATCH_QUERY = """
 SELECT id, results, items_at, results_at FROM matches WHERE results_at IS NOT NULL
@@ -51,6 +53,7 @@ def use_item_drafts():
         # TODO: run last checks here! We're soooo fucked if the draft is wrong and it hits here!
 
         for entry in results:
+            pass
             # TODO: query emporium_draft DB for items
             # TODO: update items in db
             # TODO: update bets table with winnings

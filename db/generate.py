@@ -5,7 +5,7 @@ import json, random, os
 
 cur_dir = os.path.dirname(__file__)
 
-
+ONE_WEEK_PAST = datetime.utcnow() + relativedelta(weeks=-1)
 ONE_WEEK_FUTURE = datetime.utcnow() + relativedelta(weeks=1)
 
 USERS = [
@@ -13,10 +13,16 @@ USERS = [
     ("76561198031651584", "normal"),
 ]
 
-def generate_users(t):
+RANDOM_STEAMIDS = json.load(open("random_users.json", "r"))
+
+def generate_users(t, db):
     for user in USERS:
         t.execute("INSERT INTO users (steamid, active, ugroup) VALUES (%s, %s, %s)",
             (user[0], True, user[1]))
+
+    for steamid in RANDOM_STEAMIDS:
+        t.execute("INSERT INTO users (steamid, active, ugroup) VALUES (%s, %s, %s)",
+            (steamid, True, "normal"))
 
 GAME = {
     "name": "CS:GO",
@@ -24,7 +30,7 @@ GAME = {
     "active": True,
 }
 
-def generate_games(t):
+def generate_games(t, db):
     t.execute("INSERT INTO games (name, appid, active) VALUES (%(name)s, %(appid)s, %(active)s)",
         GAME)
 
@@ -38,7 +44,7 @@ TEAMS = [
     ("CLG", "Counter Logic Gaming", "http://clgaming.net/interface/img/ogImage.jpg")
 ]
 
-def generate_teams(t):
+def generate_teams(t, db):
     for team in TEAMS:
         t.execute("INSERT INTO teams (tag, name, logo) VALUES (%s, %s, %s)", team)
 
@@ -79,6 +85,24 @@ MATCHES = [
         "lock_date": ONE_WEEK_FUTURE,
         "match_date": ONE_WEEK_FUTURE,
         "public_date": datetime.utcnow()
+    },
+    {
+        "game": 1,
+        "teams": [5, 6],
+        "meta": {
+            "league": {
+                "name": "ESL Katowice",
+                "info": None,
+                "splash": "http://i.imgur.com/YHUUssh.png",
+                "logo": "http://i.imgur.com/YHUUssh.png"
+            },
+            "type": "BO3",
+            "streams": ["http://mlg.tv/swag", "http://twitch.tv/esea"],
+            "maps": ["de_facade", "de_mirage", "de_dust2"]
+        },
+        "lock_date": ONE_WEEK_PAST,
+        "match_date": ONE_WEEK_PAST,
+        "public_date": ONE_WEEK_PAST,
     }
 ]
 
@@ -87,21 +111,34 @@ INSERT INTO matches (game, teams, meta, lock_date, match_date, public_date, acti
 (%(game)s, %(teams)s, %(meta)s, %(lock_date)s, %(match_date)s, %(public_date)s, true);
 """
 
-def generate_matches(t):
+def generate_matches(t, db):
     for match in MATCHES:
         match['meta'] = Json(match['meta'])
         t.execute(MATCH_QUERY, match)
 
+base_betters = range(1, 10000)
+betters = [random.choice(base_betters) for i in range(1, 260000)]
+
 BETS = [
     {
-        "better": 2,
+        "better": random.randint(1, 10000),
         "match": 1,
         "team": random.choice([0, 1]),
         "value": random.randint(1, 60),
-        "items": [(random.randint(1, 25), 'NULL', 'NULL') for i in range(4)],
+        "items": [(random.randint(1, 25), 'NULL', 'NULL', random.randint(1, 20)) for i in range(4)],
         "state": "confirmed",
         "created_at": datetime.utcnow(),
-    } for i in range(300)
+    } for i in range(2500)
+] + [
+    {
+        "better": betters.pop(0),
+        "match": 3,
+        "team": random.choice([0, 1]),
+        "value": random.randint(1, 60),
+        "items": [(random.randint(1, 25), 'NULL', 'NULL', random.randint(1, 20)) for i in range(4)],
+        "state": "confirmed",
+        "created_at": datetime.utcnow(),
+    } for i in range(250000)
 ]
 
 BET_QUERY = """
@@ -110,11 +147,14 @@ INSERT INTO bets (better, match, team, value, items, state, created_at) VALUES
 """
 
 # TODO
-def generate_bets(t):
-    for entry in BETS:
+def generate_bets(t, db):
+    for index, entry in enumerate(BETS):
+        if index % 10000 == 0:
+            print "    Bet #%s" % index
+            db.commit()
         data = entry['items']
         del entry['items']
-        q = BET_QUERY.format(', '.join(map(lambda i: ("(%s, %s, %s, '{}')" % i) + "::steam_item", data)))
+        q = BET_QUERY.format(', '.join(map(lambda i: ("(%s, %s, %s, '{\"price\": %s}')" % i) + "::steam_item", data)))
         t.execute(q, entry)
 
 DATA_GENERATORS = [

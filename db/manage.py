@@ -99,7 +99,7 @@ def main():
         with db.cursor() as c:
             for gen in DATA_GENERATORS:
                 print "  running %s" % gen.__name__
-                gen(c)
+                gen(c, db)
         db.commit()
         print "  DONE!"
 

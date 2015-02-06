@@ -9,8 +9,9 @@ class BetState(object):
     CONFIRMED = "confirmed"
     WON = "won"
     LOST = "lost"
+    CANCELLED = "cancelled"
 
-    ORDER = [OFFERED, CONFIRMED, WON, LOST]
+    ORDER = [OFFERED, CONFIRMED, WON, LOST, CANCELLED]
 
 
 CREATE_BET_SQL = """
