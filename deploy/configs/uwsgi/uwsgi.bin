@@ -1,4 +1,0 @@
-#!/bin/bash
-cd /var/www/emporium/app
-/usr/local/bin/uwsgi --json /etc/emporium.json:emporium
-
