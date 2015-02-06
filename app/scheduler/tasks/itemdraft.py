@@ -4,7 +4,7 @@ from datetime import datetime
 
 from database import Cursor
 from util.itemdraft import pre_draft, run_draft
-from util.uemail import Email
+from util.email import Email
 
 RUN_MATCH_DRAFT_QUERY = """
 SELECT id, lock_date, match_date, results FROM matches

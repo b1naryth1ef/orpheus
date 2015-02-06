@@ -24,5 +24,10 @@ class Email(object):
             }, self.to_addrs),
         }
 
+        if app.config.get("ENV") != "PROD":
+            log.debug("Would send email %s" % payload)
+            return
+
+        log.info("Sending email to %s" % self.to_addrs)
         mandrill_client.messages.send(message=payload)
 

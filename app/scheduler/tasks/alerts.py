@@ -1,6 +1,6 @@
 import json, time, traceback, logging
 
-from util.uemail import Email
+from util.email import Email
 
 from database import Cursor, redis
 
