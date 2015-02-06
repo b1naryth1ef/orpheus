@@ -9993,3 +9993,34 @@ body .jvectormap-zoomout {
   cursor: pointer;
 }
 
+.match-over {
+  opacity: 0.4;
+}
+
+.team-won {
+  background-color: green;
+}
+
+.team-won-name {
+  color: green;
+}
+
+.row-centered {
+  text-align: center;
+}
+
+.col-centered {
+  display:inline-block;
+  float:none;
+  background-color: #dde6e9;
+  width: 165px;
+  border: 2px solid #ffffff;
+  border-radius: 8px;
+  -moz-border-radius: 8px;
+  -webkit-border-radius: 8px;
+}
+
+.close-header {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}

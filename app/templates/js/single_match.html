@@ -1,25 +1,3 @@
-<style>
-  .row-centered {
-    text-align: center;
-  }
-
-  .col-centered {
-    display:inline-block;
-    float:none;
-    background-color: #dde6e9;
-    width: 165px;
-    border: 2px solid #ffffff;
-    border-radius: 8px;
-    -moz-border-radius: 8px;
-    -webkit-border-radius: 8px;
-  }
-
-  .close-header {
-    margin-top: 5px;
-    margin-bottom: 5px;
-  }
-</style>
-
 <div class="row">
   <% if (match.extra.note) { %>
   <div role="alert" class="alert alert-warning">
@@ -138,10 +116,10 @@
           <div class="tab-content">
             <div id="matchinfo" role="tabpanel" class="tab-pane active">
               <div class="row">
-                <% for (team in match.teams) { %>
-                  <% var team = match.teams[team] %>
+                <% for (iteam in match.teams) { %>
+                  <% var team = match.teams[iteam] %>
                   <div class="col-md-6">
-                    <img src="<%- team.logo %>" style="max-height: 256px"/>
+                    <img src="<%- team.logo %>" style="max-height: 256px" class="img-rounded <%=(match.results && match.results.winner == iteam) ? 'team-won' : ''%>"/>
                     <h1><%= team.name %></h1>
                     <h3><%= team.odds * 100 %>%</h3>
                     <h3 class="close-header">Bets: <%= team.stats.players %></h3>

@@ -168,6 +168,7 @@ CREATE TABLE matches (
     items_at timestamp with time zone,
     draft_started_at timestamp with time zone,
     draft_finished_at timestamp with time zone,
+    items_distributed boolean
 );
 
 

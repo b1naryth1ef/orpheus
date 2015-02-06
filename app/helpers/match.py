@@ -129,7 +129,7 @@ def match_to_json(m, user=None):
         match['me'] = {}
 
         mybet = c.execute("""
-            SELECT id, team, items::steam_item[], state, value
+            SELECT id, team, items::steam_item[], winnings::steam_item[], state, value
             FROM bets WHERE match=%s AND better=%s
         """, (m.id, user)).fetchone()
 

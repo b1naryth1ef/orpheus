@@ -50,7 +50,7 @@ CREATE_ITEM_SQL = """INSERT INTO items
 VALUES (%s, %s, %s, %s, %s, %s)"""
 
 def pre_draft(match_id, team_id, betters, items):
-    create_tables()
+    # create_tables()
 
     with Cursor("emporium_draft") as c:
         c.execute("DELETE FROM items WHERE tid=%s", (team_id, ))
