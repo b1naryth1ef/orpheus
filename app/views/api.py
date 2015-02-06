@@ -163,25 +163,48 @@ def route_user_inventory():
         return APIResponse()
 
 USER_BETS_QUERY = """
-SELECT match, team, value, state, winnings FROM bets WHERE better=%s
-ORDER BY created_at LIMIT 250
+SELECT b.id, b.match, b.team, b.value, b.state, b.winnings, b.items, m.id AS mid, m.teams, m.results
+FROM bets b
+JOIN matches m ON m.id = match
+WHERE b.better=%s
+ORDER BY b.created_at LIMIT 250
 """
 
 @api.route("/user/<int:id>/info")
 def route_user_info(id):
     with Cursor() as c:
         user = c.execute("SELECT steamid FROM users WHERE id=%s", (id, )).fetchone()
-        bets = c.execute(USER_BETS_QUERY, (id, )).fetchall()
+        bets = c.execute(USER_BETS_QUERY, (id, )).fetchall(as_list=True)
+
+        base = {
+            "id": id,
+            "username": gache_nickname(user.steamid),
+            "bets": {
+                "placed": len(bets),
+                "won": len(filter(lambda i: i.state == BetState.WON, bets)),
+                "lost": len(filter(lambda i: i.state == BetState.LOST, bets)),
+                "detail": []
+            }
+        }
 
         if g.user != id:
-            return APIResponse({
-                "id": id,
-                "username": gache_nickname(user.steamid),
-                "bets": {
-                    "placed": len(bets),
-                    "won": len(filter(lambda i: i.state == BetState.WON, bets)),
-                    "lost": len(filter(lambda i: i.state == BetState.LOST, bets))
-                }})
+            return APIResponse(base)
+
+        for entry in bets:
+            base['bets']['detail'].append({
+                "id": entry.id,
+                "match": {
+                    "id": entry.mid,
+                    "teams": entry.teams,
+                    "results": entry.results
+                },
+                "team": entry.team,
+                "state": entry.state,
+                "winnings": entry.winnings,
+                "items": map(lambda i: i.to_dict(), entry.items)
+            })
+
+        return APIResponse(base)
 
 @api.route("/user/<int:id>/avatar")
 def auth_route_avatar(id):
