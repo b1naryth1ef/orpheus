@@ -47,7 +47,7 @@ def main():
             sys.exit(1)
 
         if sys.argv[2] in dir(scheduler.run):
-            getattr(globals()["scheduler"].run, sys.argv[2])()
+            getattr(locals()["scheduler"].run, sys.argv[2])()
         sys.exit(0)
 
     print USAGE

@@ -49,7 +49,7 @@ def admin_matches():
 
 USERS_LIST_QUERY = """
 SELECT id, steamid, email, active, last_login
-FROM users ORDER BY id LIMIT %s OFFSET %s
+FROM users WHERE id > %s ORDER BY id LIMIT %s
 """
 
 @admin.route("/api/user/list")
@@ -57,9 +57,10 @@ def admin_users_list():
     page = int(request.values.get("page", 1))
 
     g.cursor.execute("SELECT count(*) as c FROM users")
-    pages = (g.cursor.fetchone().c / 100) + 1
+    pages = (g.cursor.fetchone().c / 50) + 1
 
-    g.cursor.execute(USERS_LIST_QUERY, paginate(page, per_page=100))
+    a, b = paginate(page, per_page=50)
+    g.cursor.execute(USERS_LIST_QUERY, (b, a))
 
     users = []
     for entry in g.cursor.fetchall():

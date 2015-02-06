@@ -23,11 +23,13 @@ def create_tables():
             current REAL
         );
 
-        CREATE UNIQUE INDEX ON betters (iid, mid, tid);
-        CREATE INDEX ON betters (needed);
+        CREATE UNIQUE INDEX better_base ON betters (iid, mid, tid);
+        CREATE INDEX better_needed ON betters (needed);
+        CREATE INDEX better_team ON betters (tid);
 
         CREATE TABLE IF NOT EXISTS items (
             id SERIAL PRIMARY KEY,
+            bid INTEGER,
             iid INTEGER,
             mid INTEGER,
             tid INTEGER,
@@ -35,25 +37,32 @@ def create_tables():
             better INTEGER REFERENCES betters
         );
 
-        CREATE UNIQUE INDEX ON items (iid, mid, tid);
+        CREATE INDEX item_base ON items (bid, iid, mid, tid);
+        CREATE INDEX item_value ON items (value);
+        CREATE INDEX item_team ON items (tid);
         """)
 
 CREATE_BETTER_SQL = """INSERT INTO betters
 (iid, mid, tid, value, needed, current)
 VALUES (%s, %s, %s, %s, %s, %s)"""
 CREATE_ITEM_SQL = """INSERT INTO items
-(iid, mid, tid, value, better)
-VALUES (%s, %s, %s, %s, %s)"""
+(bid, iid, mid, tid, value, better)
+VALUES (%s, %s, %s, %s, %s, %s)"""
 
 def pre_draft(match_id, team_id, betters, items):
+    create_tables()
+
     with Cursor("emporium_draft") as c:
+        c.execute("DELETE FROM items WHERE tid=%s", (team_id, ))
+        c.execute("DELETE FROM betters WHERE tid=%s", (team_id, ))
+
         print "Inserting %s betters..." % len(betters)
         for (id, need) in betters:
             c.execute(CREATE_BETTER_SQL, (id, match_id, team_id, need, need, 0))
 
         print "Inserting %s items..." % len(items)
-        for (id, value) in items:
-            c.execute(CREATE_ITEM_SQL, (id, match_id, team_id, value, None))
+        for (betid, id, value) in items:
+            c.execute(CREATE_ITEM_SQL, (betid, id, match_id, team_id, value, None))
 
 
 ITEMS_FOR_DRAFT_QUERY = """
@@ -62,7 +71,7 @@ SELECT id, value FROM items WHERE mid=%s AND tid=%s AND better IS NULL ORDER BY 
 
 def run_draft(match_id, team_id):
     c = Cursor("emporium_draft")
-    items = c.execute(ITEMS_FOR_DRAFT_QUERY, (match_id, team_id)).fetchall()
+    items = c.execute(ITEMS_FOR_DRAFT_QUERY, (match_id, team_id)).fetchall(as_list=True)
     for i, item in enumerate(items):
         if not i % 100:
             print "  processing item #%s" % i

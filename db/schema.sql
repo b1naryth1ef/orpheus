@@ -48,6 +48,7 @@ CREATE TABLE users (
   settings jsonb
 );
 
+CREATE INDEX ON users USING btree (id);
 CREATE INDEX ON users (steamid);
 
 
@@ -166,7 +167,7 @@ CREATE TABLE matches (
     results_at timestamp with time zone,
     items_at timestamp with time zone,
     draft_started_at timestamp with time zone,
-    draft_finished_at timestamp with time zone
+    draft_finished_at timestamp with time zone,
 );
 
 

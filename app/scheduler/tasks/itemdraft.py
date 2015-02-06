@@ -1,10 +1,16 @@
+import logging
+
 from database import Cursor
 from datetime import datetime
+from util.itemdraft import pre_draft, run_draft
 
 RUN_MATCH_DRAFT_QUERY = """
-SELECT id, lock_date, match_date FROM matches
-WHERE lock_date < %s AND active;
+SELECT id, lock_date, match_date, results FROM matches
+WHERE lock_date < %s AND active AND draft_started_at IS NULL;
+LIMIT 1
 """
+
+log = logging.getLogger(__name__)
 
 def run_item_drafts():
     """
@@ -15,48 +21,44 @@ def run_item_drafts():
     """
 
     with Cursor() as c:
-        results = c.execute(RUN_MATCH_DRAFT_QUERY, (datetime.utcnow(), )).fetchall()
+        entry = c.execute(RUN_MATCH_DRAFT_QUERY, (datetime.utcnow(), )).fetchall(as_list=True)
 
-        if not len(results):
+        if not entry:
             return
 
-        print "Found %s matches that can have item drafts ran!" % len(results)
+        log.info("Running entire draft process for match #%s", entry.id)
 
+        # First thing we need to tell everyone we're working on this
+        c.execute("UPDATE matches SET draft_started_at=%s WHERE id=%s", (datetime.utcnow(), entry.id))
 
-        for entry in results:
-            c.execute("UPDATE matches SET draft_started_at=%s WHERE id=%s", (datetime.utcnow(), entry.id))
+        # Huge queries are good duh
+        BETTERS = c.execute("""
+            SELECT id, better, value, items, team FROM bets WHERE match=%s
+        """, (entry.id, )).fetchall(as_list=True)
 
-            BETTERS = c.execute("""
-                SELECT id, better, value, items FROM bets WHERE match=%s
-            """, (entry.id))
+        # Calculate some basic stuff
+        winning_team = entry.results.get("winner") if entry.results else -1
+        total_value = sum(map(lambda i: i.value, BETTERS))
+        winning_team_value = sum(map(lambda i: i.value if i.team == winning_team else 0, BETTERS))
 
+        # Get our bodies ready for the draft code
+        betters = [(item.id,
+            ((total_value * 1.0) / winning_team_value) * item.value)
+            for item in BETTERS if item.team == winning_team]
+        skins = []
+
+        # Lets just loop over more shit shall we
+        for bet in BETTERS:
+            skins += [(bet.id, item.item_id, item.item_meta.get("price")) for item in bet.items]
+
+        # Pre-draft will insert the items we need
+        log.info("Running predraft for match #%s" % entry.id)
+        pre_draft(entry.id, winning_team, betters, skins)
+
+        # Run-draft will actually draft items
+        log.info("Running draft for match #%s" % entry.id)
+        run_draft(entry.id, winning_team)
+
+        with Cursor() as c:
             c.execute("UPDATE matches SET draft_finished_at=%s WHERE id=%s", (datetime.utcnow(), entry.id))
-
-USE_MATCH_QUERY = """
-SELECT id, results, items_at, results_at FROM matches WHERE results_at IS NOT NULL
-AND items_at < %s AND active;
-"""
-
-def use_item_drafts():
-    """
-    Finds matches that's results have been entered, and have past the
-    item lock date.
-    """
-
-    with Cursor() as c:
-        results = c.execute(USE_MATCH_QUERY, (datetime.utcnow(), )).fetchall()
-        if not len(results):
-            return
-
-        print "Found %s matches that can have items distributed" % len(results)
-
-        # TODO: run last checks here! We're soooo fucked if the draft is wrong and it hits here!
-
-        for entry in results:
-            pass
-            # TODO: query emporium_draft DB for items
-            # TODO: update items in db
-            # TODO: update bets table with winnings
-
-        # TODO: dump emporium_draft DB for this match to a csv and store it somewhere
 

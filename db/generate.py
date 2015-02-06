@@ -13,7 +13,7 @@ USERS = [
     ("76561198031651584", "normal"),
 ]
 
-RANDOM_STEAMIDS = json.load(open("random_users.json", "r"))
+RANDOM_STEAMIDS = json.load(open("random_steamids.json", "r"))
 
 def generate_users(t, db):
     for user in USERS:
@@ -116,8 +116,7 @@ def generate_matches(t, db):
         match['meta'] = Json(match['meta'])
         t.execute(MATCH_QUERY, match)
 
-base_betters = range(1, 10000)
-betters = [random.choice(base_betters) for i in range(1, 260000)]
+betters = range(1, len(RANDOM_STEAMIDS))
 
 BETS = [
     {
@@ -138,7 +137,7 @@ BETS = [
         "items": [(random.randint(1, 25), 'NULL', 'NULL', random.randint(1, 20)) for i in range(4)],
         "state": "confirmed",
         "created_at": datetime.utcnow(),
-    } for i in range(250000)
+    } for i in range(25000)
 ]
 
 BET_QUERY = """

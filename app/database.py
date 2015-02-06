@@ -20,7 +20,9 @@ def get_connection(database=None):
         dbname=database or app.config.get("PG_DATABASE"),
         user=app.config.get("PG_USERNAME"),
         pw=app.config.get("PG_PASSWORD")), cursor_factory=NamedTupleCursor)
-    bind_custom_types(dbc)
+
+    if database not in ['emporium_draft']:
+        bind_custom_types(dbc)
     dbc.autocommit = True
     return dbc
 
@@ -81,7 +83,7 @@ class Cursor(object):
 
     def __exit__(self, typ, value, tb):
         if value != None:
-            raise value
+            return False
 
         if self.commit:
             self.db.commit()
