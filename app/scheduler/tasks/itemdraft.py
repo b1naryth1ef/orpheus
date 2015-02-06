@@ -1,8 +1,10 @@
-import logging
+import logging, traceback
+
+from datetime import datetime
 
 from database import Cursor
-from datetime import datetime
 from util.itemdraft import pre_draft, run_draft
+from util.uemail import Email
 
 RUN_MATCH_DRAFT_QUERY = """
 SELECT id, lock_date, match_date, results FROM matches
@@ -61,7 +63,14 @@ def run_item_drafts():
             # Run-draft will actually draft items
             log.info("Running draft for match #%s" % entry.id)
             run_draft(entry.id, winning_team)
-        except:
+        except Exception as e:
+            log.exception("Error during item draft run: ")
+            e = Email()
+            e.to_addrs = ["b1naryth1ef@gmail.com"]
+            e.subject = "CSGOE Item Draft FAILED: #%s (%s)" % (entry.id, e)
+            e.body = traceback.format_tb(e)
+            e.send()
+
             with Cursor() as c:
                 c.execute("UPDATE matches SET draft_started_at=NULL WHERE id=%s", (entry.id, ))
             raise

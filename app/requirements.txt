@@ -15,6 +15,7 @@ greenlet==0.4.5
 itsdangerous==0.24
 line-profiler==1.0
 lxml==3.4.1
+mandrill==1.0.57
 peewee==2.4.6
 protobuf==2.6.1
 psycopg2==2.5.4
