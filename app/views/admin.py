@@ -8,7 +8,7 @@ from helpers.game import create_game
 from helpers.match import create_match
 from helpers.bot import get_bot_space
 
-from util.etc import paginate
+from util import paginate
 from util.errors import UserError, APIError
 from util.responses import APIResponse
 

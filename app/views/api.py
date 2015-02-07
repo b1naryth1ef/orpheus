@@ -12,7 +12,7 @@ from helpers.bot import get_bot_space
 from helpers.bet import BetState, create_bet
 from helpers.user import UserGroup, gache_nickname
 
-from util.etc import paginate
+from util import paginate
 from util.perms import authed
 from util.queue import JobQueue
 from util.errors import UserError, APIError, InvalidRequestError, apiassert
