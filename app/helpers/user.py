@@ -1,7 +1,12 @@
+import logging
 from datetime import datetime
 
 from emporium import steam
 from database import Cursor, redis
+
+from util.steam import SteamAPIError
+
+log = logging.getLogger(__name__)
 
 class UserGroup(object):
     NORMAL = 'normal'
@@ -57,6 +62,12 @@ def get_user_info(uid):
         return {
             "authed": False
         }
+
+    try:
+        nick = gache_nickname(resp.steamid)
+    except SteamAPIError:
+        log.exception("Failed to get and cache nickname (%s)" % resp.steamid)
+        nick = ""
 
     return {
         "authed": True,

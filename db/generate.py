@@ -13,7 +13,7 @@ USERS = [
     ("76561198031651584", "normal"),
 ]
 
-RANDOM_STEAMIDS = json.load(open("random_steamids.json", "r"))
+RANDOM_STEAMIDS = json.load(open(os.path.join(cur_dir, "random_steamids.json"), "r"))
 
 def generate_users(t, db):
     for user in USERS:
