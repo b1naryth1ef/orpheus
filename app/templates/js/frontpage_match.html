@@ -16,7 +16,7 @@
       <div class="panel-body">
         <div class="row">
           <div class="col-md-3">
-            <img src="<%= match.teams[0].logo %>" style="max-height: 200px; max-width: 350px" class="img-rounded <%=(match.results && match.results.winner == 0) ? 'team-won' : ''%>" />
+            <img src="<%= match.teams[0].logo %>" style="max-height: 200px; max-width: 350px" class="img-rounded <%=(match.results && match.results.winner == match.teams[0].id) ? 'team-won' : ''%>" />
           </div>
 
           <div class="col-md-6">
@@ -24,7 +24,7 @@
           </div>
 
           <div class="col-md-3">
-            <img src="<%= match.teams[1].logo %>" style="max-height: 200px; max-width: 350px; display: block; float: right;" class="img-rounded <%=(match.results && match.results.winner == 1) ? 'team-won' : ''%>" />
+            <img src="<%= match.teams[1].logo %>" style="max-height: 200px; max-width: 350px; display: block; float: right;" class="img-rounded <%=(match.results && match.results.winner == match.teams[1].id) ? 'team-won' : ''%>" />
           </div>
         </div>
         <div class="row">

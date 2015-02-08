@@ -103,7 +103,9 @@ def match_to_json(m, user=None):
     total_bets = sum(map(lambda i: i.count, bet_stats.values())) * 1.0
     total_value = sum(map(lambda i: i.value, bet_stats.values()))
 
-    for index, team in enumerate(teams):
+    values = {}
+
+    for team in teams:
         team_data = {
             "id": team.id,
             "name": team.name,
@@ -117,11 +119,12 @@ def match_to_json(m, user=None):
             "odds": 0
         }
 
-        if index in bet_stats:
-            team_data['stats']['players'] = bet_stats[index].count
-            team_data['stats']['skins'] = bet_stats[index].skins_count
-            team_data['stats']['value'] = bet_stats[index].value
-            team_data['odds'] = float("{0:.2f}".format(bet_stats[index].count / total_bets))
+        if team.id in bet_stats:
+            team_data['stats']['players'] = bet_stats[team.id].count
+            team_data['stats']['skins'] = bet_stats[team.id].skins_count
+            team_data['stats']['value'] = bet_stats[team.id].value
+            team_data['odds'] = float("{0:.2f}".format(bet_stats[team.id].count / total_bets))
+            values[team.id] = bet_stats[team.id].value
 
         match['teams'].append(team_data)
 
@@ -141,7 +144,7 @@ def match_to_json(m, user=None):
             match['me']['state'] = mybet.state
 
             if total_value > mybet.value:
-                my_return = ((total_value * 1.0) / match['teams'][mybet.team]['stats']['value']) * mybet.value
+                my_return = ((total_value * 1.0) / values[mybet.team]) * mybet.value
             else:
                 my_return = mybet.value
 

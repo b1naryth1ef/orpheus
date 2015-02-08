@@ -194,34 +194,19 @@ CREATE INDEX ON bets (items);
 CREATE INDEX ON bets (winnings);
 CREATE INDEX on bets (state);
 
-/*
-  Represents steam trades in the database
-*/
-
-CREATE TYPE trade_type AS ENUM ('returns', 'winnings');
-CREATE TYPE trade_state AS ENUM ('offered', 'declined', 'accepted', 'cancelled');
-
-CREATE TABLE trades (
-    id SERIAL PRIMARY KEY,
-    account integer REFERENCES bots(id),
-    trader integer REFERENCES users(id),
-    bet integer REFERENCES bets(id),
-    bot_out steam_item[],
-    bot_in steam_item[],
-    state trade_state,
-    ttype trade_type,
-    created_at timestamp with time zone
-);
-
 
 /*
-  Represents the result of a fraud run for a match
+  A single item draft
 */
 
-CREATE TABLE fraud_result (
+CREATE TYPE item_draft_state AS ENUM ('pending', 'started', 'failed', 'completed', 'discarded', 'used');
+
+CREATE TABLE item_drafts (
     id SERIAL PRIMARY KEY,
     match integer REFERENCES matches(id),
-    data jsonb,
-    created_at timestamp with time zone
+    team integer REFERENCES teams(id),
+    state item_draft_state,
+    started_at timestamp with time zone,
+    ended_at timestamp with time zone
 );
 

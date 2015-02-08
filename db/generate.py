@@ -122,7 +122,7 @@ BETS = [
     {
         "better": random.randint(1, 10000),
         "match": 1,
-        "team": random.choice([0, 1]),
+        "team": random.choice([1, 2]),
         "value": random.randint(1, 40),
         "items": [(random.randint(1, 25), 'NULL', 'NULL', random.randint(1, 20)) for i in range(4)],
         "state": "confirmed",
@@ -132,7 +132,7 @@ BETS = [
     {
         "better": betters.pop(0),
         "match": 3,
-        "team": random.choice([0, 1]),
+        "team": random.choice([5, 6]),
         "value": random.randint(1, 40),
         "items": [(random.randint(1, 25), 'NULL', 'NULL', random.randint(1, 20)) for i in range(4)],
         "state": "confirmed",

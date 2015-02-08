@@ -13,6 +13,7 @@
   </head>
 
   <body>
+    {% block body %}
     <div class="wrapper">
       <header class="topnavbar-wrapper">
         <nav role="navigation" class="navbar topnavbar">
@@ -129,5 +130,6 @@
       app.run();
     </script>
     {% endblock %}
+  {% endblock %}
   </body>
 </html>

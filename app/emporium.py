@@ -1,17 +1,24 @@
-import os, sys
+import os, sys, uuid
 
-from flask import Flask
+from flask import Flask, render_template
 from flask.ext.openid import OpenID
 
 from util.steam import SteamAPI, SteamMarketAPI
 
 app = Flask(__name__)
-
 app.config.from_pyfile("settings.py")
-
 oid = OpenID(app)
-
 steam = SteamAPI(app.config.get("STEAM_API_KEY"))
+
+@app.errorhandler(500)
+def internal_error_handler(exception):
+    trace = str(uuid.uuid4())
+    app.logger.exception("Server Exception (%s)" % trace)
+    return render_template("error.html", code=500, msg="Internal Server Exception", trace=trace), 500
+
+@app.errorhandler(404)
+def page_not_found_handler(exception):
+    return render_template("error.html", code=404, msg="Page Not Found!"), 404
 
 def load_all_views():
     """

@@ -102,7 +102,7 @@ def route_match_bet(match_id):
     apiassert(match.active, "Invalid match ID")
     apiassert(match.public_date.replace(tzinfo=None) < datetime.utcnow(), "Invalid match ID")
     apiassert(match.lock_date.replace(tzinfo=None) > datetime.utcnow(), "Match is locked")
-    apiassert(len(match.teams) > team, "Invalid Team")
+    apiassert(team in match.teams, "Invalid Team")
 
     # Make sure this user doesn't already have a bet on this match
     g.cursor.execute("SELECT * FROM bets WHERE better=%s AND match=%s", (g.user, match.id))

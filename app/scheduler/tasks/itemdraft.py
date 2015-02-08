@@ -6,20 +6,76 @@ from database import Cursor
 from util.itemdraft import pre_draft, run_draft
 from util.email import Email
 
-RUN_MATCH_DRAFT_QUERY = """
-SELECT id, lock_date, match_date, results FROM matches
-WHERE lock_date < %s AND active AND draft_started_at IS NULL
-LIMIT 1
-"""
-
 log = logging.getLogger(__name__)
 
-def run_item_drafts():
-    """
-    Finds matches that have just been locked (aka started being played)
-    and run item drafts for them.
-    """
+FIND_MATCH_DRAFT_QUERY = """
+SELECT id, lock_date, match_date, teams FROM matches
+WHERE lock_date < now() AND id NOT IN (
+    SELECT match FROM item_drafts)
+LIMIT 1;
+"""
 
+CREATE_ITEM_DRAFT = """
+INSERT INTO item_drafts (match, team, state)
+VALUES (%(match)s, %(team)s, %(state)s);
+"""
+
+def create_item_drafts():
+    with Cursor() as c:
+        match = c.execute(FIND_MATCH_DRAFT_QUERY).fetchone()
+
+        if not match:
+            return
+
+        log.info("Creating new item drafts for match #%s", match.id)
+
+        for team in match.teams:
+            c.execute(CREATE_ITEM_DRAFT, {
+                "match": match.id,
+                "team": team,
+                "state": "pending"
+            })
+
+FIND_ITEM_DRAFT_QUERY = """
+SELECT id, match, team FROM item_drafts
+WHERE state='pending'
+"""
+
+def run_item_drafts():
+    with Cursor() as c:
+        draft = c.execute(FIND_ITEM_DRAFT_QUERY).fetchone()
+
+        if not draft:
+            return
+
+        # Let's make sure we don't get toe-stomped
+        c.execute("UPDATE item_drafts SET state='started', started_at=now() WHERE id=%s", (draft.id, ))
+
+        betters = c.execute(
+            "SELECT id, better, value, items, team FROM bets WHERE match=%s", (draft.match, )).fetchall(as_list=True)
+
+        # Calculate value so we can get return-value
+        total_value = sum(map(lambda i: i.value, betters))
+        winning_team_value = sum(map(lambda i: i.value if i.team == draft.team else 0, betters))
+
+        draft_betters, draft_skins = [], []
+        for better in betters:
+            if better.team != draft.team:
+                draft_skins += [(item.item_id, item.item_meta.get("price")) for item in better.items]
+                continue
+
+            draft_betters.append((better.id,
+                ((total_value * 1.0) / winning_team_value) * better.value))
+
+
+        log.info("[Draft #%s] starting pre-draft", draft.id)
+        pre_draft(draft.id, draft_betters, draft_skins)
+
+        log.info("[Draft #%s] running full draft", draft.id)
+        run_draft(draft.id)
+
+'''
+def run_item_drafts():
     with Cursor() as c:
         entry = c.execute(RUN_MATCH_DRAFT_QUERY, (datetime.utcnow(), )).fetchone()
 
@@ -77,4 +133,4 @@ def run_item_drafts():
         else:
             with Cursor() as c:
                 c.execute("UPDATE matches SET draft_finished_at=%s WHERE id=%s", (datetime.utcnow(), entry.id))
-
+'''

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="wrapper">
+  <div class="abs-center wd-xl">
+    <!-- START panel-->
+    <div class="text-center mb-xl">
+      <div class="text-lg mb-lg">{{ code }}</div>
+      <p class="lead m0">{{ msg }}</p>
+      {% if trace %}
+        <p>If this issue persists, please contact support with the following trace ID: <br /> <b>{{ trace }}</b></p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
