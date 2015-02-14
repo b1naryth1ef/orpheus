@@ -3,7 +3,7 @@ import json, uuid, logging, time, thread
 from emporium import steam
 from database import redis
 
-from jobs import handle_inventory_job
+from jobs import handle_inventory_job, handle_bot_update_job
 
 log = logging.getLogger(__name__)
 
@@ -28,7 +28,8 @@ class JobQueue(object):
         log.info("Finished job #%s (%s) in %ss" % (id, self.name, (time.time() - start)))
 
 QUEUES = [
-    ("inventory", handle_inventory_job)
+    ("inventory", handle_inventory_job),
+    ("botupdate", handle_bot_update_job),
 ]
 
 def start_queues():

@@ -40,6 +40,7 @@ def process_inventory(data, steamid):
         if not obj.get('tradable') or not 'icon_url_large' in obj or not 'actions' in obj:
             continue
 
+        """
         asset_id = filter(lambda i: i.get("name") == "Inspect in Game...", obj['actions'])
         if len(asset_id) != 1:
             continue
@@ -49,6 +50,7 @@ def process_inventory(data, steamid):
         if not asset_id.isdigit():
             log.warning("Got an assetid which is not an integer: %s", asset_id)
             continue
+        """
 
         # Grab some general information
         item_name = obj['market_hash_name']
@@ -56,22 +58,22 @@ def process_inventory(data, steamid):
         type_id, price = process_item(item_name, item_image, obj.get('descriptions', []))
 
         # Make sure we have this item in the database, and it's not totally fuck-boner-fied
-        existing_item = c.execute("SELECT state, owner FROM items WHERE id=%s", (asset_id, )).fetchone()
+        existing_item = c.execute("SELECT state, owner FROM items WHERE id=%s", (item_id, )).fetchone()
         if existing_item:
             if existing_item.state != ItemState.EXTERNAL:
                 if existing_item.state == ItemState.LOCKED:
-                    log.error("Found itemid %s in inventory %s, but it's locked!" % (asset_id, steamid))
+                    log.error("Found itemid %s in inventory %s, but it's locked!" % (item_id, steamid))
                     continue
 
             if not existing_item.owner:
-                log.debug("Updating owner for item %s" % asset_id)
-                c.execute("UPDATE items SET owner=%s WHERE id=%s", (steamid, asset_id))
+                log.debug("Updating owner for item %s" % item_id)
+                c.execute("UPDATE items SET owner=%s WHERE id=%s", (steamid, item_id))
         else:
             c.execute("""
                 INSERT INTO items (id, owner, type_id, class_id, instance_id, state, meta)
                 VALUES (%(id)s, %(owner)s, %(type_id)s, %(class_id)s, %(instance_id)s, %(state)s, %(meta)s);
             """, {
-                "id": asset_id,
+                "id": item_id,
                 "owner": steamid,
                 "type_id": type_id,
                 "class_id": item['classid'],
@@ -88,7 +90,7 @@ def process_inventory(data, steamid):
             continue
 
         inv.append({
-            "id": asset_id,
+            "id": item_id,
             "type": type_id,
             "price": price,
             "image": item_image
@@ -125,4 +127,13 @@ def handle_inventory_job(job):
         result = {"success": False, "inventory": {}, "type": "inventory"}
 
     WebPush(job['user']).send(result)
+
+def handle_bot_update_job(job):
+    with Cursor() as c:
+        steamid = c.execute("SELECT steamid FROM bots WHERE id=%s", (job['bot'], )).fetchone().steamid
+
+        inv = steam.market(730).get_inventory(steamid)
+        inv = process_inventory(inv, steamid)
+        items = map(lambda i: int(i['id']), inv)
+        c.execute("UPDATE bots SET inventory=%s WHERE id=%s", (items, job['bot']))
 

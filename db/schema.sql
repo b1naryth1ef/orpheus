@@ -191,7 +191,7 @@ CREATE TABLE matches (
   Represents a bet placed on a match
 */
 
-CREATE TYPE bet_state AS ENUM ('OFFERED', 'CONFIRMED', 'WON', 'LOST', 'CANCELLED');
+CREATE TYPE bet_state AS ENUM ('NEW', 'CONFIRMED', 'WON', 'LOST', 'CANCELLED');
 
 CREATE TABLE bets (
     id SERIAL PRIMARY KEY,
@@ -208,6 +208,31 @@ CREATE TABLE bets (
 CREATE INDEX ON bets (items);
 CREATE INDEX ON bets (winnings);
 CREATE INDEX on bets (state);
+
+
+/*
+  A trade
+*/
+
+CREATE TYPE trade_state AS ENUM ('NEW', 'IN-PROGRESS', 'OFFERED', 'ACCEPTED', 'REJECTED', 'UNKNOWN');
+CREATE TYPE trade_type AS ENUM ('BET', 'RETURNS', 'INTERNAL');
+
+CREATE TABLE trades (
+  id SERIAL PRIMARY KEY,
+  offerid integer,
+  state trade_state,
+  ttype trade_type,
+  to_id numeric NOT NULL,
+  message text,
+  items_in numeric[],
+  items_out numeric[],
+  created_at timestamp with time zone,
+
+  /* Optional References */
+  bot_ref integer REFERENCES bots(id),
+  user_ref integer REFERENCES users(id),
+  bet_ref integer REFERENCES bets(id)
+);
 
 
 /*

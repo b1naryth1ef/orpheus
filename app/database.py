@@ -26,6 +26,15 @@ def get_connection(database=None):
     dbc.autocommit = True
     return dbc
 
+def create_insert_query(table, *args):
+    return """
+    INSERT INTO {table} ({keys}) VALUES ({values})
+    RETURNING id;
+    """.format(
+        table=table,
+        keys=', '.join(args),
+        values=', '.join(map(lambda i: "%({})s".format(i), args)))
+
 class ResultSetIterable(object):
     def __init__(self, cursor):
         self.cursor = cursor
@@ -46,9 +55,10 @@ class ResultSetIterable(object):
         return self.cursor.fetchone()
 
 class Cursor(object):
-    def __init__(self, database=None, commit=False):
+    def __init__(self, database=None, commit=False, transaction=False):
         self.db = get_connection(database)
         self.commit = commit
+        self.transaction = transaction
         self.cursor = self.db.cursor()
 
     @staticmethod
@@ -79,6 +89,9 @@ class Cursor(object):
         return ResultSetIterable(self.cursor)
 
     def __enter__(self):
+        if self.transaction:
+            self.db.set_session(autocommit=False)
+            self.commit = True
         return self
 
     def __exit__(self, typ, value, tb):
