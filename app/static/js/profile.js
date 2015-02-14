@@ -19,6 +19,10 @@ profile.renderProfile = (function (id) {
             if (data.success) {
                 $(".profile-container").html(this.app.render("profile", {user: data}));
                 this.renderBackgroundImage(data);
+
+                if (data.id == this.app.user.id) {
+                    this.renderBetHistory(data.bets.detail);
+                }
             }
         }).bind(this)
     });
@@ -29,5 +33,13 @@ profile.renderBackgroundImage = (function (data) {
     var pattern = test.generate($(".bg-cover").width(), $(".bg-cover").height());
 
     $(".bg-cover").css("background-image", 'url(' + pattern.dataUri + ')');
+}).bind(profile);
+
+profile.renderBetHistory = (function (data) {
+    _.each(data, (function (item) {
+        $(".bet-history").append(this.app.render("past_bet", {
+            bet: item
+        }));
+    }).bind(this));
 }).bind(profile);
 

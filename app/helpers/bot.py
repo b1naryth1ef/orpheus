@@ -1,9 +1,14 @@
 from datetime import datetime
 from database import Cursor
 
+from util import create_enum
+
+BotStatus = create_enum('NEW', 'COOLDOWN', 'AVAIL', 'USED', 'INVALID')
+
+
 BOT_SPACE_QUERY = """
-SELECT count(*) * 999 as c, sum(array_length(inventory, 1)) as s FROM bots WHERE status > 'NOAUTH'
-"""
+SELECT count(*) * 999 as c, sum(array_length(inventory, 1)) as s FROM bots WHERE status IN ('%s', '%s')
+""" % (BotStatus.AVAIL, BotStatus.USED)
 
 def get_bot_space():
     """

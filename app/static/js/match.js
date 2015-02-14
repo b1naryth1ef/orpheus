@@ -108,7 +108,6 @@ match.routeRegex(/^\/match\/(\d+)$/, function (route, id) {
         var team = $(ev.target).closest("button").attr("data-team");
 
         var items = _.map(this.getBetSlots(), function (item) {
-            console.log(item);
             return $(item).attr("data-id");
         });
 

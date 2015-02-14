@@ -21,8 +21,8 @@ def get_connection(database=None):
         user=app.config.get("PG_USERNAME"),
         pw=app.config.get("PG_PASSWORD")), cursor_factory=NamedTupleCursor)
 
-    if database not in ['emporium_draft']:
-        bind_custom_types(dbc)
+    # if database not in ['emporium_draft']:
+    #     bind_custom_types(dbc)
     dbc.autocommit = True
     return dbc
 

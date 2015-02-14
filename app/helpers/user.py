@@ -4,17 +4,12 @@ from datetime import datetime
 from emporium import steam
 from database import Cursor, redis
 
+from util import create_enum
 from util.steam import SteamAPIError
 
 log = logging.getLogger(__name__)
 
-class UserGroup(object):
-    NORMAL = 'normal'
-    MODERATOR = 'moderator'
-    ADMIN = 'admin'
-    SUPER = 'super'
-
-    ORDER = [NORMAL, MODERATOR, ADMIN, SUPER]
+UserGroup = create_enum('NORMAL', 'MODERATOR', 'ADMIN', 'SUPER')
 
 DEFAULT_SETTINGS = {}
 

@@ -1,5 +1,6 @@
-import json
+import json, decimal
 
+from util import json_encoder
 from flask import Response, request
 
 class APIResponse(Response):
@@ -13,9 +14,9 @@ class APIResponse(Response):
             self.data = json.dumps(obj,
                 sort_keys=True,
                 indent=2,
-                separators=(',', ': '))
+                separators=(',', ': '), default=json_encoder)
         else:
-            self.data = json.dumps(obj)
+            self.data = json.dumps(obj, default=json_encoder)
 
         self.mimetype = "application/json"
 

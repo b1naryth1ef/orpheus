@@ -2,26 +2,40 @@
     CSGO Emporium Backend Database Schema
 */
 
-CREATE TYPE steam_item AS (
-  item_id integer,
-  class_id integer,
-  instance_id integer,
-  item_meta jsonb
-);
-
-
 /*
   Represents steam items in the database
 */
 
-CREATE TABLE items (
+CREATE TABLE itemtypes (
   id SERIAL PRIMARY KEY,
   name text NOT NULL UNIQUE,
   price decimal,
+  /* May be able to remove this field... */
   meta jsonb
 );
 
-CREATE INDEX ON items (name);
+CREATE INDEX ON itemtypes (name);
+
+
+/*
+  Represents a single item in the database
+
+  owner: steamid, can be null
+  price: cached price, can be null
+*/
+
+CREATE TYPE item_state AS ENUM ('UNKNOWN', 'EXTERNAL', 'INTERNAL', 'LOCKED');
+
+CREATE TABLE items (
+  id numeric PRIMARY KEY,
+  owner bigint,
+  type_id integer REFERENCES itemtypes(id),
+  class_id integer NOT NULL,
+  instance_id integer NOT NULL,
+  price decimal,
+  state item_state,
+  meta jsonb
+);
 
 
 /*
@@ -35,7 +49,7 @@ CREATE INDEX ON items (name);
     settings: the users settings (json)
 */
 
-CREATE TYPE user_group AS ENUM ('normal', 'moderator', 'admin', 'super');
+CREATE TYPE user_group AS ENUM ('NORMAL', 'MODERATOR', 'ADMIN', 'SUPER');
 
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
@@ -63,16 +77,17 @@ CREATE INDEX ON users (steamid);
     active: whether this bot can be used
 */
 
-CREATE TYPE bot_status AS ENUM ('COOLDOWN', 'NOAUTH', 'AVAIL', 'USED');
+CREATE TYPE bot_status AS ENUM ('NEW', 'COOLDOWN', 'AVAIL', 'USED', 'INVALID');
 
 CREATE TABLE bots (
     id SERIAL PRIMARY KEY,
     steamid character varying(255),
     username character varying(255),
     password character varying(255),
+    apikey character varying(32),
     sentry bytea,
     status bot_status,
-    inventory steam_item[],
+    inventory numeric[],
     last_activity timestamp with time zone,
     active boolean
 );
@@ -176,7 +191,7 @@ CREATE TABLE matches (
   Represents a bet placed on a match
 */
 
-CREATE TYPE bet_state AS ENUM ('offered', 'confirmed', 'won', 'lost', 'cancelled');
+CREATE TYPE bet_state AS ENUM ('OFFERED', 'CONFIRMED', 'WON', 'LOST', 'CANCELLED');
 
 CREATE TABLE bets (
     id SERIAL PRIMARY KEY,
@@ -184,8 +199,8 @@ CREATE TABLE bets (
     match integer REFERENCES matches(id),
     team integer,
     value integer,
-    items steam_item[],
-    winnings steam_item[],
+    items numeric[],
+    winnings numeric[],
     state bet_state,
     created_at timestamp with time zone
 );
@@ -199,7 +214,7 @@ CREATE INDEX on bets (state);
   A single item draft
 */
 
-CREATE TYPE item_draft_state AS ENUM ('pending', 'started', 'failed', 'completed', 'discarded', 'used');
+CREATE TYPE item_draft_state AS ENUM ('PENDING', 'STARTED', 'FAILED', 'COMPLETED', 'DISCARDED', 'USED');
 
 CREATE TABLE item_drafts (
     id SERIAL PRIMARY KEY,

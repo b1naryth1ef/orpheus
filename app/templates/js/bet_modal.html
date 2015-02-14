@@ -4,7 +4,7 @@
       <div class="modal-header">
         <button type="button" data-dismiss="modal" class="close">×</button>
         <h2 id="bet-modal-header" class="modal-title" style="text-align: center;">
-          <%- match.teams.map(function (item) { return item.name }).join(" VS ") %>
+          <%- _.map(match.teams, function (item) { return item.name }).join(" VS ") %>
           </h4>
       </div>
       <div class="modal-body">
@@ -24,7 +24,7 @@
         </div>
         <div class="row-centered" style="margin-top: 10px;">
           <% for (team in match.teams) { %>
-          <button type="button" class="mb-sm btn btn-success btn-placebet" data-team="<%= team %>">
+          <button type="button" class="mb-sm btn btn-success btn-placebet" data-team="<%= match.teams[team].id%>">
             <h4>Place bet on <%= match.teams[team].name %></h4>
           </button>
           <% } %>

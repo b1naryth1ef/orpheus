@@ -86,9 +86,6 @@ def route_match_bet(match_id):
         "max_value_item", "max_value_total",
     id=match_id).fetchone()
 
-    itemvs = g.cursor.execute("SELECT id, name, price FROM items WHERE id IN %s", (tuple(items), )).fetchall(as_list=True)
-    apiassert(len(itemvs) == len(items), "Invalid Item ID's")
-
     # Make sure we haven't bet too much shit
     if match.max_value_item:
         for item in itemvs:
@@ -113,7 +110,7 @@ def route_match_bet(match_id):
     apiassert(avail > len(items), "No space left for bet")
 
     return APIResponse({
-        "bet": create_bet(g.user, match_id, team, itemvs)
+        "bet": create_bet(g.user, match_id, team, items)
     })
 
 GET_GAMES_SQL = """

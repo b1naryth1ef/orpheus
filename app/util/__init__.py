@@ -1,4 +1,17 @@
+import decimal
 from flask import flash, redirect
+
+class BaseEnum(object):
+    pass
+
+def create_enum(*args):
+    class _T(BaseEnum):
+        ORDER = args
+
+    for entry in args:
+        setattr(_T, entry, entry)
+
+    return _T
 
 def flashy(m, f="danger", u="/"):
     flash(m, f)
@@ -17,3 +30,7 @@ def paginate(page, per_page=25):
 
     return per_page, page * per_page
 
+def json_encoder(obj):
+    if isinstance(obj, decimal.Decimal):
+        return str(float(obj))
+    raise Exception("Unsupported type: %s" % obj.__class__.__name__)

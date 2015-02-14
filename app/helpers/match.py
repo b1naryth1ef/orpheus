@@ -79,7 +79,7 @@ def match_to_json(m, user=None):
     match['id'] = m.id
     match['game'] = m.game
     match['when'] = int(m.match_date.strftime("%s"))
-    match['teams'] = []
+    match['teams'] = {}
     match['extra'] = {}
     match['stats'] = {}
 
@@ -89,7 +89,7 @@ def match_to_json(m, user=None):
             count(*) as count,
             sum(value) as value,
             team
-        FROM bets WHERE match=%s AND state >= 'confirmed' GROUP BY team""", (m.id, )).fetchall(as_list=True)
+        FROM bets WHERE match=%s AND state >= 'CONFIRMED' GROUP BY team""", (m.id, )).fetchall(as_list=True)
 
     match['stats']['players'] = sum(map(lambda i: i.count, bet_stats))
     match['stats']['skins'] = sum(map(lambda i: i.skins_count, bet_stats))
@@ -126,24 +126,31 @@ def match_to_json(m, user=None):
             team_data['odds'] = float("{0:.2f}".format(bet_stats[team.id].count / total_bets))
             values[team.id] = bet_stats[team.id].value
 
-        match['teams'].append(team_data)
+        match['teams'][team.id] = team_data
 
     if user:
         match['me'] = {}
 
-        mybet = c.execute("""
-            SELECT id, team, items::steam_item[], winnings::steam_item[], state, value
-            FROM bets WHERE match=%s AND better=%s
-        """, (m.id, user)).fetchone()
+        mybet = c.execute(
+            """SELECT id, items, winnings, team, state, value FROM bets WHERE match=%s AND better=%s""", (m.id, user)
+        ).fetchone()
 
         if mybet:
+            # Holy sql batman
+            items = c.execute("""
+                SELECT i.id, i.type_id, i.price, i.meta, it.name as name FROM
+                    (SELECT unnest(array_cat(b.items, b.winnings)) AS item_id FROM bets b WHERE b.id=%s) b
+                JOIN items i ON i.id=item_id
+                JOIN itemtypes it ON it.id=i.type_id;
+            """, (mybet.id, )).fetchall()
+
             match['me']['id'] = mybet.id
             match['me']['team'] = mybet.team
             match['me']['state'] = mybet.state
             match['me']['value'] = mybet.value
             match['me']['state'] = mybet.state
 
-            if total_value > mybet.value:
+            if total_value > mybet.value and mybet.team in values:
                 my_return = ((total_value * 1.0) / values[mybet.team]) * mybet.value
             else:
                 my_return = mybet.value
@@ -152,18 +159,21 @@ def match_to_json(m, user=None):
 
             # Load items in sub query :(
             match['me']['items'] = []
+            match['me']['winnings'] = []
 
-            items = c.execute("SELECT id, name, price, meta FROM items WHERE id IN %s", (tuple(
-                map(lambda i: i.item_id, mybet.items)), ))
-
-            for item in items.fetchall():
-                match['me']['items'].append({
+            for item in items:
+                data = {
                     "id": item.id,
                     "name": item.name,
-                    "price": float(item.price),
-                    "image": item.meta['image']
-                })
+                    "price": item.price,
+                    "image": item.meta['image'],
+                }
 
+                if item.id in mybet.items:
+                    match['me']['items'].append(data)
+
+                if item.id in (mybet.winnings or []):
+                    match['me']['winnings'].append(data)
 
     for key in ['league', 'type', 'event', 'streams', 'maps', 'note']:
         if key in m.meta:

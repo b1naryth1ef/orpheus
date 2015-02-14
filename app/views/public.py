@@ -5,7 +5,9 @@ from util.perms import authed
 
 public = Blueprint("public", __name__)
 
+tos_content = Markdown().convert(open("docs/tos.md").read())
 rules_content = Markdown().convert(open("docs/rules.md").read())
+humans_content = open("static/humans.txt").read()
 
 @public.route("/")
 def route_index():
@@ -15,12 +17,20 @@ def route_index():
 def route_bet_mid(matchid):
     return render_template("match.html")
 
-@public.route("/rules")
-def route_faq():
-    return render_template("rules.html", content=rules_content)
 
 @public.route("/profile/<id>")
 @public.route("/profile")
 def route_profile(id=None):
     return render_template("profile.html")
 
+@public.route("/humans.txt")
+def route_humans():
+    return humans_content
+
+@public.route("/rules")
+def route_faq():
+    return render_template("prose.html", content=rules_content)
+
+@public.route("/tos")
+def route_tos():
+    return render_template("prose.html", content=tos_content)

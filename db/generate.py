@@ -9,8 +9,8 @@ ONE_WEEK_PAST = datetime.utcnow() + relativedelta(weeks=-1)
 ONE_WEEK_FUTURE = datetime.utcnow() + relativedelta(weeks=1)
 
 USERS = [
-    ("76561198037632722", "super"),
-    ("76561198031651584", "normal"),
+    ("76561198037632722", "SUPER"),
+    ("76561198031651584", "NORMAL"),
 ]
 
 RANDOM_STEAMIDS = json.load(open(os.path.join(cur_dir, "random_steamids.json"), "r"))
@@ -22,7 +22,7 @@ def generate_users(t, db):
 
     for steamid in RANDOM_STEAMIDS:
         t.execute("INSERT INTO users (steamid, active, ugroup) VALUES (%s, %s, %s)",
-            (steamid, True, "normal"))
+            (steamid, True, "NORMAL"))
 
 GAME = {
     "name": "CS:GO",
