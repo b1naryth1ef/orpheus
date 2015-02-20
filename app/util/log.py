@@ -1,4 +1,4 @@
-import logging
+import logging, os
 
 LEVELS = {
     "urllib3": logging.WARN,
@@ -15,7 +15,11 @@ def setup_logging():
     logging.basicConfig(level=logging.DEBUG, format=FORMAT)
     set_logging_levels()
 
-    file_handler = logging.FileHandler('/tmp/csgofort.log')
+    if os.path.exists("/var/log/emporium"):
+        file_handler = logging.FileHandler('/var/log/emporium/app.log')
+    else:
+        file_handler = logging.FileHandler('/tmp/emporium.log')
+
     file_handler.setFormatter(logging.Formatter(FORMAT))
 
     root = logging.getLogger()
