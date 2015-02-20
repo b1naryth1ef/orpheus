@@ -10,7 +10,7 @@ BetState = create_enum('NEW', 'OFFERED', 'CONFIRMED', 'WON', 'LOST', 'CANCELLED'
 
 CREATE_BET_SQL = create_insert_query("bets", "better", "match", "team", "items", "value", "state", "created_at")
 CREATE_TRADE_SQL = create_insert_query("trades",
-    "state", "ttype", "to_id", "message", "items_in", "items_out", "created_at", "user_ref", "bet_ref")
+    "state", "ttype", "to_id", "message", "items_in", "items_out", "created_at", "user_ref", "bet_ref", "token")
 LOCK_ITEM_SQL = "UPDATE items SET price=%s WHERE id=%s"
 
 def create_bet(user, match, team, items):
@@ -40,20 +40,21 @@ def create_bet(user, match, team, items):
             'value': sum(map(lambda i: i.price, items_q)),
         }).fetchone()
 
-        # Get the user's steamid for the trade
-        user = c.execute("SELECT id, steamid FROM users WHERE id=%s", (user, )).fetchone()
+        # Get the user's steamid and token for the trade
+        user = c.execute("SELECT id, steamid, trade_token FROM users WHERE id=%s", (user, )).fetchone()
 
         # Create a new trade
         tid = c.execute(CREATE_TRADE_SQL, {
             'state': TradeState.NEW,
             'ttype': TradeType.BET,
             'to_id': user.steamid,
+            'token': user.trade_token,
             'message': 'I should do this...',
             'items_in': items,
             'items_out': [],
             'created_at': datetime.utcnow(),
             'user_ref': user.id,
-            'bet_ref': bid.id
+            'bet_ref': bid.id,
         }).fetchone()
 
         # Finally, we queue the bet to a bot

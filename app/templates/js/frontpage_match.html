@@ -1,6 +1,6 @@
 
-<div class="row match-row clickable <%= match.results ? 'match-over' : '' %>" data-id="<%- match.id %>">
-  <div class="col-lg-12">
+<div class="row-responsive match-row clickable <%= match.results ? 'match-over' : '' %>" data-id="<%- match.id %>">
+  <div class="col-lg-6">
     <div id="panelDemo7" class="panel panel-default">
       <div class="panel-heading">
         <h2 style="text-align: center">
@@ -12,30 +12,36 @@
 
           <% } %>
         </h2>
+        <% if (match.extra.note) { %>
+        <div role="alert" class="alert alert-warning">
+          <strong>Match Note: </strong> <%= match.extra.note %>
+        </div>
+        <% } %>
       </div>
       <div class="panel-body">
         <div class="row">
           <div class="col-md-3">
-            <img src="<%= match.teams[0].logo %>" style="max-height: 200px; max-width: 350px" class="img-rounded <%=(match.results && match.results.winner == match.teams[0].id) ? 'team-won' : ''%>" />
+            <% var teams = _.values(match.teams) %>
+            <img src="<%= teams[0].logo %>" style="max-height: 150px; max-width: 250px" class="img-rounded <%=(match.results && match.results.winner == teams[0].id) ? 'team-won' : ''%> img-responsive" />
           </div>
 
           <div class="col-md-6">
-            <img src="<%= match.extra.league.splash %>" style="max-width: 600px; max-height: 200px; margin: 0 auto;" class="img-responsive">
+            <img src="<%= match.extra.league.splash %>" style="max-width: 300px; max-height: 100px; margin: 0 auto;" class="img-responsive">
           </div>
 
           <div class="col-md-3">
-            <img src="<%= match.teams[1].logo %>" style="max-height: 200px; max-width: 350px; display: block; float: right;" class="img-rounded <%=(match.results && match.results.winner == match.teams[1].id) ? 'team-won' : ''%>" />
+            <img src="<%= teams[1].logo %>" style="max-height: 150px; max-width: 250px; display: block; float: right;" class="img-rounded <%=(match.results && match.results.winner == teams[1].id) ? 'team-won' : ''%>" />
           </div>
         </div>
         <div class="row">
           <div class="col-md-6 col-md-offset-3">
             <div class="row">
-              <div class="col-md-6"><h3><%= match.teams[0].odds * 100 %>%</h3></div>
-              <div class="col-md-6"><h3 style="text-align: right"><%= match.teams[1].odds * 100 %>%</h3></div>
+              <div class="col-md-6"><h3><%= teams[1].odds * 100 %>%</h3></div>
+              <div class="col-md-6"><h3 style="text-align: right"><%= teams[1].odds * 100 %>%</h3></div>
             </div>
             <div class="progress">
-              <div style="width: <%= match.teams[0].odds * 100 %>%" class="progress-bar bg-gray-darker"></div>
-              <div style="width: <%= match.teams[1].odds * 100 %>%; display: block; float: right;" class="progress-bar bg-gray"></div>
+              <div style="width: <%= teams[0].odds * 100 %>%" class="progress-bar bg-gray-darker"></div>
+              <div style="width: <%= teams[1].odds * 100 %>%; display: block; float: right;" class="progress-bar bg-gray"></div>
             </div>
             <% if (match.extra.maps) { %>
               <h4 style="text-align: center">Maps: <%= match.extra.maps.join(', ') %></h4>

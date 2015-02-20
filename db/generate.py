@@ -8,31 +8,27 @@ cur_dir = os.path.dirname(__file__)
 ONE_WEEK_PAST = datetime.utcnow() + relativedelta(weeks=-1)
 ONE_WEEK_FUTURE = datetime.utcnow() + relativedelta(weeks=1)
 
-USERS = [
-    ("76561198037632722", "SUPER"),
-    ("76561198031651584", "NORMAL"),
-]
-
+B1NZY_USER = ("76561198037632722", "jSiDJlpo", True, "SUPER")
 RANDOM_STEAMIDS = json.load(open(os.path.join(cur_dir, "random_steamids.json"), "r"))
 
 def generate_users(t, db):
-    for user in USERS:
-        t.execute("INSERT INTO users (steamid, active, ugroup) VALUES (%s, %s, %s)",
-            (user[0], True, user[1]))
+    t.execute("INSERT INTO users (steamid, trade_token, active, ugroup) VALUES (%s, %s, %s, %s)", B1NZY_USER)
 
     for steamid in RANDOM_STEAMIDS:
         t.execute("INSERT INTO users (steamid, active, ugroup) VALUES (%s, %s, %s)",
             (steamid, True, "NORMAL"))
 
-GAME = {
-    "name": "CS:GO",
-    "appid": 730,
-    "active": True,
-}
+GAMES = [
+    {
+        "name": "CS:GO",
+        "appid": 730,
+        "active": True,
+    }
+]
 
 def generate_games(t, db):
-    t.execute("INSERT INTO games (name, appid, active) VALUES (%(name)s, %(appid)s, %(active)s)",
-        GAME)
+    for game in GAMES:
+        t.execute("INSERT INTO games (name, appid, active) VALUES (%(name)s, %(appid)s, %(active)s)", game)
 
 TEAMS = [
     ("c9", "Cloud9", "/static/img/teams/cloud9.png"),
@@ -52,6 +48,7 @@ MATCHES = [
     {
         "game": 1,
         "teams": [1, 5],
+        "state": "NEW",
         "meta": {
             "league": {
                 "name": "CEVO",
@@ -69,6 +66,7 @@ MATCHES = [
     },
     {
         "game": 1,
+        "state": "NEW",
         "teams": [3, 4],
         "meta": {
             "league": {
@@ -88,6 +86,7 @@ MATCHES = [
     },
     {
         "game": 1,
+        "state": "LOCKED",
         "teams": [5, 6],
         "meta": {
             "league": {
@@ -107,8 +106,8 @@ MATCHES = [
 ]
 
 MATCH_QUERY = """
-INSERT INTO matches (game, teams, meta, lock_date, match_date, public_date, active) VALUES
-(%(game)s, %(teams)s, %(meta)s, %(lock_date)s, %(match_date)s, %(public_date)s, true);
+INSERT INTO matches (state, game, teams, meta, lock_date, match_date, public_date, active) VALUES
+(%(state)s, %(game)s, %(teams)s, %(meta)s, %(lock_date)s, %(match_date)s, %(public_date)s, true);
 """
 
 def generate_matches(t, db):
@@ -125,7 +124,7 @@ BETS = [
         "team": random.choice([1, 2]),
         "value": random.randint(1, 40),
         "items": [(random.randint(1, 25), 'NULL', 'NULL', random.randint(1, 20)) for i in range(4)],
-        "state": "confirmed",
+        "state": "CONFIRMED",
         "created_at": datetime.utcnow(),
     } for i in range(2500)
 ] + [
@@ -135,7 +134,7 @@ BETS = [
         "team": random.choice([5, 6]),
         "value": random.randint(1, 40),
         "items": [(random.randint(1, 25), 'NULL', 'NULL', random.randint(1, 20)) for i in range(4)],
-        "state": "confirmed",
+        "state": "CONFIRMED",
         "created_at": datetime.utcnow(),
     } for i in range(25000)
 ]
@@ -161,6 +160,6 @@ DATA_GENERATORS = [
     generate_games,
     generate_teams,
     generate_matches,
-    generate_bets
+    # generate_bets
 ]
 

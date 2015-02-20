@@ -33,6 +33,9 @@ def process_inventory(data, steamid):
     c = Cursor()
     inv = []
 
+    if not isinstance(data['rgInventory'], dict):
+        print data
+
     for item_id, item in data['rgInventory'].iteritems():
         key = item['classid'] + "_" + item['instanceid']
         obj = data['rgDescriptions'][key]

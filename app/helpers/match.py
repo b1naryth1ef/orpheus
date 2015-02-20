@@ -56,8 +56,23 @@ def create_match(user, game, teams, meta, lock_date, match_date, public_date, vi
 
         return c.fetchone().id
 
+# This query gets all items pertaining to a match (e.g. winnings or items placed)
+MATCH_GET_ITEMS_QUERY = """
+SELECT i.id, i.type_id, i.price, i.meta, it.name as name FROM
+    (SELECT unnest(array_cat(b.items, b.winnings)) AS item_id FROM bets b WHERE b.id=%s) b
+JOIN items i ON i.id=item_id
+JOIN itemtypes it ON it.id=i.type_id;
+"""
 
-MATCH_SELECT_SQL = "SELECT * FROM matches WHERE id=%s"
+# Select some information about bets for this match
+MATCH_GET_BETS_INFO_QUERY = """
+SELECT
+    sum(array_length(items, 1)) as skins_count,
+    count(*) as count,
+    sum(value) as value,
+    team
+FROM bets WHERE match=%s AND state >= 'CONFIRMED' GROUP BY team
+"""
 
 def match_to_json(m, user=None):
     """
@@ -68,15 +83,15 @@ def match_to_json(m, user=None):
     c = Cursor()
 
     if not isinstance(m, tuple):
-        c.execute(MATCH_SELECT_SQL, (m, ))
+        c.execute("SELECT {} FROM matches WHERE id=%s".format(', '.join(match_to_json.required_fields)), (m, ))
         m = c.fetchone()
 
     if not m:
         raise InvalidRequestError("Failed to match_to_json with arg %s" % m)
 
     match = {}
-
     match['id'] = m.id
+    match['state'] = m.state
     match['game'] = m.game
     match['when'] = int(m.match_date.strftime("%s"))
     match['teams'] = {}
@@ -84,12 +99,7 @@ def match_to_json(m, user=None):
     match['stats'] = {}
 
     # This will most definitily require some fucking caching at some point
-    bet_stats = c.execute("""SELECT
-            sum(array_length(items, 1)) as skins_count,
-            count(*) as count,
-            sum(value) as value,
-            team
-        FROM bets WHERE match=%s AND state >= 'CONFIRMED' GROUP BY team""", (m.id, )).fetchall(as_list=True)
+    bet_stats = c.execute(MATCH_GET_BETS_INFO_QUERY, (m.id, )).fetchall(as_list=True)
 
     match['stats']['players'] = sum(map(lambda i: i.count, bet_stats))
     match['stats']['skins'] = sum(map(lambda i: i.skins_count, bet_stats))
@@ -97,7 +107,7 @@ def match_to_json(m, user=None):
     bet_stats = { i.team: i for i in bet_stats}
 
     # Grab team information, including bets (this should be a join)
-    c.execute("SELECT * FROM teams WHERE id IN %s", (tuple(m.teams), ))
+    c.execute("SELECT id, name, tag, logo FROM teams WHERE id IN %s", (tuple(m.teams), ))
     teams = c.fetchall()
 
     total_bets = sum(map(lambda i: i.count, bet_stats.values())) * 1.0
@@ -131,18 +141,14 @@ def match_to_json(m, user=None):
     if user:
         match['me'] = {}
 
-        mybet = c.execute(
-            """SELECT id, items, winnings, team, state, value FROM bets WHERE match=%s AND better=%s""", (m.id, user)
-        ).fetchone()
+        # Get any bets I placed
+        mybet = c.execute("""
+            SELECT id, items, winnings, team, state, value FROM bets
+            WHERE match=%s AND better=%s AND state != 'CANCELLED'
+        """, (m.id, user)).fetchone()
 
         if mybet:
-            # Holy sql batman
-            items = c.execute("""
-                SELECT i.id, i.type_id, i.price, i.meta, it.name as name FROM
-                    (SELECT unnest(array_cat(b.items, b.winnings)) AS item_id FROM bets b WHERE b.id=%s) b
-                JOIN items i ON i.id=item_id
-                JOIN itemtypes it ON it.id=i.type_id;
-            """, (mybet.id, )).fetchall()
+            items = c.execute(MATCH_GET_ITEMS_QUERY, (mybet.id, )).fetchall()
 
             match['me']['id'] = mybet.id
             match['me']['team'] = mybet.team
@@ -181,4 +187,6 @@ def match_to_json(m, user=None):
 
     match['results'] = m.results
     return match
+
+match_to_json.required_fields = ['id', 'game', 'match_date', 'meta', 'results', 'teams', 'state']
 

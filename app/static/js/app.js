@@ -1,6 +1,6 @@
 /*
-   This is an extremely simple JS view-route controller.
-   */
+    This is an extremely simple JS view-route controller.
+*/
 
 var App = function () {
     this.templates = T || {};

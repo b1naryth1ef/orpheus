@@ -7,11 +7,10 @@
 */
 
 CREATE TABLE itemtypes (
-  id SERIAL PRIMARY KEY,
-  name text NOT NULL UNIQUE,
-  price decimal,
-  /* May be able to remove this field... */
-  meta jsonb
+  id     SERIAL PRIMARY KEY,
+  name   text NOT NULL UNIQUE,
+  price  decimal,
+  meta   jsonb
 );
 
 CREATE INDEX ON itemtypes (name);
@@ -27,14 +26,14 @@ CREATE INDEX ON itemtypes (name);
 CREATE TYPE item_state AS ENUM ('UNKNOWN', 'EXTERNAL', 'INTERNAL', 'LOCKED');
 
 CREATE TABLE items (
-  id numeric PRIMARY KEY,
-  owner bigint,
-  type_id integer REFERENCES itemtypes(id),
-  class_id integer NOT NULL,
-  instance_id integer NOT NULL,
-  price decimal,
-  state item_state,
-  meta jsonb
+  id           numeric PRIMARY KEY,
+  owner        bigint,
+  type_id      integer REFERENCES itemtypes(id),
+  class_id     integer NOT NULL,
+  instance_id  integer NOT NULL,
+  price        decimal,
+  state        item_state,
+  meta         jsonb
 );
 
 
@@ -52,14 +51,15 @@ CREATE TABLE items (
 CREATE TYPE user_group AS ENUM ('NORMAL', 'MODERATOR', 'ADMIN', 'SUPER');
 
 CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
-  steamid character varying(255) NOT NULL UNIQUE,
-  email character varying(255) UNIQUE,
-  active boolean,
-  join_date timestamp with time zone,
-  last_login timestamp with time zone,
-  ugroup user_group,
-  settings jsonb
+  id           SERIAL PRIMARY KEY,
+  steamid      varchar(255) NOT NULL UNIQUE,
+  email        varchar(255) UNIQUE,
+  trade_token  varchar(32) UNIQUE,
+  active       boolean,
+  join_date    timestamp with time zone,
+  last_login   timestamp with time zone,
+  ugroup       user_group,
+  settings     jsonb
 );
 
 CREATE INDEX ON users USING btree (id);
@@ -80,19 +80,19 @@ CREATE INDEX ON users (steamid);
 CREATE TYPE bot_status AS ENUM ('NEW', 'COOLDOWN', 'AVAIL', 'USED', 'INVALID');
 
 CREATE TABLE bots (
-    id SERIAL PRIMARY KEY,
-    steamid character varying(255),
-    username character varying(255),
-    password character varying(255),
-    apikey character varying(32),
-    sentry bytea,
-    status bot_status,
-    inventory numeric[],
-    last_activity timestamp with time zone,
-    active boolean
+    id             SERIAL PRIMARY KEY,
+    steamid        varchar(255),
+    username       varchar(255),
+    password       varchar(255),
+    apikey         varchar(32),
+    sentry         bytea,
+    status         bot_status,
+    inventory      numeric[],
+    last_activity  timestamp with time zone,
+    active         boolean
 );
 
-CREATE INDEX ON bots (inventory);
+CREATE INDEX ON bots USING GIN (inventory);
 
 
 /*
@@ -103,10 +103,10 @@ CREATE INDEX ON bots (inventory);
 */
 
 CREATE TABLE steam_guard_codes (
-    id SERIAL PRIMARY KEY,
-    email character varying(255),
-    username character varying(255),
-    code character varying(5)
+    id        SERIAL PRIMARY KEY,
+    email     varchar(255),
+    username  varchar(255),
+    code      varchar(5)
 );
 
 
@@ -122,14 +122,14 @@ CREATE TABLE steam_guard_codes (
 */
 
 CREATE TABLE games (
-    id SERIAL PRIMARY KEY,
-    name character varying(255) NOT NULL,
-    meta jsonb,
-    appid integer,
-    view_perm user_group,
-    active boolean,
-    created_by integer REFERENCES users(id),
-    created_at timestamp with time zone
+    id          SERIAL PRIMARY KEY,
+    name        varchar(255) NOT NULL,
+    meta        jsonb,
+    appid       integer,
+    view_perm   user_group,
+    active      boolean,
+    created_by  integer REFERENCES users(id),
+    created_at  timestamp with time zone
 );
 
 
@@ -138,13 +138,13 @@ CREATE TABLE games (
 */
 
 CREATE TABLE teams (
-  id SERIAL PRIMARY KEY,
-  tag varchar(24) UNIQUE,
-  name text,
-  logo text,
-  meta jsonb,
-  created_by integer REFERENCES users(id),
-  created_at timestamp with time zone
+  id          SERIAL PRIMARY KEY,
+  tag         varchar(24) UNIQUE,
+  name        text,
+  logo        text,
+  meta        jsonb,
+  created_by  integer REFERENCES users(id),
+  created_at  timestamp with time zone
 );
 
 
@@ -163,27 +163,27 @@ CREATE TABLE teams (
     created_at: when this was created
 */
 
+CREATE TYPE match_state AS ENUM ('NEW', 'OPEN', 'LOCKED', 'ENDED', 'RETURNED');
+
 CREATE TABLE matches (
-    id SERIAL PRIMARY KEY,
-    game integer REFERENCES games(id),
-    teams integer[],
-    meta jsonb,
-    results jsonb,
-    max_value_item decimal,
-    max_value_total decimal,
-    lock_date timestamp with time zone,
-    match_date timestamp with time zone,
-    public_date timestamp with time zone,
-    view_perm user_group,
-    active boolean,
-    created_by integer REFERENCES users(id),
-    created_at timestamp with time zone,
-    results_by integer REFERENCES users(id),
-    results_at timestamp with time zone,
-    items_at timestamp with time zone,
-    draft_started_at timestamp with time zone,
-    draft_finished_at timestamp with time zone,
-    items_distributed boolean
+    id               SERIAL PRIMARY KEY,
+    state            match_state NOT NULL,
+    game             integer REFERENCES games(id),
+    teams            integer[],
+    meta             jsonb,
+    results          jsonb,
+    max_value_item   decimal,
+    max_value_total  decimal,
+    lock_date        timestamp with time zone,
+    match_date       timestamp with time zone,
+    public_date      timestamp with time zone,
+    items_date       timestamp with time zone,
+    view_perm        user_group,
+    active           boolean,
+    created_by       integer REFERENCES users(id),
+    created_at       timestamp with time zone,
+    results_by       integer REFERENCES users(id),
+    results_at       timestamp with time zone
 );
 
 
@@ -191,22 +191,22 @@ CREATE TABLE matches (
   Represents a bet placed on a match
 */
 
-CREATE TYPE bet_state AS ENUM ('NEW', 'CONFIRMED', 'WON', 'LOST', 'CANCELLED');
+CREATE TYPE bet_state AS ENUM ('NEW', 'CANCELLED', 'CONFIRMED', 'WON', 'LOST');
 
 CREATE TABLE bets (
-    id SERIAL PRIMARY KEY,
-    better integer REFERENCES users(id),
-    match integer REFERENCES matches(id),
-    team integer,
-    value integer,
-    items numeric[],
-    winnings numeric[],
-    state bet_state,
-    created_at timestamp with time zone
+    id          SERIAL PRIMARY KEY,
+    better      integer REFERENCES users(id),
+    match       integer REFERENCES matches(id),
+    team        integer,
+    value       integer,
+    items       numeric[],
+    winnings    numeric[],
+    state       bet_state,
+    created_at  timestamp with time zone
 );
 
-CREATE INDEX ON bets (items);
-CREATE INDEX ON bets (winnings);
+CREATE INDEX ON bets USING GIN (items);
+CREATE INDEX ON bets USING GIN (winnings);
 CREATE INDEX on bets (state);
 
 
@@ -218,20 +218,21 @@ CREATE TYPE trade_state AS ENUM ('NEW', 'IN-PROGRESS', 'OFFERED', 'ACCEPTED', 'R
 CREATE TYPE trade_type AS ENUM ('BET', 'RETURNS', 'INTERNAL');
 
 CREATE TABLE trades (
-  id SERIAL PRIMARY KEY,
-  offerid integer,
-  state trade_state,
-  ttype trade_type,
-  to_id numeric NOT NULL,
-  message text,
-  items_in numeric[],
-  items_out numeric[],
-  created_at timestamp with time zone,
+  id          SERIAL PRIMARY KEY,
+  offerid     integer,
+  token       varchar(32),
+  state       trade_state,
+  ttype       trade_type,
+  to_id       numeric NOT NULL,
+  message     text,
+  items_in    numeric[],
+  items_out   numeric[],
+  created_at  timestamp with time zone,
 
   /* Optional References */
-  bot_ref integer REFERENCES bots(id),
-  user_ref integer REFERENCES users(id),
-  bet_ref integer REFERENCES bets(id)
+  bot_ref     integer REFERENCES bots(id),
+  user_ref    integer REFERENCES users(id),
+  bet_ref     integer REFERENCES bets(id)
 );
 
 
@@ -242,11 +243,25 @@ CREATE TABLE trades (
 CREATE TYPE item_draft_state AS ENUM ('PENDING', 'STARTED', 'FAILED', 'COMPLETED', 'DISCARDED', 'USED');
 
 CREATE TABLE item_drafts (
-    id SERIAL PRIMARY KEY,
-    match integer REFERENCES matches(id),
-    team integer REFERENCES teams(id),
-    state item_draft_state,
-    started_at timestamp with time zone,
-    ended_at timestamp with time zone
+    id          SERIAL PRIMARY KEY,
+    match       integer REFERENCES matches(id),
+    team        integer REFERENCES teams(id),
+    state       item_draft_state,
+    started_at  timestamp with time zone,
+    ended_at    timestamp with time zone
 );
+
+/*
+  An exception
+*/
+
+CREATE TABLE exceptions (
+  id          uuid PRIMARY KEY,
+  etype       varchar(128),
+  content     text,
+  meta        jsonb,
+  created_at  timestamp with time zone
+);
+
+CREATE INDEX ON exceptions (etype);
 

@@ -71,7 +71,7 @@
               <h2>Place a Bet</h2>
             </button>
             <% } else { %>
-              <% if (match.me.state == "offered") { %>
+              <% if (match.me.state == "NEW") { %>
                 <div role="alert" class="alert alert-warning">
                   You have a pending bet placed on team <%- match.teams[match.me.team].name %>!
                 </div>

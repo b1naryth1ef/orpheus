@@ -35,10 +35,10 @@ def route_stats_overview():
     pass
 
 MATCH_LIST_QUERY = """
-SELECT * FROM matches
+SELECT {} FROM matches
 WHERE now() > public_date AND active=true
 ORDER BY id LIMIT %s OFFSET %s
-"""
+""".format(', '.join(match_to_json.required_fields))
 
 @api.route("/match/list")
 def route_match_list():
@@ -62,12 +62,18 @@ def route_match_info(id):
     except InvalidRequestError:
         raise APIError("Invalid match ID")
 
+# TODO: deprecate?
 @api.route("/match/<int:id>/items")
 def route_match_items(id):
     match = g.cursor.select("matches", "id", id=match_id).fetchone()
 
     if not match:
         return APIError("Invalid match ID")
+
+MATCH_CONFIRM_BET_FIELDS = [
+    "id", "teams", "lock_date", "match_date", "public_date", "active",
+    "max_value_item", "max_value_total"
+]
 
 @api.route("/match/<int:match_id>/bet", methods=["POST"])
 @authed()
@@ -81,10 +87,8 @@ def route_match_bet(match_id):
     # Make sure this seems mildly valid
     apiassert(0 < len(items) <= 4, "Too many items")
 
-    match = g.cursor.select("matches",
-        "id", "teams", "lock_date", "match_date", "public_date", "active",
-        "max_value_item", "max_value_total",
-    id=match_id).fetchone()
+    # Grab some info for the match
+    match = g.cursor.select("matches", *MATCH_CONFIRM_BET_FIELDS, id=match_id).fetchone()
 
     # Make sure we haven't bet too much shit
     if match.max_value_item:
@@ -102,7 +106,7 @@ def route_match_bet(match_id):
     apiassert(team in match.teams, "Invalid Team")
 
     # Make sure this user doesn't already have a bet on this match
-    g.cursor.execute("SELECT * FROM bets WHERE better=%s AND match=%s", (g.user, match.id))
+    g.cursor.execute("SELECT * FROM bets WHERE better=%s AND match=%s AND state>='CONFIRMED'", (g.user, match.id))
     apiassert(g.cursor.fetchone() == None, "Bet already created")
 
     # Ensure we have space for the items
