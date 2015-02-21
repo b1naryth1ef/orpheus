@@ -34,7 +34,8 @@ InventoryView.prototype.parseData = function (data) {
     }
 
     return {
-        "pages": newData
+        "pages": newData,
+        "cur_page": this.page
     }
 }
 
@@ -49,9 +50,10 @@ InventoryView.prototype.gotoPage = function (page) {
 InventoryView.prototype.render = function (data, opts) {
     var opts = opts || {};
 
+    // This is used for when we "select" inventory items
     if (opts.filtered) {
         var data = _.filter(data, function (obj) {
-            if (opts.filtered.indexOf(obj.uid) == -1) {
+            if (opts.filtered.indexOf(obj.id) == -1) {
                 return obj
             }
         });
@@ -59,12 +61,15 @@ InventoryView.prototype.render = function (data, opts) {
 
     $(this.el).html(this.app.render("inventory", this.parseData(data)));
 
+    // If we're refreshing, we want to just immediatly update things.
+    //  fading would be too jolty.
     if (opts.refresh) {
-        $(".inv-page[data-page='0']").fadeIn();
+        $(".inv-page[data-page='" + this.page + "']").show();
     } else {
-        $(".inv-page[data-page='0']").show();
+        $(".inv-page[data-page='" + this.page + "']").fadeIn();
     }
 
+    // Bind pagination events (TODO: delegate)
     $(".inv-paginate").click((function (ev) {
         if ($(ev.target).hasClass("back")) {
             if (this.page > 0) {

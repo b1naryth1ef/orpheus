@@ -8,7 +8,7 @@ cur_dir = os.path.dirname(__file__)
 ONE_WEEK_PAST = datetime.utcnow() + relativedelta(weeks=-1)
 ONE_WEEK_FUTURE = datetime.utcnow() + relativedelta(weeks=1)
 
-B1NZY_USER = ("76561198037632722", "jSiDJlpo", True, "SUPER")
+# B1NZY_USER = ("76561198037632722", "jSiDJlpo", True, "SUPER")
 RANDOM_STEAMIDS = json.load(open(os.path.join(cur_dir, "random_steamids.json"), "r"))
 
 def generate_users(t, db):

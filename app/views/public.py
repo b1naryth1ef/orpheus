@@ -23,6 +23,11 @@ def route_bet_mid(matchid):
 def route_profile(id=None):
     return render_template("profile.html")
 
+@public.route("/settings")
+@authed()
+def route_settings():
+    return render_template("settings.html")
+
 @public.route("/humans.txt")
 def route_humans():
     return humans_content

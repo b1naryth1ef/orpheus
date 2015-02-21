@@ -33,7 +33,7 @@
     <ul class="pagination pagination-lg">
       <li><a href="#" class="inv-paginate back">«</a></li>
       <% for (page in pages) { %>
-        <li class="<%- page == '0' ? 'active' :'' %>">
+        <li class="<%- page == cur_page ? 'active' :'' %>">
           <a href="#" class="inv-paginate page" data-page="<%- page %>"><%- parseInt(page) + 1 %></a>
         </li>
       <% } %>

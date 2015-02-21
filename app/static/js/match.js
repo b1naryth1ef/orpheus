@@ -95,15 +95,16 @@ match.routeRegex(/^\/match\/(\d+)$/, function (route, id) {
         if (target.hasClass("bet-slot")) {
             target.detach();
             $(".bet-slot:hidden").first().show();
-            this.ignored = _.without(this.ignored, target.attr("data-uid"));
-            this.inventoryView.render(this.cachedInventory, {refresh: false, filtered: this.ignored});
+            this.ignored = _.without(this.ignored, target.attr("data-id"));
+            this.inventoryView.render(this.cachedInventory, {refresh: true, filtered: this.ignored, keepPage: true});
         } else if (this.getBetSlots(true).length > 0) {
-            this.ignored.push(target.attr("data-uid"));
-            this.inventoryView.render(this.cachedInventory, {refresh: false, filtered: this.ignored});
+            this.ignored.push(target.attr("data-id"));
+            this.inventoryView.render(this.cachedInventory, {refresh: true, filtered: this.ignored, keepPage: true});
             this.addItemToSlot(target);
         }
     }).bind(this));
 
+    // TODO: make a seperate function
     $(".matches-container").delegate(".btn-placebet", "click", (function (ev) {
         var team = $(ev.target).closest("button").attr("data-team");
 
@@ -119,11 +120,11 @@ match.routeRegex(/^\/match\/(\d+)$/, function (route, id) {
             },
             success: (function (data) {
                 if (!data.success) {
-                    // TODO: error alert
-                    console.error(data.message);
-                } else {
-                    // TODO: success alert
                     $("#bet-modal").modal("hide");
+                    $.notify("Error placing bet: " + data.message, "danger");
+                } else {
+                    $("#bet-modal").modal("hide");
+                    $.notify("Placed Bet!", "success");
                     this.renderSingleMatch(this.cachedMatch.id);
                 }
             }).bind(this)

@@ -10,7 +10,7 @@ from database import Cursor, redis
 from helpers.match import match_to_json
 from helpers.bot import get_bot_space
 from helpers.bet import BetState, create_bet
-from helpers.user import UserGroup, gache_nickname
+from helpers.user import UserGroup, gache_nickname, user_save_settings, InvalidTradeUrl, USER_SETTING_SAVE_PARAMS
 
 from util import paginate
 from util.perms import authed
@@ -202,7 +202,7 @@ def route_user_info(id):
                 "team": entry.team,
                 "state": entry.state,
                 "winnings": entry.winnings,
-                "items": map(lambda i: i.to_dict(), entry.items)
+                "items": entry.items
             })
 
         return APIResponse(base)
@@ -233,4 +233,28 @@ def auth_route_avatar(id):
 
     buffered.seek(0)
     return send_file(buffered, mimetype="image/jpeg")
+
+@api.route("/user/settings/save", methods=['POST'])
+def user_settings_save():
+    try:
+        sent_data = json.loads(request.values.get("data", "{}"))
+    except:
+        raise APIError("Failed to decode object")
+
+    data_to_save = {}
+
+    for entry in USER_SETTING_SAVE_PARAMS:
+        if entry in sent_data:
+            data_to_save[entry] = sent_data[entry]
+
+    apiassert(len(data_to_save) == len(USER_SETTING_SAVE_PARAMS), "Invalid Params")
+
+    try:
+        user_save_settings(g.user, data_to_save)
+    except InvalidTradeUrl:
+        raise APIError("Invalid Trade URL")
+    except Exception:
+        raise APIError("Failed to save settings")
+
+    return APIResponse()
 

@@ -37,9 +37,9 @@ def create_or_login(resp):
             raise UserError("Sorry, your not part of the beta! :(")
 
         if id in auto_admin_steamids:
-            group = 'super'
+            group = 'SUPER'
         else:
-            group = 'normal'
+            group = 'NORMAL'
         g.user = create_user(id, group)
         g.group = group
 
@@ -66,12 +66,13 @@ def route_ping():
 
 @auth.route("/info")
 def route_info():
+    raise APIError("Deprecated")
     if not g.user:
         return APIResponse({
             "authed": False
         })
 
-    g.cursor.execute("SELECT steamid, settings, ugroup FROM users WHERE id=%s", (g.user, ))
+    g.cursor.execute("SELECT steamid, settings, ugroup, trade_token FROM users WHERE id=%s", (g.user, ))
     resp = g.cursor.fetchone()
 
     if not resp:
@@ -80,13 +81,16 @@ def route_info():
             "authed": False
         })
 
+    settings = resp.settings
+    settings['trade_url'] = 'https://steamcommunity.com/tradeoffer/new/?partner=77366994&token=jSiDJlpo'
+
     return APIResponse({
         "authed": True,
         "user": {
             "id": g.user,
             "name": gache_nickname(resp.steamid),
             "steamid": str(resp.steamid),
-            "settings": resp.settings,
+            "settings": settings,
             "group": resp.ugroup
         }
     })

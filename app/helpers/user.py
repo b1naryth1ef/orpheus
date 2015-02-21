@@ -1,4 +1,4 @@
-import logging
+import logging, re
 from datetime import datetime
 
 from emporium import steam
@@ -9,9 +9,21 @@ from util.steam import SteamAPIError
 
 log = logging.getLogger(__name__)
 
+class InvalidTradeUrl(Exception): pass
+
 UserGroup = create_enum('NORMAL', 'MODERATOR', 'ADMIN', 'SUPER')
 
-DEFAULT_SETTINGS = {}
+DEFAULT_SETTINGS = {
+    "ui": {
+        "disable_streams": False,
+        "disable_push": False
+    }
+}
+
+USER_SETTING_SAVE_PARAMS = [
+    "trade_url", "ui.disable_streams", "ui.disable_push"
+]
+
 
 CREATE_USER_QUERY = """
 INSERT INTO users (steamid, active, join_date, last_login, ugroup, settings)
@@ -51,7 +63,7 @@ def get_user_info(uid):
         }
 
     with Cursor() as c:
-        resp = c.execute("SELECT steamid, settings, ugroup FROM users WHERE id=%s", (uid, )).fetchone()
+        resp = c.execute("SELECT steamid, settings, ugroup, trade_token FROM users WHERE id=%s", (uid, )).fetchone()
 
     if not uid:
         return {
@@ -64,6 +76,10 @@ def get_user_info(uid):
         log.exception("Failed to get and cache nickname (%s)" % resp.steamid)
         nick = ""
 
+    # Rebuild the trade url because UX
+    resp.settings['trade_url'] = 'https://steamcommunity.com/tradeoffer/new/?partner=%s&token=%s' % (
+        resp.steamid, resp.trade_token)
+
     return {
         "authed": True,
         "user": {
@@ -74,4 +90,33 @@ def get_user_info(uid):
             "group": resp.ugroup
         }
     }
+
+INSERT_BOTH_SETTINGS = """
+UPDATE users SET settings=%s, trade_token=%s WHERE id=%s
+"""
+
+INSERT_ONLY_SETTINGS = """
+UPDATE users SET settings=%s WHERE id=%s
+"""
+
+def user_save_settings(uid, obj):
+    assert(isinstance(obj["ui.disable_streams"], bool))
+    assert(isinstance(obj["ui.disable_push"], bool))
+
+    trade_url = obj.get('trade_url')
+    obj = {
+        "ui": {
+            "disable_streams": obj["ui.disable_streams"],
+            "disable_push": obj["ui.disable_push"],
+       }
+    }
+
+    with Cursor() as c:
+        if trade_url:
+            token = re.findall("token=([a-zA-Z0-9\-]+)", trade_url)
+            if len(token) != 1:
+                raise InvalidTradeUrl("Invalid trade_url")
+            c.execute(INSERT_BOTH_SETTINGS, (Cursor.json(obj), token[0], uid))
+        else:
+            c.execute(INSERT_ONLY_SETTINGS, (Cursor.json(obj), uid))
 
