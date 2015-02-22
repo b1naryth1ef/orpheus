@@ -172,7 +172,7 @@ USER_BETS_QUERY = """
 SELECT b.id, b.match, b.team, b.value, b.state, b.winnings, b.items, m.id AS mid, m.teams, m.results
 FROM bets b
 JOIN matches m ON m.id = match
-WHERE b.better=%s
+WHERE b.better=%s AND b.state != 'CANCELLED'
 ORDER BY b.created_at LIMIT 250
 """
 

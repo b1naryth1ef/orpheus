@@ -1,7 +1,7 @@
 import base64
 from flask import Blueprint, g, render_template, request
 
-from database import Cursor
+from database import Cursor, redis
 
 from helpers.user import UserGroup
 from helpers.game import create_game
@@ -24,6 +24,10 @@ def admin_before_request():
 
 @admin.route("/")
 def admin_dashboard():
+    rush_conn = redis.get("rush:open")
+    bots_online = g.cursor.execute("""
+        SELECT count(*) as c FROM bots WHERE status='USED'
+    """).fetchone().c
     bot_used, bot_total = get_bot_space()
     b_cap = 100 - (((float(bot_used or 0) / bot_total)) * 100)
     return render_template("admin/index.html",
@@ -33,7 +37,9 @@ def admin_dashboard():
         bets_count=g.cursor.count("bets"),
         b_used=bot_used,
         b_total=bot_total,
-        b_cap=b_cap)
+        b_cap=b_cap,
+        rush_conn=rush_conn,
+        bots_online=bots_online)
 
 @admin.route("/users")
 def admin_users():
