@@ -6,13 +6,12 @@ from util.log import setup_logging
 USAGE = "Usage: ./run <web|sched|once|queue|js>"
 
 def main():
-    setup_logging()
-
     if not len(sys.argv) > 1:
         print USAGE
         sys.exit(1)
 
     if sys.argv[1] == "web":
+        setup_logging("web")
         from emporium import app, setup, get_js_templates
 
         port = 5000
@@ -26,10 +25,12 @@ def main():
         sys.exit(0)
 
     if sys.argv[1] == "queue":
+        setup_logging("queue")
         from queue.queue import start_queues
         start_queues()
 
     if sys.argv[1] == "sched":
+        setup_logging("sched")
         from scheduler.run import sched
         sched.run()
         sys.exit(0)
@@ -40,6 +41,7 @@ def main():
         sys.exit(0)
 
     if sys.argv[1] == "once":
+        setup_logging("sched-once")
         import scheduler.run
 
         if len(sys.argv) < 3:

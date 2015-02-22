@@ -11,12 +11,12 @@ def set_logging_levels():
     for log, lvl in LEVELS.items():
         logging.getLogger(log).setLevel(lvl)
 
-def setup_logging():
+def setup_logging(app):
     logging.basicConfig(level=logging.DEBUG, format=FORMAT)
     set_logging_levels()
 
     if os.path.exists("/var/log/emporium"):
-        file_handler = logging.FileHandler('/var/log/emporium/app.log')
+        file_handler = logging.FileHandler('/var/log/emporium/app-%s.log' % app)
     else:
         file_handler = logging.FileHandler('/tmp/emporium.log')
 
