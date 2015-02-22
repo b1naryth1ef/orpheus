@@ -1,4 +1,4 @@
-from flask import jsonify
+from flask import jsonify, request
 from util import flashy
 
 class ResponseException(Exception):
