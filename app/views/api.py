@@ -2,7 +2,7 @@ import json, requests
 
 from cStringIO import StringIO
 from datetime import datetime
-from flask import Blueprint, request, g, send_file
+from flask import Blueprint, request, g, send_file, redirect
 
 from emporium import steam
 from database import Cursor, redis
@@ -169,9 +169,11 @@ def route_user_inventory():
         return APIResponse()
 
 USER_BETS_QUERY = """
-SELECT b.id, b.match, b.team, b.value, b.state, b.winnings, b.items, m.id AS mid, m.teams, m.results
+SELECT b.id, b.match, b.team, b.value, b.state, b.winnings, b.items, m.id AS mid, m.teams, m.results,
+    t.offerid AS t_offerid, t.state AS t_state
 FROM bets b
 JOIN matches m ON m.id = match
+JOIN trades t ON t.bet_ref = b.id
 WHERE b.better=%s AND b.state != 'CANCELLED'
 ORDER BY b.created_at LIMIT 250
 """
@@ -201,15 +203,15 @@ def route_user_info(id):
         for entry in bets:
             base['bets']['detail'].append({
                 "id": entry.id,
-                "match": {
-                    "id": entry.mid,
-                    "teams": entry.teams,
-                    "results": entry.results
-                },
+                "match": match_to_json(entry.mid, g.user),
                 "team": entry.team,
                 "state": entry.state,
                 "winnings": entry.winnings,
-                "items": entry.items
+                "items": entry.items,
+                "trade": {
+                    "offer": entry.t_offerid,
+                    "state": entry.t_state
+                }
             })
 
         return APIResponse(base)
@@ -262,4 +264,9 @@ def user_settings_save():
         raise APIError("Invalid Trade URL")
 
     return APIResponse()
+
+@api.route("/item/image/<id>")
+def route_item_image(id):
+    image = g.cursor.execute("SELECT meta->'image' as i FROM items WHERE id=%s", (id, )).fetchone()
+    return redirect("https://steamcommunity-a.akamaihd.net/economy/image/%s" % image.i)
 

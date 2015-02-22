@@ -1,4 +1,4 @@
-
+<% var teams = _.values(match.teams) %>
 <div class="row-responsive match-row clickable <%= match.results ? 'match-over' : '' %>" data-id="<%- match.id %>">
   <div class="col-lg-6">
     <div id="panelDemo7" class="panel panel-default">
@@ -8,7 +8,9 @@
             <span class="<%= (match.results && match.results.winner == team) ? 'team-won-name' : '' %>">
               <%- match.teams[team].name %>
             </span>
-            <%- (team < (match.teams.length - 1)) ? "VS" : "" %>
+            <% if (_.keys(match.teams).indexOf(team) < (_.keys(match.teams).length - 1)) { %>
+                  VS
+            <% } %>
 
           <% } %>
         </h2>
@@ -21,7 +23,6 @@
       <div class="panel-body">
         <div class="row">
           <div class="col-md-3">
-            <% var teams = _.values(match.teams) %>
             <img src="<%= teams[0].logo %>" style="max-height: 150px; max-width: 250px" class="img-rounded <%=(match.results && match.results.winner == teams[0].id) ? 'team-won' : ''%> img-responsive" />
           </div>
 
@@ -36,7 +37,7 @@
         <div class="row">
           <div class="col-md-6 col-md-offset-3">
             <div class="row">
-              <div class="col-md-6"><h3><%= teams[1].odds * 100 %>%</h3></div>
+              <div class="col-md-6"><h3><%= teams[0].odds * 100 %>%</h3></div>
               <div class="col-md-6"><h3 style="text-align: right"><%= teams[1].odds * 100 %>%</h3></div>
             </div>
             <div class="progress">

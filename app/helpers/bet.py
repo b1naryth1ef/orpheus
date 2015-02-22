@@ -19,22 +19,30 @@ CREATE_TRADE_SQL = create_insert_query("trades",
 FIND_AVAIL_BOT_SQL = """
 SELECT b.id FROM bots b
 LEFT OUTER JOIN trades t ON t.bot_ref=b.id
-WHERE b.status='USED'
-AND (t.state='IN-PROGRESS' OR t.state='OFFERED')
-AND array_length(t.items_in, 1) > 0
-AND (array_length(b.inventory, 1) + array_length(t.items_in, 1)) < %s
-OR b.inventory='{}'
-LIMIT 1
+WHERE b.status='USED' AND (
+  (
+    (t.state='NEW' OR t.state='IN-PROGRESS' OR t.state='OFFERED')
+    AND array_length(t.items_in, 1) > 0
+    AND (array_length(b.inventory, 1) + array_length(t.items_in, 1)) < %s
+    OR b.inventory='{}'
+  ) OR (
+    t IS NULL
+    AND (array_length(b.inventory, 1) < %s) OR b.inventory='{}'
+  )
+)
+LIMIT 1;
 """
 
 LOCK_ITEM_SQL = "UPDATE items SET price=%s WHERE id=%s"
 
 def find_avail_bot(items_count):
+    
+
     # Max size minus what we need to store
     size_expected = 999 - items_count
 
     with Cursor() as c:
-        bot = c.execute(FIND_AVAIL_BOT_SQL, (size_expected, )).fetchone()
+        bot = c.execute(FIND_AVAIL_BOT_SQL, (size_expected, size_expected)).fetchone()
 
     return bot.id if bot else 0
 
@@ -89,7 +97,7 @@ def create_bet(user, match, team, items):
             'bot_ref': bot,
         }).fetchone()
 
-        queue_trade(bot, tid)
+        queue_trade(bot, tid.id)
 
     return bid.id
 

@@ -10012,12 +10012,30 @@ body .jvectormap-zoomout {
 .col-centered {
   display:inline-block;
   float:none;
-  background-color: #dde6e9;
   width: 165px;
+}
+
+.gray-bg {
   border: 2px solid #ffffff;
   border-radius: 8px;
   -moz-border-radius: 8px;
   -webkit-border-radius: 8px;
+  background-color: #dde6e9;
+}
+
+.generic-slot {
+  border: 2px solid #ffffff;
+  border-radius: 8px;
+  -moz-border-radius: 8px;
+  -webkit-border-radius: 8px;
+}
+
+.bet-slot {
+  border: 2px solid #ffffff;
+  border-radius: 8px;
+  -moz-border-radius: 8px;
+  -webkit-border-radius: 8px;
+  background-color: #dde6e9;
 }
 
 .close-header {

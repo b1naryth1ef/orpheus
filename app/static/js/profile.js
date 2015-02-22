@@ -37,6 +37,7 @@ profile.renderBackgroundImage = (function (data) {
 
 profile.renderBetHistory = (function (data) {
     _.each(data, (function (item) {
+        console.log(item);
         $(".bet-history").append(this.app.render("profile_past_bet", {
             bet: item
         }));
