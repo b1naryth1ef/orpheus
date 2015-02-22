@@ -33,12 +33,12 @@ def create_item_drafts():
             c.execute(CREATE_ITEM_DRAFT, {
                 "match": match.id,
                 "team": team,
-                "state": "pending"
+                "state": "PENDING"
             })
 
 FIND_ITEM_DRAFT_QUERY = """
 SELECT id, match, team FROM item_drafts
-WHERE state='pending'
+WHERE state='PENDING'
 """
 
 def run_item_drafts():
@@ -49,7 +49,7 @@ def run_item_drafts():
             return
 
         # Let's make sure we don't get toe-stomped
-        c.execute("UPDATE item_drafts SET state='started', started_at=now() WHERE id=%s", (draft.id, ))
+        c.execute("UPDATE item_drafts SET state='STARTED', started_at=now() WHERE id=%s", (draft.id, ))
 
         betters = c.execute(
             "SELECT id, better, value, items, team FROM bets WHERE match=%s", (draft.match, )).fetchall(as_list=True)
