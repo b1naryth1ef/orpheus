@@ -36,8 +36,6 @@ LIMIT 1;
 LOCK_ITEM_SQL = "UPDATE items SET price=%s WHERE id=%s"
 
 def find_avail_bot(items_count):
-    
-
     # Max size minus what we need to store
     size_expected = 999 - items_count
 

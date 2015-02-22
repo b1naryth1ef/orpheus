@@ -198,7 +198,7 @@ CREATE TABLE bets (
     better      integer REFERENCES users(id),
     match       integer REFERENCES matches(id),
     team        integer,
-    value       integer,
+    value       decimal,
     items       numeric[],
     winnings    numeric[],
     state       bet_state,
