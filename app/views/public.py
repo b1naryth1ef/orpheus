@@ -39,3 +39,4 @@ def route_faq():
 @public.route("/tos")
 def route_tos():
     return render_template("prose.html", content=tos_content)
+

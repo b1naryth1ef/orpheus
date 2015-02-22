@@ -10,16 +10,6 @@ app.config.from_pyfile("settings.py")
 oid = OpenID(app)
 steam = SteamAPI(app.config.get("STEAM_API_KEY"))
 
-@app.errorhandler(500)
-def internal_error_handler(exception):
-    trace = str(uuid.uuid4())
-    app.logger.exception("Server Exception (%s)" % trace)
-    return render_template("error.html", code=500, msg="Internal Server Exception", trace=trace), 500
-
-@app.errorhandler(404)
-def page_not_found_handler(exception):
-    return render_template("error.html", code=404, msg="Page Not Found!"), 404
-
 def load_all_views():
     """
     Attempts to load all the subset blueprint views for the application

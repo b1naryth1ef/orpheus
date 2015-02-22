@@ -30,6 +30,7 @@ def create_or_login(resp):
             g.cursor.execute("UPDATE users SET last_login=%s WHERE id=%s", (datetime.utcnow(), user.id))
         else:
             raise UserError("Account Disabled. Please contact support for more information")
+        next_url = redirect(oid.get_next_url())
     else:
         allowed = steam.getGroupMembers("emporiumbeta")
         if int(id) not in allowed:
@@ -43,8 +44,11 @@ def create_or_login(resp):
         g.user = create_user(id, group)
         g.group = group
 
+        # Alright, lets try to onboard the user
+        next_url = redirect("/?onboard=1")
+
     g.session["u"] = g.user
-    return redirect(oid.get_next_url())
+    return next_url
 
 @auth.route("/login")
 @oid.loginhandler

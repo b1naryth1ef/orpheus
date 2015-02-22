@@ -9,9 +9,10 @@ from settings import CRYPT
 
 from util.custom import bind_custom_types
 
-
 log = logging.getLogger(__name__)
 redis = redis.Redis(app.config.get("R_HOST"), port=app.config.get("R_PORT"), db=app.config.get("R_DB"))
+
+psycopg2.extras.register_uuid()
 
 def get_connection(database=None):
     dbc = psycopg2.connect("host={host} port={port} dbname={dbname} user={user} password={pw}".format(

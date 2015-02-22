@@ -1,11 +1,12 @@
 import json, logging
 
-from flask import request, g, redirect
+from flask import request, g, redirect, render_template
 from psycopg2 import OperationalError
 
 from emporium import app
 from database import Cursor
 
+from helpers.common import create_exception
 from helpers.user import get_user_info
 
 from util.sessions import Session
@@ -13,6 +14,22 @@ from util.errors import ResponseException, GenericError
 from util.responses import APIResponse
 
 log = logging.getLogger(__name__)
+
+@app.errorhandler(500)
+def internal_error_handler(exception):
+    trace_id = create_exception(exception, {
+        "uid": g.user,
+        "sid": g.session._id,
+        "ip": request.remote_addr,
+        "headers": dict(request.headers),
+        "values": dict(request.values)
+    })
+    app.logger.exception("Server Exception (%s)" % trace_id)
+    return render_template("error.html", code=500, msg="Internal Server Exception", trace=trace_id), 500
+
+@app.errorhandler(404)
+def page_not_found_handler(exception):
+    return render_template("error.html", code=404, msg="Page Not Found!"), 404
 
 @app.context_processor
 def app_context_processor():
