@@ -35,7 +35,7 @@ class APIError(ResponseException):
         resp.status_code = self.status_code
         return resp
 
-class EmporiumException(Exception):
+class EmporiumException(ResponseException):
     def __init__(self, msg):
         self.msg = msg
 
