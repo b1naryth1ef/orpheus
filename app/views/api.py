@@ -10,7 +10,7 @@ from database import Cursor, redis
 from helpers.match import match_to_json
 from helpers.bot import get_bot_space
 from helpers.bet import BetState, create_bet
-from helpers.user import UserGroup, gache_nickname, user_save_settings, InvalidTradeUrl, USER_SETTING_SAVE_PARAMS
+from helpers.user import UserGroup, gache_user_info, user_save_settings, InvalidTradeUrl, USER_SETTING_SAVE_PARAMS
 
 from util import paginate
 from util.perms import authed
@@ -177,9 +177,11 @@ def route_user_info(id):
         user = c.execute("SELECT steamid FROM users WHERE id=%s", (id, )).fetchone()
         bets = c.execute(USER_BETS_QUERY, (id, )).fetchall(as_list=True)
 
+        info = gache_user_info(user.steamid)
+
         base = {
             "id": id,
-            "username": gache_nickname(user.steamid),
+            "username": info.get("personaname"),
             "bets": {
                 "placed": len(bets),
                 "won": len(filter(lambda i: i.state == BetState.WON, bets)),

@@ -9,7 +9,7 @@ from util.errors import UserError, APIError
 from util.responses import APIResponse
 
 from emporium import oid, steam
-from helpers.user import create_user, gache_nickname
+from helpers.user import create_user, gache_user_info
 
 auth = Blueprint("auth", __name__, url_prefix="/auth")
 steam_id_re = re.compile('steamcommunity.com/openid/id/(.*?)$')
@@ -71,31 +71,4 @@ def route_ping():
 @auth.route("/info")
 def route_info():
     raise APIError("Deprecated")
-    if not g.user:
-        return APIResponse({
-            "authed": False
-        })
-
-    g.cursor.execute("SELECT steamid, settings, ugroup, trade_token FROM users WHERE id=%s", (g.user, ))
-    resp = g.cursor.fetchone()
-
-    if not resp:
-        g.user = None
-        return APIResponse({
-            "authed": False
-        })
-
-    settings = resp.settings
-    settings['trade_url'] = 'https://steamcommunity.com/tradeoffer/new/?partner=77366994&token=jSiDJlpo'
-
-    return APIResponse({
-        "authed": True,
-        "user": {
-            "id": g.user,
-            "name": gache_nickname(resp.steamid),
-            "steamid": str(resp.steamid),
-            "settings": settings,
-            "group": resp.ugroup
-        }
-    })
 

@@ -3,7 +3,7 @@ from flask import Blueprint, g, render_template, request
 
 from database import Cursor
 
-from helpers.user import UserGroup, gache_nickname
+from helpers.user import UserGroup
 from helpers.game import create_game
 from helpers.match import create_match
 from helpers.bot import get_bot_space
@@ -67,7 +67,7 @@ def admin_users_list():
         users.append({
             "id": entry.id,
             "steamid": entry.steamid,
-            "username": gache_nickname(entry.steamid),
+            "username": None,
             "last_login": entry.last_login.strftime("%s") if entry.last_login else 0,
             "active": entry.active
         })

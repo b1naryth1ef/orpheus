@@ -1,4 +1,4 @@
-import logging, re
+import logging, re, json
 from datetime import datetime
 
 from emporium import steam
@@ -41,20 +41,24 @@ def create_user(steamid, group=UserGroup.NORMAL):
         now = datetime.utcnow()
         return c.execute(CREATE_USER_QUERY, (steamid, True, now, now, group, Cursor.json(DEFAULT_SETTINGS))).fetchone().id
 
-def gache_nickname(steamid):
+def gache_user_info(steamid):
     """
-    Gets a steam nickname either from the cache, or the steam API. It
-    then ensures it's cached for 2 hours.
+    Gets the steam users info, or retreives a cached version of it.
+    Cache time: 30 minutes
     """
-    nick = redis.get("nick:%s" % steamid)
-    if not nick:
-        nick = steam.getUserInfo(steamid)['personaname']
-        redis.setex("nick:%s" % steamid, nick, 60 * 120)
+    info = redis.get("u:%s:info" % steamid)
 
-    if not isinstance(nick, unicode):
-        nick = nick.decode("utf-8")
+    if info:
+        info = json.loads(info)
+    else:
+        info = steam.getUserInfo(steamid)
 
-    return nick
+        # Turn a profileurl into just the vanity name
+        if 'profileurl' in info:
+            info['vanityname'] = info['profileurl'].rsplit("/", 2)[1]
+
+        redis.setex("u:%s:info" % steamid, json.dumps(info), 60 * 30)
+    return info
 
 def get_user_info(uid):
     if not uid:
@@ -71,10 +75,10 @@ def get_user_info(uid):
         }
 
     try:
-        nick = gache_nickname(resp.steamid)
+        steam_info = gache_user_info(resp.steamid)
     except SteamAPIError:
         log.exception("Failed to get and cache nickname (%s)" % resp.steamid)
-        nick = ""
+        info = {}
 
     # Rebuild the trade url because UX
     resp.settings['trade_url'] = 'https://steamcommunity.com/tradeoffer/new/?partner=%s&token=%s' % (
@@ -84,7 +88,8 @@ def get_user_info(uid):
         "authed": True,
         "user": {
             "id": uid,
-            "name": gache_nickname(resp.steamid),
+            "name": steam_info.get("personaname"),
+            "vanity": steam_info.get("vanityname"),
             "steamid": str(resp.steamid),
             "settings": resp.settings,
             "group": resp.ugroup
