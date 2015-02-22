@@ -4,6 +4,7 @@ from datetime import datetime
 from database import Cursor, redis, create_insert_query
 
 from util import create_enum
+from util.errors import EmporiumException
 from helpers.trade import queue_trade, TradeType, TradeState
 
 BetState = create_enum('NEW', 'OFFERED', 'CONFIRMED', 'WON', 'LOST', 'CANCELLED')
@@ -47,7 +48,7 @@ def create_bet(user, match, team, items):
 
         # We need all dem results doh
         if not len(items) == len(items_q):
-            raise Exception("Attempted betting invalid item")
+            raise EmporiumException("Attempted betting invalid item")
 
         # Lock a price for all the items
         for item in items_q:
@@ -68,7 +69,7 @@ def create_bet(user, match, team, items):
         bot = find_avail_bot(len(items))
 
         if not bot:
-            raise Exception("No bot space availible")
+            raise EmporiumException("No bot space availible")
 
         # Get the user's steamid and token for the trade
         user = c.execute("SELECT id, steamid, trade_token FROM users WHERE id=%s", (user, )).fetchone()

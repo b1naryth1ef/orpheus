@@ -1,18 +1,5 @@
 from flask import jsonify
-
 from util import flashy
-
-class EmporiumException(Exception):
-    pass
-
-class ValidationError(Exception):
-    pass
-
-class InvalidRequestError(Exception):
-    pass
-
-class InvalidTradeUrl(Exception):
-    pass
 
 class ResponseException(Exception):
     def to_response(self):
@@ -27,7 +14,7 @@ class GenericError(ResponseException):
         return self.msg, self.code
 
 class UserError(ResponseException):
-    def __init__(self, response, mtype="success", redirect="/"):
+    def __init__(self, response, mtype="danger", redirect="/"):
         self.response = response
         self.redirect = redirect
         self.mtype = mtype
@@ -47,6 +34,28 @@ class APIError(ResponseException):
         resp = jsonify(self.obj)
         resp.status_code = self.status_code
         return resp
+
+class EmporiumException(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def to_response(self):
+        if request.blueprint == 'api':
+            resp = jsonify({
+                "message": self.msg,
+                "success": False,
+            })
+        else:
+            flashy(self.msg, "danger", self.redirect)
+
+class ValidationError(EmporiumException):
+    pass
+
+class InvalidRequestError(EmporiumException):
+    pass
+
+class InvalidTradeUrl(EmporiumException):
+    pass
 
 def apiassert(truthy, msg):
     if not truthy:
