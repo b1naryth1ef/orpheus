@@ -107,10 +107,12 @@
             <li role="presentation" class="active">
               <a href="#matchinfo" aria-controls="home" role="tab" data-toggle="tab" aria-expanded="true">Match Info</a>
             </li>
-            <% for (stream in match.extra.streams) { %>
-            <li role="presentation" class="">
-              <a href="#stream-<%- stream %>" role="tab" data-toggle="tab"><%- match.extra.streams[stream] %></a>
-            </li>
+            <% if (!app.user || !app.user.settings.ui.disable_streams) { %>
+              <% for (stream in match.extra.streams) { %>
+              <li role="presentation" class="">
+                <a href="#stream-<%- stream %>" role="tab" data-toggle="tab"><%- match.extra.streams[stream] %></a>
+              </li>
+              <% } %>
             <% } %>
           </ul>
           <div class="tab-content">
@@ -140,17 +142,19 @@
                 <% } %>
               </div>
             </div>
-            <% for (stream in match.extra.streams) { %>
-            <div id="stream-<%- stream %>" role="tabpanel" class="tab-pane">
-              <div class="embed-responsive embed-responsive-16by9">
-                <% var streamUrl = match.extra.streams[stream] %>
-                <% if (streamUrl.indexOf("http://twitch.tv/") == 0) { %>
-                  <iframe src="<%- streamUrl %>/embed" frameborder="0" scrolling="no"></iframe>
-                <% } else { %>
-                  <iframe src="<%- streamUrl %>" frameborder="0" scrolling="no"></iframe>
-                <% } %>
+            <% if (!app.user || !app.user.settings.ui.disable_streams) { %>
+              <% for (stream in match.extra.streams) { %>
+              <div id="stream-<%- stream %>" role="tabpanel" class="tab-pane">
+                <div class="embed-responsive embed-responsive-16by9">
+                  <% var streamUrl = match.extra.streams[stream] %>
+                  <% if (streamUrl.indexOf("http://twitch.tv/") == 0) { %>
+                    <iframe src="<%- streamUrl %>/embed" frameborder="0" scrolling="no"></iframe>
+                  <% } else { %>
+                    <iframe src="<%- streamUrl %>" frameborder="0" scrolling="no"></iframe>
+                  <% } %>
+                </div>
               </div>
-            </div>
+              <% } %>
             <% } %>
           </div>
         </div>

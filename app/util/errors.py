@@ -11,6 +11,9 @@ class ValidationError(Exception):
 class InvalidRequestError(Exception):
     pass
 
+class InvalidTradeUrl(Exception):
+    pass
+
 class ResponseException(Exception):
     def to_response(self):
         raise NotImplementtedError("Must define to_response on `%s`" % self.__class__.__name__)

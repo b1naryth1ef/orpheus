@@ -10,12 +10,12 @@ from database import Cursor, redis
 from helpers.match import match_to_json
 from helpers.bot import get_bot_space
 from helpers.bet import BetState, create_bet
-from helpers.user import UserGroup, gache_user_info, user_save_settings, InvalidTradeUrl, USER_SETTING_SAVE_PARAMS
+from helpers.user import (UserGroup, gache_user_info, user_save_settings,
+    authed, USER_SETTING_SAVE_PARAMS)
 
 from util import paginate
-from util.perms import authed
 from util.queue import JobQueue
-from util.errors import UserError, APIError, InvalidRequestError, apiassert
+from util.errors import UserError, APIError, InvalidRequestError, InvalidTradeUrl, apiassert
 from util.responses import APIResponse
 
 api = Blueprint("api", __name__, url_prefix="/api")
@@ -83,6 +83,11 @@ def route_match_bet(match_id):
         team = int(request.values.get("team"))
     except Exception as e:
         raise APIError("Invalid Request: %s" % e)
+
+    # Need a trade token
+    user_to = g.cursor.select("users", "trade_token", id=g.user).fetchone()
+    if not user_to.trade_token:
+        raise APIError("You must set a trade token to bet!")
 
     # Make sure this seems mildly valid
     apiassert(0 < len(items) <= 4, "Too many items")
@@ -255,8 +260,6 @@ def user_settings_save():
         user_save_settings(g.user, data_to_save)
     except InvalidTradeUrl:
         raise APIError("Invalid Trade URL")
-    except Exception:
-        raise APIError("Failed to save settings")
 
     return APIResponse()
 

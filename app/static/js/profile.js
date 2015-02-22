@@ -17,7 +17,7 @@ profile.renderProfile = (function (id) {
     $.ajax("/api/user/" + id + "/info", {
         success: (function (data) {
             if (data.success) {
-                $(".profile-container").html(this.app.render("profile", {user: data}));
+                $(".profile-container").html(this.app.render("profile_page", {user: data}));
                 this.renderBackgroundImage(data);
 
                 if (data.id == this.app.user.id) {
@@ -37,7 +37,7 @@ profile.renderBackgroundImage = (function (data) {
 
 profile.renderBetHistory = (function (data) {
     _.each(data, (function (item) {
-        $(".bet-history").append(this.app.render("past_bet", {
+        $(".bet-history").append(this.app.render("profile_past_bet", {
             bet: item
         }));
     }).bind(this));

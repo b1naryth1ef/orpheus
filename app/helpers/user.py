@@ -1,15 +1,16 @@
-import logging, re, json
+import functools, logging, re, json
 from datetime import datetime
+
+from flask import g
 
 from emporium import steam
 from database import Cursor, redis
 
 from util import create_enum
 from util.steam import SteamAPIError
+from util.errors import UserError, APIError, InvalidTradeUrl
 
 log = logging.getLogger(__name__)
-
-class InvalidTradeUrl(Exception): pass
 
 UserGroup = create_enum('NORMAL', 'MODERATOR', 'ADMIN', 'SUPER')
 
@@ -40,6 +41,29 @@ def create_user(steamid, group=UserGroup.NORMAL):
     with Cursor() as c:
         now = datetime.utcnow()
         return c.execute(CREATE_USER_QUERY, (steamid, True, now, now, group, Cursor.json(DEFAULT_SETTINGS))).fetchone().id
+
+def build_error(msg, typ, api=False):
+    if api:
+        return APIError(msg)
+    else:
+        return UserError(msg, typ)
+
+def authed(group=UserGroup.NORMAL, api=False):
+    def deco(f):
+        base_group_index = UserGroup.ORDER.index(group)
+
+        @functools.wraps(f)
+        def _f(*args, **kwargs):
+            if not g.user or not g.group:
+                raise build_error("You must be logged in for that!", "error", api)
+
+            group_index = UserGroup.ORDER.index(g.group)
+
+            if group_index < base_group_index:
+                raise build_error("You don't have permission to see that!", "error", api)
+            return f(*args, **kwargs)
+        return _f
+    return deco
 
 def gache_user_info(steamid):
     """
@@ -82,7 +106,7 @@ def get_user_info(uid):
 
     # Rebuild the trade url because UX
     resp.settings['trade_url'] = 'https://steamcommunity.com/tradeoffer/new/?partner=%s&token=%s' % (
-        resp.steamid, resp.trade_token)
+        resp.steamid, resp.trade_token) if resp.trade_token else ""
 
     return {
         "authed": True,
@@ -92,7 +116,8 @@ def get_user_info(uid):
             "vanity": steam_info.get("vanityname"),
             "steamid": str(resp.steamid),
             "settings": resp.settings,
-            "group": resp.ugroup
+            "group": resp.ugroup,
+            "token": resp.trade_token
         }
     }
 
@@ -119,7 +144,7 @@ def user_save_settings(uid, obj):
     with Cursor() as c:
         if trade_url:
             token = re.findall("token=([a-zA-Z0-9\-]+)", trade_url)
-            if len(token) != 1:
+            if len(token) != 1 or len(token[0]) < 5:
                 raise InvalidTradeUrl("Invalid trade_url")
             c.execute(INSERT_BOTH_SETTINGS, (Cursor.json(obj), token[0], uid))
         else:

@@ -3,13 +3,13 @@ import re, logging
 from flask import Blueprint, g, redirect
 from datetime import datetime
 
+from emporium import oid, steam
+
 from util import flashy
-from util.perms import authed
 from util.errors import UserError, APIError
 from util.responses import APIResponse
 
-from emporium import oid, steam
-from helpers.user import create_user, gache_user_info
+from helpers.user import create_user, gache_user_info, authed
 
 auth = Blueprint("auth", __name__, url_prefix="/auth")
 steam_id_re = re.compile('steamcommunity.com/openid/id/(.*?)$')

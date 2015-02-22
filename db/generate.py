@@ -12,8 +12,6 @@ ONE_WEEK_FUTURE = datetime.utcnow() + relativedelta(weeks=1)
 RANDOM_STEAMIDS = json.load(open(os.path.join(cur_dir, "random_steamids.json"), "r"))
 
 def generate_users(t, db):
-    t.execute("INSERT INTO users (steamid, trade_token, active, ugroup) VALUES (%s, %s, %s, %s)", B1NZY_USER)
-
     for steamid in RANDOM_STEAMIDS:
         t.execute("INSERT INTO users (steamid, active, ugroup) VALUES (%s, %s, %s)",
             (steamid, True, "NORMAL"))

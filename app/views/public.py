@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, g
 from markdown import Markdown
 
-from util.perms import authed
+from helpers.user import authed
 
 public = Blueprint("public", __name__)
 

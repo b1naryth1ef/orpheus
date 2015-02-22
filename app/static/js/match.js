@@ -41,7 +41,7 @@ match.renderSingleMatch = function (id) {
         success: (function (data) {
             this.cachedMatch = data.match;
 
-            $(".matches-container").html(this.app.render("single_match", {
+            $(".matches-container").html(this.app.render("match_page", {
                 match: data.match,
                 time: moment.unix(data.match.when),
             })).removeClass("whirl");
@@ -80,7 +80,7 @@ match.routeRegex(/^\/match\/(\d+)$/, function (route, id) {
     $(".matches-container").delegate("#bet-btn", "click", (function (ev) {
         if (!this.cachedMatch) { return; }
 
-        $(".bet-modal-container").html(this.app.render("bet_modal", {
+        $(".bet-modal-container").html(this.app.render("match_bet_modal", {
             match: this.cachedMatch
         }));
 
@@ -106,6 +106,13 @@ match.routeRegex(/^\/match\/(\d+)$/, function (route, id) {
 
     // TODO: make a seperate function
     $(".matches-container").delegate(".btn-placebet", "click", (function (ev) {
+        if (app.user && app.user.token == null) {
+            $("#bet-modal").modal("hide");
+            $.notify("Error: You must setup your trade URL before betting." +
+                "Please <a href=\"/settings\">setup a trade URL</a> now!", "danger")
+            return
+        }
+
         var team = $(ev.target).closest("button").attr("data-team");
 
         var items = _.map(this.getBetSlots(), function (item) {
