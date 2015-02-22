@@ -18,7 +18,7 @@ def setup_logging(app):
     if os.path.exists("/var/log/emporium"):
         file_handler = logging.FileHandler('/var/log/emporium/app-%s.log' % app)
     else:
-        file_handler = logging.FileHandler('/tmp/emporium.log')
+        file_handler = logging.FileHandler('/tmp/emporium-%s.log' % app)
 
     file_handler.setFormatter(logging.Formatter(FORMAT))
 
