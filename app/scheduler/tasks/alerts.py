@@ -3,6 +3,7 @@ import json, time, traceback, logging
 from util.email import Email
 
 from database import Cursor, redis
+from util.slack import slack_message
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +23,10 @@ class Check(object):
 
     def send_message(self, level, sub_ctx=None, msg_ctx=None):
         log.warning("Sending alert %s @ lvl %s" % (self.NAME, level))
+
+        slack_color = 'danger' if level == AlertLevel.CRITICAL else 'warning'
+        slack_message("%s [%s]" % (self.NAME.title(), level.title()), color=slack_color, fields=msg_ctx)
+
         e = Email()
         e.to_addrs = ALERT_EMAILS
         e.subject = "CSGOE ALERT: %s %s (%s)" % (
@@ -32,7 +37,9 @@ class Check(object):
         e.body = "\n".join(map(lambda i: "%s: %s" % i, msg_ctx.items()))
         e.send()
 
+# TODO: refactor
 class TradeQueueSizeCheck(Check):
+    NAME = "Trade Queue Size Check"
     THRESHOLD_WARNING = 100
     THRESHOLD_CRITICAL = 500
 
@@ -49,10 +56,13 @@ class TradeQueueSizeCheck(Check):
             })
 
 class PostgresDBCheck(Check):
+    NAME = "Postgres DB Check"
+
     def run(self):
         with Cursor() as c:
             try:
                 c.execute("SELECT 1337 AS v")
+                raise Exception("Test exception")
                 assert(c.fetchone().v == 1337)
             except Exception as e:
                 self.send_message(AlertLevel.CRITICAL, [], {
@@ -60,6 +70,8 @@ class PostgresDBCheck(Check):
                 })
 
 class RedisDBCheck(Check):
+    NAME = "Redis DB Check"
+
     def run(self):
         try:
             redis.ping()
@@ -67,7 +79,6 @@ class RedisDBCheck(Check):
             self.send_message(AlertLevel.CRITICAL, [], {
                 "Exception:": traceback.format_exc()
             })
-
 
 CHECKS = [TradeQueueSizeCheck(), PostgresDBCheck(), RedisDBCheck()]
 

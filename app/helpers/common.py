@@ -18,5 +18,5 @@ def create_exception(exception, meta):
             traceback.format_tb(exc_tb), Cursor.json(meta),
             datetime.utcnow()))
 
-    return id
+    return id, traceback.format_tb(exc_tb), str(exc_type)
 
