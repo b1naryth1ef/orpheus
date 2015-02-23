@@ -181,30 +181,123 @@ admin.route("/admin/games", function () {
     }).bind(this));
 })
 
-admin.loadMatches = function () {
+
+admin.restGetMatchList = (function () {
+    return $.ajax("/admin/api/match/list");
+}).bind(admin)
+
+admin.renderMatches = (function () {
+    $("#matches-content").empty();
+    console.log(this.gameCache);
+    console.log(this.matchCache);
+    for (mid in this.matchCache) {
+        $("#matches-content").append(this.app.render("admin_match_row", {
+            match: this.matchCache[mid],
+            games: this.gameCache,
+            hidden: true
+        }));
+
+        $(".match-row:hidden").fadeIn();
+    }
+}).bind(admin)
+
+admin.loadMatches = (function () {
     this.page = this.page || 1;
     this.max_pages = 0;
-    this.matchCache = {};
 
-    $.ajax("/admin/api/match/list", {
+    this.matchCache = {};
+    this.gameCache = {};
+    this.teamCache = {};
+
+    $.get("/admin/api/team/list", (function (data) {
+        this.teamCache = data.teams;
+    }).bind(this));
+
+    $.when(
+        $.get("/admin/api/match/list", (function (data) {
+            this.matchCache = data.matches;
+        }).bind(this)),
+
+        $.get("/admin/api/game/list", (function (data) {
+            this.gameCache = data.games;
+        }).bind(this))
+    ).then((function () {
+        this.renderMatches();
+    }).bind(this));
+}).bind(admin);
+
+admin.renderSingleMatchEntry = (function (match) {
+    $("#match-modal").modal("hide");
+    $("#match-modal-location").empty().html(this.app.render("admin_match_modal", {
+        match: match,
+        games: this.gameCache,
+        teams: this.teamCache,
+        create: false
+    }));
+    $("#match-modal").modal("show");
+}).bind(admin);
+
+admin.renderMatchDraft = (function (match) {
+    $("#match-modal").modal("hide");
+    $("#match-modal-location").empty().html(this.app.render("admin_match_results", {
+        match: match,
+        games: this.gameCache,
+        teams: this.teamCache,
+    }));
+    $("#match-modal").modal("show");
+}).bind(admin);
+
+admin.saveMatchDraft = (function () {
+    var id = $("#match-modal").attr("data-id");
+    var data = {};
+
+    data.id = id;
+    data.winner = $("#field-winner").val();
+    data.state = $('input:radio[name=state]:checked').val();
+    data.meta = [];
+
+    for (i in _.range(5)) {
+        if ($("#meta-type-" + i).val() != "Empty") {
+            data.meta.push({
+                type: $("#meta-type-" + i).val(),
+                value: $("#meta-value-" + i).val()
+            })
+        }
+    }
+
+    $.ajax("/admin/api/match/results", {
+        type: 'POST',
+        data: JSON.stringify(data),
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
         success: (function (data) {
-            $("#matches-content").empty();
-            _.each(data.matches, (function (v) {
-                this.matchCache[v.id] = v;
-                console.log(v);
-                $("#matches-content").append(this.app.render("admin_match_row", {
-                    match: v,
-                    teams: "test vs test",
-                    hidden: true,
-                }));
-                $(".match-row:hidden").fadeIn();
-            }).bind(this));
-        }).bind(this)
-    });
-}
+            $("#match-modal").modal("hide");
+            if (data.success) {
+                $.notify("Match Result Saved", "success");
+            } else {
+                $.notify("Error: " + data.message, "danger");
+            }
+        })
+    })
+}).bind(admin);
 
 admin.route("/admin/matches", function () {
     this.loadMatches();
-})
 
+    $("#matches-table").delegate(".match-edit", "click", (function (eve) {
+        eve.stopImmediatePropagation();
+        var matchRow = $(eve.target).parent().parent();
+        this.renderSingleMatchEntry(this.matchCache[matchRow.attr("data-id")]);
+    }).bind(this));
+
+    $("#matches-table").delegate(".match-draft", "click", (function (eve) {
+        eve.stopImmediatePropagation();
+        var matchRow = $(eve.target).parent().parent();
+        this.renderMatchDraft(this.matchCache[matchRow.attr("data-id")]);
+    }).bind(this));
+
+    $("#match-modal-location").delegate("#match-draft-save", "click", (function (eve) {
+        this.saveMatchDraft();
+    }).bind(this));
+})
 

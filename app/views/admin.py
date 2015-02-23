@@ -5,7 +5,7 @@ from database import Cursor, redis
 
 from helpers.user import UserGroup
 from helpers.game import create_game
-from helpers.match import create_match
+from helpers.match import create_match, match_to_json
 from helpers.bot import get_bot_space
 
 from util import paginate
@@ -25,9 +25,7 @@ def admin_before_request():
 @admin.route("/")
 def admin_dashboard():
     rush_conn = redis.get("rush:open")
-    bots_online = g.cursor.execute("""
-        SELECT count(*) as c FROM bots WHERE status='USED'
-    """).fetchone().c
+    bots_online = g.cursor.execute("SELECT count(*) as c FROM bots WHERE status='USED'").fetchone().c
     bot_used, bot_total = get_bot_space()
     b_cap = 100 - (((float(bot_used or 0) / bot_total)) * 100)
     return render_template("admin/index.html",
@@ -117,14 +115,14 @@ def admin_game_list():
 
     g.cursor.execute(GAMES_LIST_QUERY, paginate(page, per_page=100))
 
-    games = []
+    games = {}
     for entry in g.cursor.fetchall():
-        games.append({
+        games[entry.id] = {
             "id": entry.id,
             "name": entry.name,
             "appid": entry.appid,
             "active": entry.active
-        })
+        }
 
     return APIResponse({"games": games, "pages": pages})
 
@@ -163,8 +161,7 @@ def admin_edit_game():
     return APIResponse()
 
 MATCHES_LIST_QUERY = """
-SELECT id, game, teams, meta, results, active, lock_date, match_date, public_date
-FROM matches ORDER BY id LIMIT %s OFFSET %s;
+SELECT * FROM matches ORDER BY id LIMIT %s OFFSET %s;
 """
 
 @admin.route("/api/match/list")
@@ -176,25 +173,61 @@ def admin_match_list():
 
     g.cursor.execute(MATCHES_LIST_QUERY, paginate(page, per_page=100))
 
-    matches = []
+    matches = {}
     for entry in g.cursor.fetchall():
-        matches.append({
-            "id": entry.id,
-            "game": entry.game,
-            "teams": entry.teams,
-            "meta": entry.meta,
-            "results": entry.results,
-            "active": entry.active,
-            "lock_date": entry.lock_date.strftime("%s"),
-            "match_date": entry.match_date.strftime("%s"),
-            "public_date": entry.public_date.strftime("%s")
-        })
+        matches[entry.id] = match_to_json(entry)
 
     return APIResponse({"matches": matches, "pages": pages})
 
 @admin.route("/api/match/create", methods=["POST"])
 def admin_match_create():
     pass
+
+DRAFT_MATCHES_QUERY = """
+    SELECT id, teams, state, itemstate FROM matches WHERE id=%s
+"""
+DRAFT_KEYS = ['state', 'winner', 'meta']
+DRAFT_STATES = ['state-completed', 'state-closed', 'state-locked']
+
+@admin.route("/api/match/results", methods=["POST"])
+def admin_match_results():
+    match = g.cursor.execute(DRAFT_MATCHES_QUERY, (request.json['id'], )).fetchone()
+
+    # We couldn't find a match for that id
+    if not match:
+        raise APIError("Invalid Match")
+
+    # Items must be locked to enter results
+    if match.itemstate != 'LOCKED':
+        raise APIError("Cannot enter result for match which is not item-locked")
+
+    if request.json['state'] not in DRAFT_STATES:
+        raise APIError("Invalid Draft State")
+
+    match_state = None
+    match_results = {}
+
+    if request.json['state'] == 'state-completed':
+        if not request.json['winner']:
+            raise APIError("Cannot mark match as completed without a winner!")
+
+        winner = request.json['winner']
+        if int(winner) not in match.teams:
+            raise APIError("Invalid match winner")
+
+        match_state = "RESULT"
+        match_results['winner'] = int(winner)
+        match_results['meta'] = request.json['meta']
+    elif request.json['state'] == 'state-closed':
+        match_state = "CLOSED"
+    elif request.json['state'] == 'state-locked':
+        match_state = "LOCKED"
+
+    g.cursor.execute("""
+        UPDATE matches SET state=%s, results=%s WHERE id=%s
+    """, (match_state, g.cursor.json(match_results), match.id))
+
+    return APIResponse()
 
 @admin.route("/api/bots/export")
 def admin_bots_export():
@@ -215,4 +248,29 @@ def admin_bots_export():
         })
 
     return APIResponse({"bots": res})
+
+TEAM_LIST_QUERY = """
+SELECT * FROM teams ORDER BY id LIMIT %s OFFSET %s;
+"""
+
+@admin.route("/api/team/list")
+def admin_team_list():
+    page = int(request.values.get("page", 1))
+
+    g.cursor.execute("SELECT count(*) as c FROM teams")
+    pages = (g.cursor.fetchone().c / 100) + 1
+
+    g.cursor.execute(TEAM_LIST_QUERY, paginate(page, per_page=100))
+
+    teams = {}
+    for entry in g.cursor.fetchall():
+        teams[entry.id] = {
+            "id": entry.id,
+            "tag": entry.tag,
+            "name": entry.name,
+            "logo": entry.logo,
+            "meta": entry.meta,
+        }
+
+    return APIResponse({"teams": teams, "pages": pages})
 

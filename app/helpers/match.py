@@ -185,6 +185,7 @@ def match_to_json(m, user=None):
         if key in m.meta:
             match['extra'][key] = m.meta[key]
 
+    match['extra']['brief'] = ' vs '.join(map(lambda i: i['tag'], match['teams'].values()))
     match['results'] = m.results
     return match
 

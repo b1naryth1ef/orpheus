@@ -9,7 +9,7 @@ ONE_WEEK_PAST = datetime.utcnow() + relativedelta(weeks=-1)
 ONE_WEEK_FUTURE = datetime.utcnow() + relativedelta(weeks=1)
 
 # B1NZY_USER = ("76561198037632722", "jSiDJlpo", True, "SUPER")
-RANDOM_STEAMIDS = json.load(open(os.path.join(cur_dir, "random_steamids.json"), "r"))
+RANDOM_STEAMIDS = json.load(open(os.path.join(cur_dir, "random_steamids.json"), "r"))[:30000]
 
 def generate_users(t, db):
     for steamid in RANDOM_STEAMIDS:
@@ -46,7 +46,8 @@ MATCHES = [
     {
         "game": 1,
         "teams": [1, 5],
-        "state": "NEW",
+        "state": "OPEN",
+        "itemstate": "OPEN",
         "meta": {
             "league": {
                 "name": "CEVO",
@@ -64,7 +65,8 @@ MATCHES = [
     },
     {
         "game": 1,
-        "state": "NEW",
+        "state": "OPEN",
+        "itemstate": "OPEN",
         "teams": [3, 4],
         "meta": {
             "league": {
@@ -84,7 +86,8 @@ MATCHES = [
     },
     {
         "game": 1,
-        "state": "LOCKED",
+        "state": "WAITING",
+        "itemstate": "LOCKED",
         "teams": [5, 6],
         "meta": {
             "league": {
@@ -104,8 +107,8 @@ MATCHES = [
 ]
 
 MATCH_QUERY = """
-INSERT INTO matches (state, game, teams, meta, lock_date, match_date, public_date, active) VALUES
-(%(state)s, %(game)s, %(teams)s, %(meta)s, %(lock_date)s, %(match_date)s, %(public_date)s, true);
+INSERT INTO matches (state, itemstate, game, teams, meta, lock_date, match_date, public_date, active) VALUES
+(%(state)s, %(itemstate)s, %(game)s, %(teams)s, %(meta)s, %(lock_date)s, %(match_date)s, %(public_date)s, true);
 """
 
 def generate_matches(t, db):

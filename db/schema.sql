@@ -163,11 +163,13 @@ CREATE TABLE teams (
     created_at: when this was created
 */
 
-CREATE TYPE match_state AS ENUM ('NEW', 'OPEN', 'LOCKED', 'ENDED', 'RETURNED');
+CREATE TYPE match_state AS ENUM ('OPEN', 'WAITING', 'RESULT', 'LOCKED', 'CLOSED', 'COMPLETED');
+CREATE TYPE match_item_state AS ENUM ('OPEN', 'LOCKED', 'RETURNED', 'DISTRIBUTED');
 
 CREATE TABLE matches (
     id               SERIAL PRIMARY KEY,
     state            match_state NOT NULL,
+    itemstate        match_item_state NOT NULL,
     game             integer REFERENCES games(id),
     teams            integer[],
     meta             jsonb,
