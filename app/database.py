@@ -104,6 +104,7 @@ class Cursor(object):
 
     def __exit__(self, typ, value, tb):
         if value != None:
+            self.db.rollback()
             return False
 
         self.db.commit()
