@@ -8,13 +8,6 @@ from util.errors import InvalidRequestError, ValidationError
 from helpers.user import UserGroup
 from helpers.bet import BetState
 
-CREATE_MATCH_SQL = """
-INSERT INTO matches (game, teams, meta, results, lock_date, match_date, public_date, view_perm, active, created_at, created_by)
-VALUES (%(game)s, %(teams)s, %(meta)s, %(results)s, %(lock_date)s, %(match_date)s, %(public_date)s,
-%(view_perm)s, %(active)s, %(created_at)s, %(created_by)s)
-RETURNING id
-"""
-
 def validate_match_team_data(obj):
     if not isinstance(obj, list):
         raise ValidationError("Team data must be a list")
@@ -30,17 +23,18 @@ def validate_match_team_data(obj):
 
     return True
 
-def validate_match_meta_data(obj):
-    if not isinstance(obj, dict):
-        raise ValidationError("Match meta data must be a dictionary")
+def create_match(user, game, teams, meta, lock_date, match_date, public_date,
+        view_perm=UserGroup.NORMAL):
 
-    return True
-
-def create_match(user, game, teams, meta, lock_date, match_date, public_date, view_perm=UserGroup.NORMAL):
+    # Make sure the teams are valid
     validate_match_team_data(teams)
 
+    # Make sure meta info is valid
+    if not isinstance(meta, dict):
+        raise ValidationError("Match meta data must be a dictionary")
+
     with Cursor() as c:
-        c.execute(CREATE_MATCH_SQL, {
+        c.insert("matches", {
             "game": game,
             "teams": teams,
             "meta": meta,
@@ -83,7 +77,8 @@ def match_to_json(m, user=None):
     c = Cursor()
 
     if not isinstance(m, tuple):
-        c.execute("SELECT {} FROM matches WHERE id=%s".format(', '.join(match_to_json.required_fields)), (m, ))
+        c.execute("SELECT {} FROM matches WHERE id=%s".format(
+            ', '.join(match_to_json.required_fields)), (m, ))
         m = c.fetchone()
 
     if not m:
@@ -190,5 +185,6 @@ def match_to_json(m, user=None):
     match['results'] = m.results
     return match
 
-match_to_json.required_fields = ['id', 'game', 'match_date', 'meta', 'results', 'teams', 'state', 'itemstate']
+match_to_json.required_fields = [
+    'id', 'game', 'match_date', 'meta', 'results', 'teams', 'state', 'itemstate']
 

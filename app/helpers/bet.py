@@ -1,20 +1,13 @@
 import time, json
 from datetime import datetime
 
-from database import Cursor, redis, create_insert_query
+from database import Cursor, redis
 
 from util import create_enum
 from util.errors import EmporiumException
 from helpers.trade import queue_trade, TradeType, TradeState
 
 BetState = create_enum('NEW', 'OFFERED', 'CONFIRMED', 'WON', 'LOST', 'CANCELLED')
-
-CREATE_BET_SQL = create_insert_query("bets", "better", "match", "team", "items",
-    "value", "state", "created_at")
-
-CREATE_TRADE_SQL = create_insert_query("trades",
-    "state", "ttype", "to_id", "message", "items_in", "items_out", "created_at",
-    "user_ref", "bet_ref", "bot_ref", "token")
 
 FIND_AVAIL_BOT_SQL = """
 SELECT b.id FROM bots b
@@ -45,7 +38,7 @@ def find_avail_bot(items_count):
     return bot.id if bot else 0
 
 def create_bet(user, match, team, items):
-    with Cursor(transaction=True) as c:
+    with Cursor() as c:
         items_q = c.execute("""
             SELECT items.id as id, itemtypes.price as price, items.type_id FROM items
             JOIN itemtypes ON itemtypes.id=items.type_id
@@ -61,7 +54,7 @@ def create_bet(user, match, team, items):
             c.execute(LOCK_ITEM_SQL, (item.price, item.id))
 
         # Create a new bet
-        bid = c.execute(CREATE_BET_SQL, {
+        bet = c.insert("matches", {
             'better': user,
             'match': match,
             'team': team,
@@ -75,13 +68,14 @@ def create_bet(user, match, team, items):
         bot = find_avail_bot(len(items))
 
         if not bot:
-            raise EmporiumException("No bot space availible")
+            raise EmporiumException("Bot's are full, please try again later!")
 
         # Get the user's steamid and token for the trade
-        user = c.execute("SELECT id, steamid, trade_token FROM users WHERE id=%s", (user, )).fetchone()
+        user = c.execute("SELECT id, steamid, trade_token FROM users WHERE id=%s",
+            (user, )).fetchone()
 
         # Create a new trade
-        tid = c.execute(CREATE_TRADE_SQL, {
+        tid = c.insert("trades", {
             'state': TradeState.NEW,
             'ttype': TradeType.BET,
             'to_id': user.steamid,

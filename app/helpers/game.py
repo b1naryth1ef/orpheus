@@ -5,23 +5,12 @@ from database import Cursor
 from util.errors import ValidationError
 from helpers.user import UserGroup
 
-CREATE_GAME_SQL = """
-INSERT INTO games (name, meta, appid, view_perm, active, created_by, created_at)
-VALUES (%(name)s, %(meta)s, %(appid)s, %(view_perm)s, %(active)s, %(created_by)s, %(created_at)s)
-RETURNING id
-"""
-
-def validate_game_metadata(obj):
+def create_game(user, name, appid, meta=None, view_perm=UserGroup.NORMAL):
     if not isinstance(obj, dict):
         raise ValidationError("Game metadata must be dictionary")
 
-    return True
-
-def create_game(user, name, appid, meta=None, view_perm=UserGroup.NORMAL):
-    validate_game_metadata(meta)
-
     with Cursor() as c:
-        return c.execute(CREATE_GAME_SQL, {
+        return c.insert("games", {
             "name": name,
             "meta": as_json(meta or {}),
             "appid": appid,

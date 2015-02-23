@@ -1,6 +1,6 @@
+import logging, redis, psycopg2
 from contextlib import contextmanager
 
-import logging, redis, psycopg2
 from flask import g
 from psycopg2.extras import NamedTupleCursor, Json
 
@@ -10,33 +10,38 @@ from settings import CRYPT
 from util.custom import bind_custom_types
 
 log = logging.getLogger(__name__)
-redis = redis.Redis(app.config.get("R_HOST"), port=app.config.get("R_PORT"), db=app.config.get("R_DB"))
+
+redis = redis.Redis(
+    app.config.get("R_HOST"),
+    port=app.config.get("R_PORT"),
+    db=app.config.get("R_DB"))
 
 psycopg2.extras.register_uuid()
 
-def get_connection(database=None):
-    dbc = psycopg2.connect("host={host} port={port} dbname={dbname} user={user} password={pw}".format(
-        host=app.config.get("PG_HOST"),
-        port=app.config.get("PG_PORT"),
-        dbname=database or app.config.get("PG_DATABASE"),
-        user=app.config.get("PG_USERNAME"),
-        pw=app.config.get("PG_PASSWORD")), cursor_factory=NamedTupleCursor)
+# The base connection string
+PG_CONN_STRING = "host={host} port={port} user={user} password={pw}".format(
+    host=app.config.get("PG_HOST"),
+    port=app.config.get("PG_PORT"),
+    user=app.config.get("PG_USERNAME"),
+    pw=app.config.get("PG_PASSWORD"))
 
-    # if database not in ['emporium_draft']:
-    #     bind_custom_types(dbc)
+def get_connection(database='emporium'):
+    """
+    Returns a psycopg2 postgres connection. In production this will
+    hit PGBouncer, and be pooled. `database` can be a valid database name.
+    """
+    dbc = psycopg2.connect(PG_CONN_STRING + "dbname={}".format(database),
+        cursor_factory=NamedTupleCursor)
+
     dbc.autocommit = True
     return dbc
 
-def create_insert_query(table, *args):
-    return """
-    INSERT INTO {table} ({keys}) VALUES ({values})
-    RETURNING id;
-    """.format(
-        table=table,
-        keys=', '.join(args),
-        values=', '.join(map(lambda i: "%({})s".format(i), args)))
-
 class ResultSetIterable(object):
+    """
+    Represents a set of results from a postgres query. Generator
+    that is used to cache the result set in memory for multiple
+    iterations.
+    """
     def __init__(self, cursor):
         self.cursor = cursor
         self.size = self.cursor.rowcount
@@ -56,10 +61,14 @@ class ResultSetIterable(object):
         return self.cursor.fetchone()
 
 class Cursor(object):
-    def __init__(self, database=None, commit=False, transaction=False):
+    """
+    A base class that can be used to query the PG database. Generally
+    all database actions should be take through this. A single cursor
+    should be used for the duration of a request, errors and exceptions
+    are scoped within the context of the cursor, allow rollback semantics.
+    """
+    def __init__(self, database=None):
         self.db = get_connection(database)
-        self.commit = commit
-        self.transaction = transaction
         self.cursor = self.db.cursor()
 
     @staticmethod
@@ -90,17 +99,14 @@ class Cursor(object):
         return ResultSetIterable(self.cursor)
 
     def __enter__(self):
-        if self.transaction:
-            self.db.set_session(autocommit=False)
-            self.commit = True
+        self.db.set_session(autocommit=False)
         return self
 
     def __exit__(self, typ, value, tb):
         if value != None:
             return False
 
-        if self.commit:
-            self.db.commit()
+        self.db.commit()
 
         self.cursor.close()
 
@@ -119,4 +125,15 @@ class Cursor(object):
             query += " WHERE %s" % etc
 
         return self.execute(self.cursor.mogrify(query, params))
+
+    def insert(self, table, obj=None, **kwargs):
+        obj = obj or kwargs
+
+        query_string = "INSERT INTO {table} ({keys}) VALUES ({values}) RETURNING id;".format(
+            table=table,
+            keys=', '.join(obj.keys()),
+            values=', '.join(map(lambda i: "%({})s".format(i), args))
+        )
+
+        return self.execute(query_string, obj)
 

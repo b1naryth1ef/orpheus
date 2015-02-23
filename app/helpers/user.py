@@ -25,13 +25,6 @@ USER_SETTING_SAVE_PARAMS = [
     "trade_url", "ui.disable_streams", "ui.disable_push"
 ]
 
-
-CREATE_USER_QUERY = """
-INSERT INTO users (steamid, active, join_date, last_login, ugroup, settings)
-VALUES (%s, %s, %s, %s, %s, %s)
-RETURNING id
-"""
-
 def create_user(steamid, group=UserGroup.NORMAL):
     """
     Attempts to create a user based on their steamid, and optionally a group.
@@ -40,7 +33,14 @@ def create_user(steamid, group=UserGroup.NORMAL):
     """
     with Cursor() as c:
         now = datetime.utcnow()
-        return c.execute(CREATE_USER_QUERY, (steamid, True, now, now, group, Cursor.json(DEFAULT_SETTINGS))).fetchone().id
+        return c.insert("users", {
+            "steamid": steamid,
+            "active": True,
+            "join_date": now,
+            "last_login": now,
+            "ugroup": group,
+            "settings": Cursor.json(DEFAULT_SETTINGS)
+        }).fetchone().id
 
 def build_error(msg, typ, api=False):
     if api:
@@ -91,7 +91,8 @@ def get_user_info(uid):
         }
 
     with Cursor() as c:
-        resp = c.execute("SELECT steamid, settings, ugroup, trade_token FROM users WHERE id=%s", (uid, )).fetchone()
+        resp = c.execute("SELECT steamid, settings, ugroup, trade_token FROM users WHERE id=%s",
+            (uid, )).fetchone()
 
     if not uid:
         return {
