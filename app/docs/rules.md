@@ -1,13 +1,13 @@
 # CSGO Emporium Rules
-These rules apply to all entities that use and/or work with us. These rules where written to protect betters, players, teams, and the game as a whole. If you have a question, feel free to contact our support team.
+These rules apply to all entities that use and/or work with us. These rules where written to protect betters, players, teams, and the game as a whole. If you have a question, feel free to contact our support team (csgoemporium AT gmail).
 
 ## Bets
 
 ### Ownership
-When you trade items to be placed in a bet to us, you agree that you've now transferred complete ownership of the item to the Emporium entity. We reserve the right to indefinitely hold items transfered to us that we believe may be in a transient stage based on match results, pending investigations, or other causes.
+When you trade items to be placed in a bet to us, you agree that you've now transferred ownership of the item to the CSGO Emporium entity. We reserve the right to indefinitely hold items transfered to us under any circumstances. Any items returned to the user are soley theirs, and CSGO Emporium takes no responsability for fraud or theft of items after they have left our inventory.
 
 ### Value
-When you place a bet, we will assign all your items a value based on our internal algorithms findings. You agree that this value will be locked for the duration of our ownership of the item. We reserve the right to change item values based on extraneous circumstances.
+When your items are traded into our system, we assign a <b>virtual</b> value to them, based on what our internal system has calculated. You agree that this value will be accurate for the duration of our ownership of the item. We reserve the right to <b>without notice</b> modify, reduce, or otherwise change this value.
 
 ## Matches
 

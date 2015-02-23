@@ -6,7 +6,7 @@ from emporium import app
 log = logging.getLogger(__name__)
 slack = Slacker('xoxb-3809520008-UCTKTT9r8AKOLUYXHhsk5jER')
 
-def slack_message(content, color=None, fields=None, username=None, channel="#auto"):
+def slack_message(content, color=None, fields=None, username=None, channel="#ops"):
     if app.config.get("ENV") != "PROD":
         log.debug("Would send slack message: %s, %s, %s, %s" % (content, color, fields, username))
         return
