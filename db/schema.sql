@@ -267,3 +267,17 @@ CREATE TABLE exceptions (
 
 CREATE INDEX ON exceptions (etype);
 
+CREATE TABLE newsposts (
+  id          SERIAL PRIMARY KEY,
+  title       varchar(256) UNIQUE,
+  category    varchar(256),
+  content     text,
+  meta        jsonb,
+  is_public   boolean,
+  created_at  timestamp with time zone,
+  created_by  integer references users(id),
+);
+
+CREATE INDEX ON newsposts (category);
+CREATE INDEX ON newsposts (title);
+

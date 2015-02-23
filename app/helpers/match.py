@@ -92,6 +92,7 @@ def match_to_json(m, user=None):
     match = {}
     match['id'] = m.id
     match['state'] = m.state
+    match['itemstate'] = m.itemstate
     match['game'] = m.game
     match['when'] = int(m.match_date.strftime("%s"))
     match['teams'] = {}
@@ -189,5 +190,5 @@ def match_to_json(m, user=None):
     match['results'] = m.results
     return match
 
-match_to_json.required_fields = ['id', 'game', 'match_date', 'meta', 'results', 'teams', 'state']
+match_to_json.required_fields = ['id', 'game', 'match_date', 'meta', 'results', 'teams', 'state', 'itemstate']
 
