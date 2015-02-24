@@ -13,7 +13,7 @@ class SlackMessage(object):
         self.username = username
         self.channel = channel
 
-        self.fallback = None
+        self.fallback = content
         self.pretext = None
         self.author_name = None
         self.author_link = None
@@ -22,7 +22,7 @@ class SlackMessage(object):
         self.title_link = None
         self.image_url = None
 
-        self.fields = {}
+        self.fields = []
 
     def add_custom_field(self, title, value, short=None):
         short = len(str(value)) < 64 if short is None else short
@@ -36,7 +36,7 @@ class SlackMessage(object):
     def payload(self):
         return (self.channel, ""), {
             'username': self.username,
-            'attachments': json.dumps({
+            'attachments': [{
                 "fallback": self.fallback,
                 "color": self.color,
                 "pretext": self.pretext,
@@ -48,20 +48,24 @@ class SlackMessage(object):
                 "text": self.text,
                 "fields": self.fields,
                 "image_url": self.image_url
-            })}
+            }]}
 
     def send_async(self):
+        if app.config.get("ENV") != "PROD":
+            log.debug("Would send slack message: %s, %s, %s, %s" % (content, color, fields, username))
+            return
+
         from util.queue import JobQueue
         args, kwargs = self.payload()
         return JobQueue("slack_msg").fire({"args": args, "kwargs": kwargs})
 
     def send(self):
         if app.config.get("ENV") != "PROD":
-            log.debug("Would send slack message: %s, %s, %s, %s" %
-                (content, color, fields, username))
+            log.debug("Would send slack message: %s, %s, %s, %s" % (content, color, fields, username))
             return
         self.send_raw(*self.payload())
 
     @staticmethod
     def send_raw(args, kwargs):
-        return self.chat.post_message(*args, **kwargs)
+        kwargs['attachments'] = json.dumps(kwargs['attachments'])
+        return slack.chat.post_message(*args, **kwargs)

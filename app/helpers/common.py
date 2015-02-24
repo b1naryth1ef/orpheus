@@ -18,5 +18,5 @@ def create_exception(exception, meta):
             id, str(exc_type), content, Cursor.json(meta),
             datetime.utcnow()))
 
-    return id, content, str(exc_type)
+    return id
 

@@ -1,4 +1,4 @@
-import json, logging
+import json, logging, traceback, sys
 
 from flask import request, g, redirect, render_template
 from psycopg2 import OperationalError
@@ -18,24 +18,35 @@ log = logging.getLogger(__name__)
 
 @app.errorhandler(500)
 def internal_error_handler(exception):
-    trace_id, content, etype = create_exception(exception, {
-        "uid": g.user,
-        "sid": g.session._id,
-        "ip": request.remote_addr,
-        "url": request.path,
-        "method": request.method,
-        "headers": dict(request.headers),
-        "values": dict(request.values)
-    })
+    trace_id = None
 
-    msg = SlackMessage("Web Exception (%s)" % etype, color='danger')
-    msg.add_custom_field("Request", "%s %s" % (request.method, request.path))
-    msg.add_custom_field("IP", request.remote_addr)
-    msg.add_custom_field("User ID", g.user)
-    msg.add_custom_field("Session ID", g.session._id)
-    msg.add_custom_field("Trace", str(trace_id))
-    msg.add_custom_field("Exception", content)
-    msg.send_async()
+    try:
+        trace_id = create_exception(exception, {
+            "uid": g.user,
+            "sid": g.session._id,
+            "ip": request.remote_addr,
+            "url": request.path,
+            "method": request.method,
+            "headers": dict(request.headers),
+            "values": dict(request.values)
+        })
+    except OperationalError:
+        log.exception("Failed to save exception trace: ")
+
+    try:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+
+        content = ''.join(traceback.format_exception(exc_type, exc_obj, exc_tb))
+        msg = SlackMessage("Web Exception (%s)" % str(exc_obj), color='danger')
+        msg.add_custom_field("Request", "%s %s" % (request.method, request.path))
+        msg.add_custom_field("IP", request.remote_addr)
+        msg.add_custom_field("User ID", g.user)
+        msg.add_custom_field("Session ID", g.session._id)
+        msg.add_custom_field("Trace", str(trace_id))
+        msg.add_custom_field("Exception", content)
+        msg.send_async()
+    except Exception:
+        log.exception("Failed to send slack exception trace: ")
 
     app.logger.exception("Server Exception (%s)" % trace_id)
     return render_template("error.html", code=500, msg="Internal Server Exception", trace=trace_id), 500
@@ -46,9 +57,12 @@ def page_not_found_handler(exception):
 
 @app.context_processor
 def app_context_processor():
-    return {
-        "user": get_user_info(g.user)
-    }
+    try:
+        return {
+            "user": get_user_info(g.user)
+        }
+    except:
+        return {}
 
 @app.template_filter("jsonify")
 def jsonify_filter(x):

@@ -21,7 +21,7 @@ def main():
             port = 8321
 
         setup()
-        app.run("0.0.0.0", port=port, debug=True, extra_files=list(get_js_templates()))
+        app.run("0.0.0.0", port=port, debug=False, extra_files=list(get_js_templates()))
         sys.exit(0)
 
     if sys.argv[1] == "queue":
