@@ -34,7 +34,7 @@ def internal_error_handler(exception):
     msg.add_custom_field("User ID", g.user)
     msg.add_custom_field("Session ID", g.session._id)
     msg.add_custom_field("Trace", str(trace_id))
-    msg.add_custom_field("Exception", ' '.join(content))
+    msg.add_custom_field("Exception", content)
     msg.send_async()
 
     app.logger.exception("Server Exception (%s)" % trace_id)

@@ -11,11 +11,12 @@ def create_exception(exception, meta):
     id = uuid.uuid4()
     exc_type, exc_obj, exc_tb = sys.exc_info()
 
+    content = ''.join(traceback.format_exception(exc_type, exc_obj, exc_tb))
+
     with Cursor() as c:
         c.execute(CREATE_EXCEPTION_SQL, (
-            id, str(exc_type),
-            ' '.join(traceback.format_exception(exc_tb)), Cursor.json(meta),
+            id, str(exc_type), content, Cursor.json(meta),
             datetime.utcnow()))
 
-    return id, traceback.format_exception(exc_type, exc_obj, exc_tb), str(exc_type)
+    return id, content, str(exc_type)
 
