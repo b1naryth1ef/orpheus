@@ -8,7 +8,7 @@ slack = Slacker('xoxb-3809520008-UCTKTT9r8AKOLUYXHhsk5jER')
 
 class SlackMessage(object):
     def __init__(self, content, color=None, username="empburt", channel="#ops"):
-        self.text = text
+        self.text = content
         self.color = color
         self.username = username
         self.channel = channel

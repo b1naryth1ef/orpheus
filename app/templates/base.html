@@ -71,7 +71,8 @@
                         </a>
                       </div>
                     </li>
-                    {% if user and user['user'] and user['user']['group'] == "MODERATOR" or user['user']['group'] == "ADMIN" or user['user']['group'] == "SUPER" %}
+                    {% if user and user['authed'] %}
+                    {% if user['user']['group'] == "MODERATOR" or user['user']['group'] == "ADMIN" or user['user']['group'] == "SUPER" %}
                     <li>
                       <div class="list-group">
                         <a href="/admin" class="list-group-item">
@@ -86,6 +87,7 @@
                         </a>
                       </div>
                     </li>
+                    {% endif %}
                     {% endif %}
                     <li>
                       <div class="list-group">
