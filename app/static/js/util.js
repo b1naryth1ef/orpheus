@@ -92,6 +92,9 @@ function getDataFromField(field) {
         case "SELECT":
             return field.val();
         case "INPUT":
+            if (field.is(":checkbox")) {
+                return field.is(":checked");
+            }
             return field.val();
         case "DIV":
             if (field.hasClass("date-field")) {
@@ -101,5 +104,19 @@ function getDataFromField(field) {
         default:
             break;
     }
+}
+
+function setupDateFields() {
+    _.each($(".date-field"), function (el) {
+        var defDate = undefined;
+
+        if ($(el).attr("data-default")) {
+            defDate = moment(parseInt($(el).attr("data-default")) * 1000);
+        }
+
+        $(el).datetimepicker({
+            defaultDate: defDate
+        })
+    })
 }
 

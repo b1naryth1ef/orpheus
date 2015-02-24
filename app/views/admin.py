@@ -54,19 +54,23 @@ def admin_matches():
     return render_template("admin/matches.html")
 
 USERS_LIST_QUERY = """
-SELECT id, steamid, email, active, last_login
-FROM users WHERE id > %s ORDER BY id LIMIT %s
+SELECT id, steamid, email, active, last_login, ugroup
+FROM users {} ORDER BY id LIMIT %s OFFSET %s
 """
 
 @admin.route("/api/user/list")
 def admin_users_list():
     page = int(request.values.get("page", 1))
 
-    g.cursor.execute("SELECT count(*) as c FROM users")
+    q = ""
+    if request.values.get("query"):
+        # TODO: injection
+        q = "WHERE steamid='%s'" % request.values.get("query")
+
+    g.cursor.execute("SELECT count(*) as c FROM users {}".format(q))
     pages = (g.cursor.fetchone().c / 50) + 1
 
-    a, b = paginate(page, per_page=50)
-    g.cursor.execute(USERS_LIST_QUERY, (b, a))
+    g.cursor.execute(USERS_LIST_QUERY.format(q), paginate(page, per_page=50))
 
     users = []
     for entry in g.cursor.fetchall():
@@ -75,19 +79,19 @@ def admin_users_list():
             "steamid": entry.steamid,
             "username": None,
             "last_login": entry.last_login.strftime("%s") if entry.last_login else 0,
+            "ugroup": entry.ugroup,
             "active": entry.active
         })
 
     return APIResponse({"users": users, "pages": pages})
 
 USER_EDITABLE_FIELDS = [
-    "email", "active"
+    "email", "active", "ugroup"
 ]
 
 @admin.route("/api/user/edit", methods=["POST"])
 def admin_user_edit():
     user = request.values.get("user")
-    print user
 
     g.cursor.execute("SELECT id FROM users WHERE id=%s", (user, ))
     if not g.cursor.fetchone():
@@ -181,30 +185,27 @@ def admin_match_list():
 
     return APIResponse({"matches": matches, "pages": pages})
 
-MATCH_CREATE_FIELDS = {
+MATCH_FIELDS = {
     "game", "event", "maplist", "match_date", "public_date",
     "team1", "team2"
 }
 
-@admin.route("/api/match/create", methods=["POST"])
-def admin_match_create():
-    print request.json
-
-    diff = MATCH_CREATE_FIELDS - set(request.json.keys())
+def parse_match_payload(obj):
+    diff = MATCH_FIELDS - set(obj.keys())
     if len(diff) != 0:
         raise APIError("Missing fields: %s" % ', '.join(diff))
 
-    if not request.json['match_date']:
+    if not obj['match_date']:
         raise APIError("Need a match date")
 
-    match_date = datetime.fromtimestamp(int(request.json['match_date']))
+    match_date = datetime.fromtimestamp(int(obj['match_date']))
 
-    if request.json['public_date']:
-        public_date = datetime.fromtimestamp(int(request.json['public_date']))
+    if obj['public_date']:
+        public_date = datetime.fromtimestamp(int(obj['public_date']))
     else:
         public_date = match_date - relativedelta(days=2)
 
-    maps = map(lambda i: i.strip(), request.json['maplist'].split(",")) if request.json['maplist'] else None
+    maps = map(lambda i: i.strip(), obj['maplist'].split(",")) if obj['maplist'] else None
 
     with Cursor() as c:
         game_ok = c.execute("SELECT id FROM games WHERE id=%s", (request.json['game'], )).fetchone()
@@ -224,12 +225,19 @@ def admin_match_create():
         if not len(teams_ok) == 2 and len(set(map(lambda i: i.id, teams_ok))) == len(teams_ok):
             raise APIError("Invalid Team ID's")
 
+        return match_date, public_date, maps, game_ok.id, event_ok.id, map(lambda i: i.id, teams_ok), obj.get("active", False)
+
+@admin.route("/api/match/create", methods=["POST"])
+def admin_match_create():
+    match_date, public_date, maps, game, event, teams, active = parse_match_payload(request.json)
+
+    with Cursor() as c:
         c.insert("matches", {
             "state": "OPEN",
             "itemstate": "OPEN",
-            "event": event_ok.id,
-            "game": game_ok.id,
-            "teams": map(lambda i: i.id, teams_ok),
+            "event": event,
+            "game": game,
+            "teams": teams,
             "meta": c.json({
                 "maps": maps
             }),
@@ -237,10 +245,35 @@ def admin_match_create():
             "lock_date": match_date - relativedelta(minutes=5),
             "match_date": match_date,
             "public_date": public_date,
-            "active": True,
+            "active": active,
             "created_by": g.user,
             "created_at": datetime.utcnow()
         })
+
+    return APIResponse()
+
+@admin.route("/api/match/<id>/edit", methods=["POST"])
+def admin_match_edit(id):
+    match_date, public_date, maps, game, event, teams, active = parse_match_payload(request.json)
+
+    data = {
+        "id": id,
+        "event": event,
+        "game": game,
+        "teams": teams,
+        "active": active,
+        "match_date": match_date,
+        "public_date": public_date
+    }
+    print data
+
+    with Cursor() as c:
+        pre, post = c.paramify(data)
+        c.execute("""
+            UPDATE matches SET
+                event=%(event)s, game=%(game)s, teams=%(teams)s, active=%(active)s, match_date=%(match_date)s,
+                public_date=%(public_date)s
+            WHERE id=%(id)s""", data)
 
     return APIResponse()
 
@@ -368,5 +401,4 @@ def admin_event_list():
         }
 
     return APIResponse({"events": events, "pages": pages})
-
 

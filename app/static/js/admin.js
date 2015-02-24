@@ -17,7 +17,8 @@ admin.loadUsers = (function () {
 
     $.ajax("/admin/api/user/list", {
         data: {
-            page: this.page
+            page: this.page,
+            query: this.query
         },
         success: (function (data) {
             _.each(data.users, (function (user) {
@@ -37,6 +38,7 @@ admin.renderSingleUserEntry = (function (user) {
 }).bind(this);
 
 admin.route("/admin/users", function () {
+    this.query = "";
     this.loadUsers();
 
     $("#users-page-last").click((function () {
@@ -51,6 +53,11 @@ admin.route("/admin/users", function () {
             this.page++;
             this.loadUsers();
         }
+    }).bind(this));
+
+    $("#btn-search").click((function (eve) {
+        this.query = $("#search-box").val();
+        this.loadUsers();
     }).bind(this));
 
     $("#refresh-users").click(this.loadUsers);
@@ -71,6 +78,7 @@ admin.route("/admin/users", function () {
         var params = {};
         params.user = $($(ev.target).parents()[2]).attr("data-uid");
         params.active = $("#user-edit-active").is(":checked");
+        params.ugroup = $("#user-ugroup").val();
 
         var user = this.usersCache[params.user];
 
@@ -188,8 +196,6 @@ admin.restGetMatchList = (function () {
 
 admin.renderMatches = (function () {
     $("#matches-content").empty();
-    console.log(this.gameCache);
-    console.log(this.matchCache);
     for (mid in this.matchCache) {
         $("#matches-content").append(this.app.render("admin_match_row", {
             match: this.matchCache[mid],
@@ -232,15 +238,17 @@ admin.loadMatches = (function () {
     }).bind(this));
 }).bind(admin);
 
-admin.renderSingleMatchEntry = (function (match, create) {
+admin.renderSingleMatchEntry = (function (match) {
     $("#match-modal").modal("hide");
-    $("#match-modal-location").empty().html(this.app.render("admin_match_modal", {
+    console.log(match);
+    $("#match-modal-location").empty().html(this.app.render("admin_match_entry", {
         match: match,
         games: this.gameCache,
         teams: this.teamCache,
         events: this.eventCache,
-        create: create || false
+        create: false,
     }));
+    setupDateFields();
     $("#match-modal").modal("show");
 }).bind(admin);
 
@@ -289,13 +297,20 @@ admin.saveMatchDraft = (function () {
 }).bind(admin);
 
 admin.saveMatch = (function (eve) {
+    var id = $($(eve.target).parents()[2]).attr("data-id");
     var data = _.reduce(_.map($(".match-field"), function (el) {
         var val = {};
         val[$(el).attr("data-name")] = getDataFromField(el);
         return val
     }), function (a, b) { return _.extend(a, b) });
 
-    $.ajax("/admin/api/match/create", {
+    if (id) {
+        var url = "/admin/api/match/" + id + "/edit";
+    } else {
+        var url = "/admin/api/match/create";
+    }
+
+    $.ajax(url, {
         type: 'POST',
         data: JSON.stringify(data),
         dataType: 'json',
@@ -303,7 +318,7 @@ admin.saveMatch = (function (eve) {
         success: (function (resp) {
             $("#match-modal").modal("hide");
             if (resp.success) {
-                $.notify("Match Created!", "success");
+                $.notify("Match Saved!", "success");
                 this.loadMatches();
             } else {
                 $.notify("Error: " + resp.message, "danger");
@@ -318,12 +333,13 @@ admin.route("/admin/matches", function () {
     $("#match-add-button").click((function (eve) {
         $("#match-modal").modal("hide");
         console.log(this.eventCache);
-        $("#match-modal-location").empty().html(this.app.render("admin_create_match_modal", {
+        $("#match-modal-location").empty().html(this.app.render("admin_match_entry", {
             games: this.gameCache,
             teams: this.teamCache,
             events: this.eventCache,
+            create: true,
         }));
-        $(".date-field").datetimepicker();
+        setupDateFields();
         $("#match-modal").modal("show");
     }).bind(this));
 

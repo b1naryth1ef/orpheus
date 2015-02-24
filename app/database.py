@@ -76,7 +76,7 @@ class Cursor(object):
         return Json(obj)
 
     @staticmethod
-    def map_values(self, obj):
+    def map_values(obj):
         return ', '.join(map(lambda i: i+"=%("+i+")s", obj.keys()))
 
     def close(self):
@@ -137,4 +137,7 @@ class Cursor(object):
         )
 
         return self.execute(query_string, obj)
+
+    def paramify(self, obj):
+        return ', '.join(obj.keys()), ', '.join(map(lambda i: "%({})s".format(i), obj.keys()))
 

@@ -1,6 +1,6 @@
 <div id="match-modal" class="modal fade in" style="display: block; padding-right: 17px;">
   <div class="modal-backdrop fade in" style="height: 560px;"></div>
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-lg" data-id="<%- create ? "" : match.id %>">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" data-dismiss="modal" class="close">×</button>
@@ -17,12 +17,13 @@
                 <select data-name="game" class="form-control m-b match-field">
                   <% for (game in games) { %>
                   <% var game = games[game] %>
-                  <option value="<%= game.id %>"><%= game.name %></option>
+                  <option <%= (!create && match.game.id == game.id) ? "selected" : "" %> value="<%= game.id %>"><%= game.name %></option>
                   <% } %>
                 </select>
               </div>
             </div>
           </fieldset>
+          <% var m_teams = _.keys(match.teams) %>
           <fieldset>
             <div class="form-group">
               <label class="col-sm-2 control-label">Team #1</label>
@@ -30,7 +31,7 @@
                 <select data-name="team1" class="form-control m-b match-field">
                   <% for (team in teams) { %>
                   <% var team = teams[team] %>
-                  <option value="<%= team.id %>"><%= team.name %> (<%= team.tag %>)</option>
+                  <option <%= (!create && match.teams[m_teams[0]].id == team.id) ? "selected" : "" %> value="<%= team.id %>"><%= team.name %> (<%= team.tag %>)</option>
                   <% } %>
                 </select>
               </div>
@@ -43,7 +44,7 @@
                 <select data-name="team2" class="form-control m-b match-field">
                   <% for (team in teams) { %>
                   <% var team = teams[team] %>
-                  <option value="<%= team.id %>"><%= team.name %> (<%= team.tag %>)</option>
+                  <option <%= (!create && match.teams[m_teams[1]].id == team.id) ? "selected" : "" %> value="<%= team.id %>"><%= team.name %> (<%= team.tag %>)</option>
                   <% } %>
                 </select>
               </div>
@@ -56,7 +57,7 @@
                 <select data-name="event" class="form-control m-b match-field">
                   <% for (event in events) { %>
                   <% var event = events[event] %>
-                  <option value="<%= event.id %>"><%= event.name %> (<%= event.league %>)</option>
+                  <option <%= (!create && match.event.id == event.id) ? "selected" : "" %> value="<%= event.id %>"><%= event.name %> (<%= event.league %>)</option>
                   <% } %>
                 </select>
               </div>
@@ -66,7 +67,7 @@
             <div class="form-group">
               <label class="col-sm-2 control-label">Map List</label>
               <div class="col-sm-10">
-                <input type="text" class="form-control match-field" data-name="maplist">
+                <input type="text" class="form-control match-field" data-name="maplist" value="<%= (!create && match.extra.maps) ? match.extra.maps.join(', ') : "" %>">
                 <span class="help-block m-b-none">Comma seperated list of maps</span>
               </div>
             </div>
@@ -75,7 +76,7 @@
             <div class="form-group mb">
               <label class="col-sm-2 control-label mb">Match Date</label>
               <div class="col-sm-10">
-                <div data-name="match_date" class="input-group date match-field date-field">
+                <div data-name="match_date" class="input-group date match-field date-field" data-default="<%= !create ? match.when : "" %>">
                   <input type="text" class="form-control">
                   <span class="input-group-addon">
                     <span class="fa fa-calendar"></span>
@@ -89,7 +90,7 @@
             <div class="form-group mb">
               <label class="col-sm-2 control-label mb">Public Date</label>
               <div class="col-sm-10">
-                <div data-name="public_date" class="input-group date match-field date-field">
+                <div data-name="public_date" class="input-group date match-field date-field" data-default="<%= !create ? match.public : "" %>">
                   <input type="text" class="form-control">
                   <span class="input-group-addon">
                     <span class="fa fa-calendar"></span>
@@ -99,6 +100,19 @@
               </div>
             </div>
           </fieldset>
+          <% if (!create) { %>
+          <fieldset>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Active</label>
+              <div class="col-sm-10">
+                <label class="switch switch-lg">
+                  <input type="checkbox" <%= match.active ? 'checked' : '' %> data-name="active" class="match-field">
+                  <span></span>
+                </label>
+              </div>
+            </div>
+          </fieldset>
+          <% } %>
         </div>
       </div>
       <div class="modal-footer">

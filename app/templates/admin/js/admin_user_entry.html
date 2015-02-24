@@ -1,31 +1,45 @@
+<% var groups = ['NORMAL', 'MODERATOR', 'ADMIN', 'SUPER'] %>
 <div id="edit-user-modal" class="modal fade in" style="display: block; padding-right: 17px;">
-<div class="modal-backdrop fade in" style="height: 560px;"></div>
-<div class="modal-dialog modal-lg" data-uid="<%- user.id %>">
-  <div class="modal-content">
-    <div class="modal-header">
-      <button type="button" data-dismiss="modal" aria-label="Close" class="close">
-        <span aria-hidden="true">×</span>
-      </button>
-      <h4 class="modal-title">Edit User: <%- user.username %></h4>
-    </div>
-    <div class="modal-body">
-      <div id="edit-user-error" class="alert alert-danger" style="display: none;"></div>
-      <fieldset>
-        <div class="form-group">
-          <label class="col-sm-2 control-label">User Active</label>
-          <div class="col-sm-10">
-            <label class="switch switch-lg">
-              <input id="user-edit-active" type="checkbox" <%= user.active ? 'checked' : '' %>>
-              <span></span>
-            </label>
+  <div class="modal-backdrop fade in" style="height: 560px;"></div>
+  <div class="modal-dialog modal-lg" data-uid="<%- user.id %>">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" data-dismiss="modal" aria-label="Close" class="close">
+          <span aria-hidden="true">×</span>
+        </button>
+        <h4 class="modal-title">Edit User: <%- user.username %></h4>
+      </div>
+      <div class="modal-body">
+        <div id="edit-user-error" class="alert alert-danger" style="display: none;"></div>
+        <fieldset>
+          <div class="form-group">
+            <label class="col-sm-2 control-label">Group</label>
+            <div class="col-sm-10">
+              <select id="user-ugroup" class="form-control">
+                <% for (group in groups) { %>
+                <% var group = groups[group] %>
+                <option <%= user.ugroup == group ? "selected" : "" %> value="<%= group %>"><%= group %></option>
+                <% } %>
+              </select>
+            </div>
           </div>
-        </div>
-      </fieldset>
-    </div>
-    <div class="modal-footer">
-      <button type="button" data-dismiss="modal" class="btn btn-danger">Close</button>
-      <button type="button" class="btn btn-success user-edit-save">Save changes</button>
+        </fieldset>
+        <fieldset>
+          <div class="form-group">
+            <label class="col-sm-2 control-label">User Active</label>
+            <div class="col-sm-10">
+              <label class="switch switch-lg">
+                <input id="user-edit-active" type="checkbox" <%= user.active ? 'checked' : '' %>>
+                <span></span>
+              </label>
+            </div>
+          </div>
+        </fieldset>
+      </div>
+      <div class="modal-footer">
+        <button type="button" data-dismiss="modal" class="btn btn-danger">Close</button>
+        <button type="button" class="btn btn-success user-edit-save">Save changes</button>
+      </div>
     </div>
   </div>
-</div>
 </div>

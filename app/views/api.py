@@ -37,7 +37,7 @@ def route_stats_overview():
 MATCH_LIST_QUERY = """
 SELECT {} FROM matches
 WHERE now() > public_date AND active=true
-ORDER BY id LIMIT %s OFFSET %s
+ORDER BY match_date LIMIT %s OFFSET %s
 """.format(', '.join(match_to_json.required_fields))
 
 @api.route("/match/list")
