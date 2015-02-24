@@ -31,7 +31,7 @@ def get_connection(database='emporium'):
     hit PGBouncer, and be pooled. `database` can be a valid database name.
     """
     dbc = psycopg2.connect(PG_CONN_STRING + " dbname={}".format(database),
-        cursor_factory=NamedTupleCursor)
+        cursor_factory=NamedTupleCursor, connect_timeout=5)
 
     dbc.autocommit = True
     return dbc
