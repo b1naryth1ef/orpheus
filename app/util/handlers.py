@@ -12,7 +12,7 @@ from helpers.user import get_user_info
 from util.sessions import Session
 from util.errors import ResponseException, GenericError
 from util.responses import APIResponse
-from util.slack import slack_message
+from util.slack import SlackMessage
 
 log = logging.getLogger(__name__)
 
@@ -28,14 +28,14 @@ def internal_error_handler(exception):
         "values": dict(request.values)
     })
 
-    slack_message("Web Exception (%s)" % etype, color='danger', fields={
-        "Request": "%s %s" % (request.method, request.path),
-        "IP": request.remote_addr,
-        "User ID": g.user,
-        "Session ID": g.session._id,
-        "Trace": str(trace_id),
-        "Exception": ' '.join(content)
-    })
+    msg = SlackMessage("Web Exception (%s)" % etype, color='danger')
+    msg.add_custom_field("Request", "%s %s" % (request.method, request.path))
+    msg.add_custom_field("IP", request.remote_addr)
+    msg.add_custom_field("User ID", g.user)
+    msg.add_custom_field("Session ID", g.session._id)
+    msg.add_custom_field("Trace", str(trace_id))
+    msg.add_custom_field("Exception", ' '.join(content))
+    msg.send_async()
 
     app.logger.exception("Server Exception (%s)" % trace_id)
     return render_template("error.html", code=500, msg="Internal Server Exception", trace=trace_id), 500

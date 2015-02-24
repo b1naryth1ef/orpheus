@@ -133,6 +133,23 @@ CREATE TABLE games (
 );
 
 
+CREATE TYPE event_type AS ENUM ('EVENT', 'SEASON');
+
+CREATE TABLE events (
+  id          SERIAL PRIMARY KEY,
+  name        varchar(255) NOT NULL,
+  website     varchar(255) NOT NULL,
+  league      varchar(255) NOT NULL,
+  logo        varchar(255) NOT NULL,
+  splash      varchar(255) NOT NULL,
+  streams     varchar(256)[],
+  games       integer[],
+  etype       event_type,
+  start_date  timestamp with time zone,
+  end_date    timestamp with time zone,
+  active      boolean
+);
+
 /*
   Represents a team
 */
@@ -170,6 +187,7 @@ CREATE TABLE matches (
     id               SERIAL PRIMARY KEY,
     state            match_state NOT NULL,
     itemstate        match_item_state NOT NULL,
+    event            integer REFERENCES events(id),
     game             integer REFERENCES games(id),
     teams            integer[],
     meta             jsonb,
@@ -275,7 +293,7 @@ CREATE TABLE newsposts (
   meta        jsonb,
   is_public   boolean,
   created_at  timestamp with time zone,
-  created_by  integer references users(id),
+  created_by  integer references users(id)
 );
 
 CREATE INDEX ON newsposts (category);

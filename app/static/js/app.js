@@ -124,11 +124,13 @@ app.setup = function (userData) {
     if (userData.authed) {
         this.user = userData.user;
         $(".authed").show();
+        $(".unauthed").hide();
         if (this.user.group === "super" || this.user.group === "admin") {
             $(".admin").show();
         }
     } else {
         this.user = null;
+        $(".authed").hide();
         $(".unauthed").show();
     }
 };

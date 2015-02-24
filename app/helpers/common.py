@@ -14,8 +14,8 @@ def create_exception(exception, meta):
     with Cursor() as c:
         c.execute(CREATE_EXCEPTION_SQL, (
             id, str(exc_type),
-            traceback.format_tb(exc_tb), Cursor.json(meta),
+            ' '.join(traceback.format_exception(exc_tb)), Cursor.json(meta),
             datetime.utcnow()))
 
-    return id, traceback.format_tb(exc_tb), str(exc_type)
+    return id, traceback.format_exception(exc_type, exc_obj, exc_tb), str(exc_type)
 

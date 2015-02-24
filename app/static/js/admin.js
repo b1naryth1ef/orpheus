@@ -205,17 +205,23 @@ admin.loadMatches = (function () {
     this.page = this.page || 1;
     this.max_pages = 0;
 
+    this.teamCache = {};
     this.matchCache = {};
     this.gameCache = {};
-    this.teamCache = {};
+    this.eventCache = {};
 
-    $.get("/admin/api/team/list", (function (data) {
-        this.teamCache = data.teams;
-    }).bind(this));
-
+    // Get all the things
     $.when(
+        $.get("/admin/api/team/list", (function (data) {
+            this.teamCache = data.teams;
+        }).bind(this)),
+
         $.get("/admin/api/match/list", (function (data) {
             this.matchCache = data.matches;
+        }).bind(this)),
+
+        $.get("/admin/api/event/list", {active: true}, (function (data) {
+            this.eventCache = data.events;
         }).bind(this)),
 
         $.get("/admin/api/game/list", (function (data) {
@@ -226,13 +232,14 @@ admin.loadMatches = (function () {
     }).bind(this));
 }).bind(admin);
 
-admin.renderSingleMatchEntry = (function (match) {
+admin.renderSingleMatchEntry = (function (match, create) {
     $("#match-modal").modal("hide");
     $("#match-modal-location").empty().html(this.app.render("admin_match_modal", {
         match: match,
         games: this.gameCache,
         teams: this.teamCache,
-        create: false
+        events: this.eventCache,
+        create: create || false
     }));
     $("#match-modal").modal("show");
 }).bind(admin);
@@ -281,8 +288,44 @@ admin.saveMatchDraft = (function () {
     })
 }).bind(admin);
 
+admin.saveMatch = (function (eve) {
+    var data = _.reduce(_.map($(".match-field"), function (el) {
+        var val = {};
+        val[$(el).attr("data-name")] = getDataFromField(el);
+        return val
+    }), function (a, b) { return _.extend(a, b) });
+
+    $.ajax("/admin/api/match/create", {
+        type: 'POST',
+        data: JSON.stringify(data),
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        success: (function (resp) {
+            $("#match-modal").modal("hide");
+            if (resp.success) {
+                $.notify("Match Created!", "success");
+                this.loadMatches();
+            } else {
+                $.notify("Error: " + resp.message, "danger");
+            }
+        }).bind(this)
+    });
+}).bind(admin);
+
 admin.route("/admin/matches", function () {
     this.loadMatches();
+
+    $("#match-add-button").click((function (eve) {
+        $("#match-modal").modal("hide");
+        console.log(this.eventCache);
+        $("#match-modal-location").empty().html(this.app.render("admin_create_match_modal", {
+            games: this.gameCache,
+            teams: this.teamCache,
+            events: this.eventCache,
+        }));
+        $(".date-field").datetimepicker();
+        $("#match-modal").modal("show");
+    }).bind(this));
 
     $("#matches-table").delegate(".match-edit", "click", (function (eve) {
         eve.stopImmediatePropagation();
@@ -297,7 +340,13 @@ admin.route("/admin/matches", function () {
     }).bind(this));
 
     $("#match-modal-location").delegate("#match-draft-save", "click", (function (eve) {
+        eve.stopImmediatePropagation();
         this.saveMatchDraft();
+    }).bind(this));
+
+    $("#match-modal-location").delegate("#match-save", "click", (function (eve) {
+        eve.stopImmediatePropagation();
+        this.saveMatch(eve);
     }).bind(this));
 })
 

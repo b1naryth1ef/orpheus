@@ -4,7 +4,7 @@ from psycopg2.extras import Json
 from flask import g
 
 from database import Cursor
-from util.errors import InvalidRequestError, ValidationError
+from util.errors import InvalidRequestError, ValidationError, EmporiumException
 from helpers.user import UserGroup
 from helpers.bet import BetState
 
@@ -82,7 +82,11 @@ def match_to_json(m, user=None):
         m = c.fetchone()
 
     if not m:
-        raise InvalidRequestError("Failed to match_to_json with arg %s" % m)
+        raise EmporiumException("Failed to match_to_json with arg %s" % m)
+
+    event = c.execute("SELECT * FROM events WHERE id=%s", (m.event, )).fetchone()
+    if not event:
+        raise EmporiumException("Could not find event for match")
 
     match = {}
     match['id'] = m.id
@@ -93,6 +97,18 @@ def match_to_json(m, user=None):
     match['teams'] = {}
     match['extra'] = {}
     match['stats'] = {}
+
+    match['event'] = {
+        "id": event.id,
+        "name": event.name,
+        "website": event.website,
+        "league": event.league,
+        "logo": event.logo,
+        "splash": event.splash,
+        "streams": event.streams,
+        "games": event.games,
+        "type": event.etype
+    }
 
     # This will most definitily require some fucking caching at some point
     bet_stats = c.execute(MATCH_GET_BETS_INFO_QUERY, (m.id, )).fetchall(as_list=True)
@@ -186,5 +202,5 @@ def match_to_json(m, user=None):
     return match
 
 match_to_json.required_fields = [
-    'id', 'game', 'match_date', 'meta', 'results', 'teams', 'state', 'itemstate']
+    'id', 'game', 'match_date', 'meta', 'results', 'teams', 'state', 'itemstate', 'event']
 

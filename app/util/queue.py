@@ -4,6 +4,7 @@ from emporium import steam
 from database import redis
 
 from jobs.inventory import handle_inventory_job, handle_bot_update_job
+from jobs.slack import slack_async_message
 
 log = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ class JobQueue(object):
 QUEUES = [
     ("inventory", handle_inventory_job),
     ("botupdate", handle_bot_update_job),
+    ("slack_msg", slack_async_message),
 ]
 
 def start_queues():

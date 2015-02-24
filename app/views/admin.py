@@ -1,4 +1,6 @@
 import base64
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from flask import Blueprint, g, render_template, request
 
 from database import Cursor, redis
@@ -9,7 +11,7 @@ from helpers.match import create_match, match_to_json
 from helpers.bot import get_bot_space
 
 from util import paginate
-from util.errors import UserError, APIError
+from util.errors import UserError, APIError, EmporiumException
 from util.responses import APIResponse
 
 admin = Blueprint("admin", __name__, url_prefix="/admin")
@@ -179,9 +181,69 @@ def admin_match_list():
 
     return APIResponse({"matches": matches, "pages": pages})
 
+MATCH_CREATE_FIELDS = {
+    "game", "event", "maplist", "match_date", "public_date",
+    "team1", "team2"
+}
+
 @admin.route("/api/match/create", methods=["POST"])
 def admin_match_create():
-    pass
+    print request.json
+
+    diff = MATCH_CREATE_FIELDS - set(request.json.keys())
+    if len(diff) != 0:
+        raise APIError("Missing fields: %s" % ', '.join(diff))
+
+    if not request.json['match_date']:
+        raise APIError("Need a match date")
+
+    match_date = datetime.fromtimestamp(int(request.json['match_date']))
+
+    if request.json['public_date']:
+        public_date = datetime.fromtimestamp(int(request.json['public_date']))
+    else:
+        public_date = match_date - relativedelta(days=2)
+
+    maps = map(lambda i: i.strip(), request.json['maplist'].split(",")) if request.json['maplist'] else None
+
+    with Cursor() as c:
+        game_ok = c.execute("SELECT id FROM games WHERE id=%s", (request.json['game'], )).fetchone()
+        if not game_ok:
+            raise APIError("Invalid Game ID")
+
+        event_ok = c.execute("SELECT id, games FROM events WHERE id=%s", (request.json['event'], )).fetchone()
+        if not event_ok:
+            raise APIError("Invalid Event ID")
+
+        # Make sure the event is involved with the game
+        if not int(game_ok.id) in event_ok.games:
+            raise APIError("That game is not part of that event!")
+
+        teams_ok = c.execute("SELECT id FROM teams WHERE id in %s",
+            ((request.json['team1'], request.json['team2']),)).fetchall()
+        if not len(teams_ok) == 2 and len(set(map(lambda i: i.id, teams_ok))) == len(teams_ok):
+            raise APIError("Invalid Team ID's")
+
+        c.insert("matches", {
+            "state": "OPEN",
+            "itemstate": "OPEN",
+            "event": event_ok.id,
+            "game": game_ok.id,
+            "teams": map(lambda i: i.id, teams_ok),
+            "meta": c.json({
+                "maps": maps
+            }),
+            "max_value_item": 60,
+            "lock_date": match_date - relativedelta(minutes=5),
+            "match_date": match_date,
+            "public_date": public_date,
+            "active": True,
+            "created_by": g.user,
+            "created_at": datetime.utcnow()
+        })
+
+    return APIResponse()
+
 
 DRAFT_MATCHES_QUERY = """
     SELECT id, teams, state, itemstate FROM matches WHERE id=%s
@@ -273,4 +335,38 @@ def admin_team_list():
         }
 
     return APIResponse({"teams": teams, "pages": pages})
+
+EVENT_LIST_QUERY = """
+SELECT * FROM events {} ORDER BY id LIMIT %s OFFSET %s;
+"""
+
+@admin.route("/api/event/list")
+def admin_event_list():
+    page = int(request.values.get("page", 1))
+
+    q = ""
+    if request.values.get("active"):
+        q = "WHERE active=true AND start_date < now() AND (end_date > now() OR end_date IS NULL)"
+
+    g.cursor.execute("SELECT count(*) as c FROM events {}".format(q))
+    pages = (g.cursor.fetchone().c / 100) + 1
+
+    g.cursor.execute(EVENT_LIST_QUERY.format(q), paginate(page, per_page=100))
+
+    events = {}
+    for entry in g.cursor.fetchall():
+        events[entry.id] = {
+            "id": entry.id,
+            "name": entry.name,
+            "type": entry.etype,
+            "website": entry.website,
+            "league": entry.league,
+            "logo": entry.logo,
+            "splash": entry.splash,
+            "streams": entry.streams,
+            "games": entry.games,
+        }
+
+    return APIResponse({"events": events, "pages": pages})
+
 

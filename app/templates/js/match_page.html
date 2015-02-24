@@ -146,14 +146,15 @@
               <% } %>
               <hr>
               <div class="row">
-                <% if (match.extra.maps) { %>
-                  <div class="col-md-12">
-                    <h1>Map Pool</h1>
-                    <% for (map in match.extra.maps) { %>
-                      <h3><%= match.extra.maps[map] %></h3>
-                    <% } %>
-                  </div>
-                <% } %>
+                <div class="col-md-12">
+                  <h1>Match Information</h1>
+                  <h3><b>League:</b> <a href="<%= match.event.website %>"><%= match.event.name %> (<%= match.event.league %>)</a></h3>
+                  <% if (match.extra.maps) { %>
+                      <% for (map in match.extra.maps) { %>
+                      <h3><b>Map Pool:</b> <%= match.extra.maps[map] %></h3>
+                      <% } %>
+                  <% } %>
+                </div>
               </div>
             </div>
             <% if (!app.user || !app.user.settings.ui.disable_streams) { %>

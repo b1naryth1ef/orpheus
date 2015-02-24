@@ -30,7 +30,7 @@ def get_connection(database='emporium'):
     Returns a psycopg2 postgres connection. In production this will
     hit PGBouncer, and be pooled. `database` can be a valid database name.
     """
-    dbc = psycopg2.connect(PG_CONN_STRING + "dbname={}".format(database),
+    dbc = psycopg2.connect(PG_CONN_STRING + " dbname={}".format(database),
         cursor_factory=NamedTupleCursor)
 
     dbc.autocommit = True
@@ -67,7 +67,7 @@ class Cursor(object):
     should be used for the duration of a request, errors and exceptions
     are scoped within the context of the cursor, allow rollback semantics.
     """
-    def __init__(self, database=None):
+    def __init__(self, database='emporium'):
         self.db = get_connection(database)
         self.cursor = self.db.cursor()
 
@@ -133,7 +133,7 @@ class Cursor(object):
         query_string = "INSERT INTO {table} ({keys}) VALUES ({values}) RETURNING id;".format(
             table=table,
             keys=', '.join(obj.keys()),
-            values=', '.join(map(lambda i: "%({})s".format(i), args))
+            values=', '.join(map(lambda i: "%({})s".format(i), obj.keys()))
         )
 
         return self.execute(query_string, obj)

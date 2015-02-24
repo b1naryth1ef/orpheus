@@ -6,6 +6,9 @@ ENV = os.getenv("ENV", "LOCAL")
 HOST = socket.gethostname().lower()
 TESTING = os.getenv("TESTING")
 
+# A list of email to send alert emails too
+ALERT_EMAILS = ["b1naryth1ef@gmail.com"]
+
 # Eventually we will change this
 CRYPT_KEY = 'Uu9_noCYmf1Bsa_KJH9K7fLdyQevUcyTk_RH8bhzHkY='
 CRYPT = SecureLoader().load(CRYPT_KEY)

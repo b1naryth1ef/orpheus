@@ -9978,7 +9978,8 @@ body .jvectormap-zoomout {
     border-top: 1px solid #f1f2f3;
     margin: 0 -20px;
 }
- .authed, .unauthed, .admin, .hide{
+
+ .authed, .unauthed, .admin, .hide {
     display:  none
 }
 

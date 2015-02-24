@@ -2,13 +2,11 @@ import json, time, traceback, logging
 
 from util.email import Email
 
+from emporium import app
 from database import Cursor, redis
-from util.slack import slack_message
+from util.slack import SlackMessage
 
 log = logging.getLogger(__name__)
-
-# TODO: move to config
-ALERT_EMAILS = ["b1naryth1ef@gmail.com"]
 
 class AlertLevel(object):
     WARNING = "WARNING"
@@ -25,10 +23,13 @@ class Check(object):
         log.warning("Sending alert %s @ lvl %s" % (self.NAME, level))
 
         slack_color = 'danger' if level == AlertLevel.CRITICAL else 'warning'
-        slack_message("%s [%s]" % (self.NAME.title(), level.title()), color=slack_color, fields=msg_ctx)
+        msg = SlackMessage("Check %s: %s (%s)" % (level, self.NAME.title(), ' '.join(sub_ctx or [])), color=slack_color)
+        for field, value in msg_ctx.items():
+            msg.add_custom_field(field, value)
+        msg.send()
 
         e = Email()
-        e.to_addrs = ALERT_EMAILS
+        e.to_addrs = app.config.get("ALERT_EMAILS")
         e.subject = "CSGOE ALERT: %s %s (%s)" % (
             self.NAME,
             level,
@@ -37,23 +38,20 @@ class Check(object):
         e.body = "\n".join(map(lambda i: "%s: %s" % i, msg_ctx.items()))
         e.send()
 
-# TODO: refactor
 class TradeQueueSizeCheck(Check):
     NAME = "Trade Queue Size Check"
     THRESHOLD_WARNING = 100
     THRESHOLD_CRITICAL = 500
 
     def run(self):
-        size = int(redis.llen("trade-queue") or 0)
+        size = 0
+        for queue in redis.keys("bot:*:tradeq"):
+            size += int(redis.llen(queue) or 0)
 
         if size >= self.THRESHOLD_WARNING:
             level = AlertLevel.CRITICAL if (size >= self.THRESHOLD_CRITICAL) else AlertLevel.WARNING
-            queue = redis.lrange("trade-queue", 0, -1)
 
-            self.send_message(level, [size], {
-                "Bets in Queue": ', '.join(queue),
-                "Queued Since (s)": time.time() - json.loads(queue[-1])["time"]
-            })
+            self.send_message(level, [size])
 
 class PostgresDBCheck(Check):
     NAME = "Postgres DB Check"

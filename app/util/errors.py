@@ -46,7 +46,7 @@ class EmporiumException(ResponseException):
                 "success": False,
             })
         else:
-            resp = flashy(self.msg, "danger", self.redirect)
+            resp = flashy(self.msg, "danger", "/")
         return resp
 
 class ValidationError(EmporiumException):

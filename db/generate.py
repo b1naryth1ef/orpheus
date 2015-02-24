@@ -42,20 +42,40 @@ def generate_teams(t, db):
     for team in TEAMS:
         t.execute("INSERT INTO teams (tag, name, logo) VALUES (%s, %s, %s)", team)
 
+EVENTS = [
+    ('ESEA Invite Season 18',
+        'http://play.esea.net/index.php?s=league&d=standings&division_id=2428',
+        'ESEA', 'http://i.imgur.com/KCZZVDH.jpg', 'http://i.imgur.com/cQ88n4A.png',
+        ['twitch.tv/ESEA'], [1], 'SEASON', datetime.utcnow()),
+    ('ESEA Premier Season 18',
+        'http://play.esea.net/index.php?s=league&d=standings&division_id=2429',
+        'ESEA', 'http://i.imgur.com/KCZZVDH.jpg', 'http://i.imgur.com/cQ88n4A.png',
+        ['twitch.tv/ESEA'], [1], 'SEASON', datetime.utcnow()),
+    ('ESEA Main Season 18',
+        'http://play.esea.net/index.php?s=league&d=standings&division_id=2430',
+        'ESEA', 'http://i.imgur.com/KCZZVDH.jpg', 'http://i.imgur.com/cQ88n4A.png',
+        ['twitch.tv/ESEA'], [1], 'SEASON', datetime.utcnow()),
+    ('ESEA Intermediate Season 18',
+        'http://play.esea.net/index.php?s=league&d=standings&division_id=2431',
+        'ESEA', 'http://i.imgur.com/KCZZVDH.jpg', 'http://i.imgur.com/cQ88n4A.png',
+        ['twitch.tv/ESEA'], [1], 'SEASON', datetime.utcnow()),
+]
+
+def generate_events(t, db):
+    for event in EVENTS:
+        t.execute("""
+            INSERT INTO events (name, website, league, logo, splash, streams, games, etype, start_date, active)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, true);
+        """, event)
+
 MATCHES = [
     {
         "game": 1,
+        "event": 1,
         "teams": [1, 5],
         "state": "OPEN",
         "itemstate": "OPEN",
         "meta": {
-            "league": {
-                "name": "CEVO",
-                "info": None,
-                "splash": "http://i.imgur.com/x9zkVjg.png",
-                "logo": "http://i.imgur.com/8VIcWM2.png"
-            },
-            "type": "BO1",
             "streams": ["http://twitch.tv/test1", "http://twitch.tv/test2"],
             "maps": ["de_nuke"]
         },
@@ -65,18 +85,12 @@ MATCHES = [
     },
     {
         "game": 1,
+        "event": 2,
         "state": "OPEN",
         "itemstate": "OPEN",
         "teams": [3, 4],
         "meta": {
-            "league": {
-                "name": "ESEA",
-                "info": None,
-                "splash": "http://i.imgur.com/cQ88n4A.png",
-                "logo": "http://i.imgur.com/KCZZVDH.jpg"
-            },
             "note": "This is a test note!",
-            "type": "BO3",
             "streams": ["http://mlg.tv/swag", "http://twitch.tv/esea"],
             "maps": ["de_nuke", "de_mirage", "de_dust2"]
         },
@@ -86,17 +100,11 @@ MATCHES = [
     },
     {
         "game": 1,
+        "event": 1,
         "state": "WAITING",
         "itemstate": "LOCKED",
         "teams": [5, 6],
         "meta": {
-            "league": {
-                "name": "ESL Katowice",
-                "info": None,
-                "splash": "http://i.imgur.com/YHUUssh.png",
-                "logo": "http://i.imgur.com/YHUUssh.png"
-            },
-            "type": "BO3",
             "streams": ["http://mlg.tv/swag", "http://twitch.tv/esea"],
             "maps": ["de_facade", "de_mirage", "de_dust2"]
         },
@@ -107,8 +115,8 @@ MATCHES = [
 ]
 
 MATCH_QUERY = """
-INSERT INTO matches (state, itemstate, game, teams, meta, lock_date, match_date, public_date, active) VALUES
-(%(state)s, %(itemstate)s, %(game)s, %(teams)s, %(meta)s, %(lock_date)s, %(match_date)s, %(public_date)s, true);
+INSERT INTO matches (event, state, itemstate, game, teams, meta, lock_date, match_date, public_date, active) VALUES
+(%(event)s, %(state)s, %(itemstate)s, %(game)s, %(teams)s, %(meta)s, %(lock_date)s, %(match_date)s, %(public_date)s, true);
 """
 
 def generate_matches(t, db):
@@ -160,6 +168,7 @@ DATA_GENERATORS = [
     generate_users,
     generate_games,
     generate_teams,
+    generate_events,
     generate_matches,
     # generate_bets
 ]

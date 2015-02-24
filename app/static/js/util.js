@@ -85,3 +85,21 @@ InventoryView.prototype.render = function (data, opts) {
     }).bind(this));
 }
 
+function getDataFromField(field) {
+    var field = $(field);
+
+    switch (field.get(0).tagName) {
+        case "SELECT":
+            return field.val();
+        case "INPUT":
+            return field.val();
+        case "DIV":
+            if (field.hasClass("date-field")) {
+                return field.data('date') ? moment(field.data('date')).format('X') : null;
+            }
+            break;
+        default:
+            break;
+    }
+}
+
