@@ -19,7 +19,9 @@ redis = redis.Redis(
 psycopg2.extras.register_uuid()
 
 # The base connection string
-PG_CONN_STRING = "host={host} port={port} user={user} password={pw}".format(
+PG_CONN_STRING = """
+    host={host} port={port} user={user} password={pw}
+    connect_timeout=5 options='-c statement_timeout=10'""".format(
     host=app.config.get("PG_HOST"),
     port=app.config.get("PG_PORT"),
     user=app.config.get("PG_USERNAME"),
@@ -31,7 +33,7 @@ def get_connection(database='emporium'):
     hit PGBouncer, and be pooled. `database` can be a valid database name.
     """
     dbc = psycopg2.connect(PG_CONN_STRING + " dbname={}".format(database),
-        cursor_factory=NamedTupleCursor, connect_timeout=5)
+        cursor_factory=NamedTupleCursor)
 
     dbc.autocommit = True
     return dbc
