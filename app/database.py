@@ -19,9 +19,7 @@ redis = redis.Redis(
 psycopg2.extras.register_uuid()
 
 # The base connection string
-PG_CONN_STRING = """
-    host={host} port={port} user={user} password={pw}
-    connect_timeout=5 options='-c statement_timeout=10'""".format(
+PG_CONN_STRING = "host={host} port={port} user={user} password={pw} connect_timeout=5".format(
     host=app.config.get("PG_HOST"),
     port=app.config.get("PG_PORT"),
     user=app.config.get("PG_USERNAME"),
