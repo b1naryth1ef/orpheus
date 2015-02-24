@@ -5,7 +5,7 @@ from flask import Blueprint, g, render_template, request
 
 from database import Cursor, redis
 
-from helpers.user import UserGroup
+from helpers.user import UserGroup, authed
 from helpers.game import create_game
 from helpers.match import create_match, match_to_json
 from helpers.bot import get_bot_space
@@ -21,7 +21,7 @@ def admin_before_request():
     if not g.user or not g.group:
         raise UserError("Yeah right...", "error")
 
-    if g.group not in [UserGroup.ADMIN, UserGroup.SUPER]:
+    if g.group not in [UserGroup.MODERATOR, UserGroup.ADMIN, UserGroup.SUPER]:
         raise UserError("Sorry, what?", "error")
 
 @admin.route("/")
@@ -42,10 +42,12 @@ def admin_dashboard():
         bots_online=bots_online)
 
 @admin.route("/users")
+@authed(UserGroup.ADMIN)
 def admin_users():
     return render_template("admin/users.html")
 
 @admin.route("/games")
+@authed(UserGroup.ADMIN)
 def admin_games():
     return render_template("admin/games.html")
 
@@ -59,6 +61,7 @@ FROM users {} ORDER BY id LIMIT %s OFFSET %s
 """
 
 @admin.route("/api/user/list")
+@authed(UserGroup.ADMIN, api=True)
 def admin_users_list():
     page = int(request.values.get("page", 1))
 
@@ -90,6 +93,7 @@ USER_EDITABLE_FIELDS = [
 ]
 
 @admin.route("/api/user/edit", methods=["POST"])
+@authed(UserGroup.ADMIN, api=True)
 def admin_user_edit():
     user = request.values.get("user")
 
@@ -113,6 +117,7 @@ SELECT id, name, appid, active FROM games ORDER BY id LIMIT %s OFFSET %s
 """
 
 @admin.route("/api/game/list")
+@authed(UserGroup.ADMIN, api=True)
 def admin_game_list():
     page = int(request.values.get("page", 1))
 
@@ -133,6 +138,7 @@ def admin_game_list():
     return APIResponse({"games": games, "pages": pages})
 
 @admin.route("/api/game/create", methods=["POST"])
+@authed(UserGroup.ADMIN, api=True)
 def admin_game_create():
     try:
         id = create_game(g.user, request.values["name"], int(request.values["appid"]))
@@ -148,6 +154,7 @@ GAME_EDITABLE_FIELDS = [
 ]
 
 @admin.route("/api/game/edit", methods=["POST"])
+@authed(UserGroup.ADMIN, api=True)
 def admin_edit_game():
     game = request.values.get("game")
 
@@ -325,6 +332,7 @@ def admin_match_results():
     return APIResponse()
 
 @admin.route("/api/bots/export")
+@authed(UserGroup.SUPER, api=True)
 def admin_bots_export():
     # lol yeah...
     assert(g.user == 1)

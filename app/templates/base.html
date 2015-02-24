@@ -71,6 +71,22 @@
                         </a>
                       </div>
                     </li>
+                    {% if user and user['user']['group'] == "MODERATOR" or user['user']['group'] == "ADMIN" or user['user']['group'] == "SUPER" %}
+                    <li>
+                      <div class="list-group">
+                        <a href="/admin" class="list-group-item">
+                          <div class="media-box">
+                            <div class="pull-left">
+                              <em class="fa icon-speedometer fa-2x text-info"></em>
+                            </div>
+                            <div class="media-box-body clearfix">
+                              <p class="m0">Admin Page</p>
+                            </div>
+                          </div>
+                        </a>
+                      </div>
+                    </li>
+                    {% endif %}
                     <li>
                       <div class="list-group">
                         <a href="/auth/logout" class="list-group-item">
