@@ -2,7 +2,6 @@ import unittest, json
 
 from psycopg2 import IntegrityError
 
-import emporium
 from tests import UnitTest, IntegrationTest, TEST_STEAM_ID, TestWebsocketClient
 from helpers.user import create_user
 from database import Cursor

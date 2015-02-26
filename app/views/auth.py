@@ -3,7 +3,7 @@ import re, logging
 from flask import Blueprint, g, redirect
 from datetime import datetime
 
-from emporium import oid, steam
+from fort import oid, steam
 
 from util import flashy
 from util.errors import UserError, APIError
@@ -32,7 +32,7 @@ def create_or_login(resp):
             raise UserError("Account Disabled. Please contact support for more information")
         next_url = redirect(oid.get_next_url())
     else:
-        allowed = steam.getGroupMembers("emporiumbeta")
+        allowed = steam.getGroupMembers("csgofort")
         if int(id) not in allowed:
             log.warning("User %s is not allowed in beta (%s)" % (id, allowed))
             raise UserError("Sorry, your not part of the beta! :(")

@@ -2,7 +2,7 @@ import json, time, traceback, logging
 
 from util.email import Email
 
-from emporium import app
+from fort import app
 from database import Cursor, redis
 from util.slack import SlackMessage
 

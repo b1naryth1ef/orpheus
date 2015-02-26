@@ -15,10 +15,10 @@ def setup_logging(app):
     logging.basicConfig(level=logging.DEBUG, format=FORMAT)
     set_logging_levels()
 
-    if os.path.exists("/var/log/emporium"):
-        file_handler = logging.FileHandler('/var/log/emporium/app-%s.log' % app)
+    if os.path.exists("/var/log/fort"):
+        file_handler = logging.FileHandler('/var/log/fort/app-%s.log' % app)
     else:
-        file_handler = logging.FileHandler('/tmp/emporium-%s.log' % app)
+        file_handler = logging.FileHandler('/tmp/fort-%s.log' % app)
 
     file_handler.setFormatter(logging.Formatter(FORMAT))
 

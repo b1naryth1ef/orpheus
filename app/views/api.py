@@ -4,7 +4,6 @@ from cStringIO import StringIO
 from datetime import datetime
 from flask import Blueprint, request, g, send_file, redirect
 
-from emporium import steam
 from database import Cursor, redis
 
 from helpers.match import match_to_json
@@ -95,13 +94,14 @@ def route_match_bet(match_id):
     # Grab some info for the match
     match = g.cursor.select("matches", *MATCH_CONFIRM_BET_FIELDS, id=match_id).fetchone()
 
+    # TODO: update
     # Make sure we haven't bet too much shit
-    if match.max_value_item:
-        for item in itemvs:
-            apiassert(item.price < match.max_value_item, "Price of item %s is too high!" % item.name)
-
-    if match.max_value_total:
-        apiassert(sum(map(lambda i: i.price, itemvs)) < match.max_value_total, "Total value placed is too high!")
+    #if match.max_value_item:
+    #    for item in items:
+    #        apiassert(item.price < match.max_value_item, "Price of item %s is too high!" % item.name)
+    #
+    #if match.max_value_total:
+    #    apiassert(sum(map(lambda i: i.price, itemvs)) < match.max_value_total, "Total value placed is too high!")
 
     # Make sure we have a valid match
     apiassert(match, "Invalid match ID")
@@ -228,7 +228,7 @@ def auth_route_avatar(id):
            if not user:
                raise APIError("Invalid User ID")
 
-        data = steam.getUserInfo(user.steamid)
+        data = gache_user_info(user.steamid)
 
         try:
             r = requests.get(data.get('avatarfull'))

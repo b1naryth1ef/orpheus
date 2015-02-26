@@ -3,7 +3,7 @@ import json, logging, traceback, sys
 from flask import request, g, redirect, render_template
 from psycopg2 import OperationalError
 
-from emporium import app
+from fort import app
 from database import Cursor
 
 from helpers.common import create_exception

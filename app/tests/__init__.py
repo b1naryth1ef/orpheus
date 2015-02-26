@@ -1,4 +1,4 @@
-import unittest, emporium, os, requests, thread, json
+import unittest, os, requests, thread, json
 
 from database import Cursor, redis
 

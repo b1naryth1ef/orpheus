@@ -6,7 +6,7 @@ export TESTING=1
 if [ ! -z "$1" ]
 then
   echo "Flushing and recreating the test database..."
-  ../db/manage.py -d emporium_test -u emporium_test -D -c -g -p=test
+  ../db/manage.py -d fort_test -u fort_test -D -c -g -p=test
 fi
 
 echo "Flushing redis test database..."

@@ -4,7 +4,7 @@ from psycopg2.extras import Json
 from flask import g
 
 from database import Cursor
-from util.errors import InvalidRequestError, ValidationError, EmporiumException
+from util.errors import InvalidRequestError, ValidationError, FortException
 from helpers.user import UserGroup
 from helpers.bet import BetState
 
@@ -82,11 +82,11 @@ def match_to_json(m, user=None):
         m = c.fetchone()
 
     if not m:
-        raise EmporiumException("Failed to match_to_json with arg %s" % m)
+        raise FortException("Failed to match_to_json with arg %s" % m)
 
     event = c.execute("SELECT * FROM events WHERE id=%s", (m.event, )).fetchone()
     if not event:
-        raise EmporiumException("Could not find event for match")
+        raise FortException("Could not find event for match")
 
     match = {}
     match['id'] = m.id

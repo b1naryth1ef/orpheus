@@ -11,7 +11,7 @@ from helpers.match import create_match, match_to_json
 from helpers.bot import get_bot_space
 
 from util import paginate
-from util.errors import UserError, APIError, EmporiumException
+from util.errors import UserError, APIError, FortException
 from util.responses import APIResponse
 
 admin = Blueprint("admin", __name__, url_prefix="/admin")
@@ -335,7 +335,6 @@ def admin_match_results():
 @authed(UserGroup.SUPER, api=True)
 def admin_bots_export():
     # lol yeah...
-    assert(g.user == 1)
 
     bots = g.cursor.execute("""
         SELECT steamid, username, password, sentry FROM bots

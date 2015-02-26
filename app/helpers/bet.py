@@ -4,7 +4,7 @@ from datetime import datetime
 from database import Cursor, redis
 
 from util import create_enum
-from util.errors import EmporiumException
+from util.errors import FortException
 from helpers.trade import queue_trade, TradeType, TradeState
 
 BetState = create_enum('NEW', 'OFFERED', 'CONFIRMED', 'WON', 'LOST', 'CANCELLED')
@@ -47,14 +47,14 @@ def create_bet(user, match, team, items):
 
         # We need all dem results doh
         if not len(items) == len(items_q):
-            raise EmporiumException("Attempted betting invalid item")
+            raise FortException("Attempted betting invalid item")
 
         # Lock a price for all the items
         for item in items_q:
             c.execute(LOCK_ITEM_SQL, (item.price, item.id))
 
         # Create a new bet
-        bet = c.insert("matches", {
+        bet = c.insert("bets", {
             'better': user,
             'match': match,
             'team': team,
@@ -68,7 +68,7 @@ def create_bet(user, match, team, items):
         bot = find_avail_bot(len(items))
 
         if not bot:
-            raise EmporiumException("Bot's are full, please try again later!")
+            raise FortException("Bot's are full, please try again later!")
 
         # Get the user's steamid and token for the trade
         user = c.execute("SELECT id, steamid, trade_token FROM users WHERE id=%s",
@@ -85,7 +85,7 @@ def create_bet(user, match, team, items):
             'items_out': [],
             'created_at': datetime.utcnow(),
             'user_ref': user.id,
-            'bet_ref': bid.id,
+            'bet_ref': bet.id,
             'bot_ref': bot,
         }).fetchone()
 

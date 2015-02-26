@@ -4,7 +4,7 @@ By tracking the players of teams, and getting a tree of their friends, we can
 attempt to find bets that seem like malicious activity.
 """
 
-from emporium import steam
+from fort import steam
 from database import Cursor
 
 def get_all_friends(ids):

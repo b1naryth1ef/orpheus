@@ -7,15 +7,15 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-D", "--dropall", help="Drop all databases before creating", action="store_true")
 parser.add_argument("-c", "--create", help="Create all unknown tables", action="store_true")
 parser.add_argument("-m", "--migration", help="Run a migration", action="store_true")
-parser.add_argument("-u", "--username", help="PSQL Username", default="emporium")
+parser.add_argument("-u", "--username", help="PSQL Username", default="fort")
 parser.add_argument("-s", "--server", help="PSQL Host", default="localhost")
-parser.add_argument("-d", "--database", help="PSQL Database", default="emporium")
+parser.add_argument("-d", "--database", help="PSQL Database", default="fort")
 parser.add_argument("-p", "--password", help="PSQL Password", default=None)
 parser.add_argument("-g", "--generate", help="Generate fake data", action="store_true")
 
 args = parser.parse_args()
 
-args.username = args.username if args.username.startswith("emporium_") else "emporium"
+args.username = args.username if args.username.startswith("fort_") else "fort"
 
 # Lists all the tables in a database
 LIST_TABLES_SQL = """
@@ -50,7 +50,7 @@ def main():
 
     password = args.password or getpass.getpass("DB Password > ")
     db = open_database_connection(password)
-    is_prod_db = args.database == "emporium"
+    is_prod_db = args.database == "fort"
 
     if args.dropall:
         print "Dropping all tables and types..."

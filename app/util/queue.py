@@ -1,6 +1,6 @@
 import json, uuid, logging, time, thread
 
-from emporium import steam
+from fort import steam
 from database import redis
 
 from jobs.inventory import handle_inventory_job, handle_bot_update_job

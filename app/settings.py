@@ -13,24 +13,25 @@ ALERT_EMAILS = ["b1naryth1ef@gmail.com"]
 CRYPT_KEY = 'Uu9_noCYmf1Bsa_KJH9K7fLdyQevUcyTk_RH8bhzHkY='
 CRYPT = SecureLoader().load(CRYPT_KEY)
 
+# Postgres connection information
 PG_HOST = "localhost"
 PG_PORT = 5432
-PG_USERNAME = "emporium"
-PG_DATABASE = "emporium"
+PG_USERNAME = "fort"
+PG_DATABASE = "fort"
 PG_PASSWORD = CRYPT.get("postgres")
+
+# Redis connection information
 R_HOST = "localhost"
 R_PORT = 6379
 R_DB = 0
 
 if TESTING:
-    PG_DATABASE = PG_USERNAME = "emporium_test"
+    PG_DATABASE = PG_USERNAME = "fort_test"
     PG_PASSWORD = "test"
-    R_DB = 10
+    R_DB = 2
 
 if ENV == "DEV":
-    PG_DATABASE = PG_USERNAME = "emporium_dev"
     PG_PASSWORD = "dev"
-    R_DB = 1
 
 if ENV in ["PROD", "DEV"]:
     PG_PORT = 5433

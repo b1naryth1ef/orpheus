@@ -1,7 +1,7 @@
 import json, logging
 from slacker import Slacker
 
-from emporium import app
+from fort import app
 
 log = logging.getLogger(__name__)
 slack = Slacker('xoxb-3809520008-UCTKTT9r8AKOLUYXHhsk5jER')

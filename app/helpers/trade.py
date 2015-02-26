@@ -1,10 +1,8 @@
 import logging, json
-from datetime import datetime
 
-from emporium import steam
-from database import Cursor, redis
+from database import redis
 from util import create_enum
-from util.errors import EmporiumException
+from util.errors import FortException
 
 log = logging.getLogger(__name__)
 
@@ -15,7 +13,7 @@ def queue_trade(bot_id, trade_id):
     queue_key = "bot:%s:tradeq" % bot_id
 
     if redis.llen(queue_key) > 32:
-        raise EmporiumException("Bot #%s trade queue is full" % bot_id)
+        raise FortException("Bot #%s trade queue is full" % bot_id)
 
     redis.rpush(queue_key, json.dumps({'type': 'trade', 'id': trade_id}))
 

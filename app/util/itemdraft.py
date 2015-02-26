@@ -5,7 +5,7 @@ from database import Cursor
 log = logging.getLogger(__name__)
 
 def create_tables():
-    with Cursor("emporium_draft") as c:
+    with Cursor("draft") as c:
         c.execute("""
         CREATE TABLE IF NOT EXISTS betters (
             id INTEGER PRIMARY KEY,
@@ -41,7 +41,7 @@ VALUES (%(draft_id)s, %(item_id)s, %(value)s, %(better)s)"""
 def pre_draft(draft, betters, items):
     create_tables()
 
-    with Cursor("emporium_draft") as c:
+    with Cursor("draft") as c:
         log.info("Inserting %s betters..." % len(betters))
         for (id, need) in betters:
             c.execute(CREATE_BETTER_SQL, {
@@ -65,7 +65,7 @@ ITEMS_FOR_DRAFT_QUERY = """
 SELECT id, value FROM items WHERE draft_id=%s AND better IS NULL ORDER BY value DESC
 """
 def run_draft(draft):
-    c = Cursor("emporium_draft")
+    c = Cursor("draft")
     items = c.execute(ITEMS_FOR_DRAFT_QUERY, (draft, )).fetchall(as_list=True)
     for i, item in enumerate(items):
         if not i % 100:

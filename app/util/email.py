@@ -1,14 +1,14 @@
 import mandrill, logging
 
-from emporium import app
+from fort import app
 
 log = logging.getLogger(__name__)
 mandrill_client = mandrill.Mandrill(app.config.get("MANDRILL_API_KEY"))
 
 class Email(object):
     def __init__(self):
-        self.from_addr = "noreply@csgoemporium.com"
-        self.from_name = "CSGO Emporium"
+        self.from_addr = "noreply@csgofort.com"
+        self.from_name = "CSGO Fort"
         self.to_addrs = []
         self.subject = ""
         self.body = ""

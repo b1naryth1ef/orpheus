@@ -35,7 +35,7 @@ class APIError(ResponseException):
         resp.status_code = self.status_code
         return resp
 
-class EmporiumException(ResponseException):
+class FortException(ResponseException):
     def __init__(self, msg):
         self.msg = msg
 
@@ -49,13 +49,13 @@ class EmporiumException(ResponseException):
             resp = flashy(self.msg, "danger", "/")
         return resp
 
-class ValidationError(EmporiumException):
+class ValidationError(FortException):
     pass
 
-class InvalidRequestError(EmporiumException):
+class InvalidRequestError(FortException):
     pass
 
-class InvalidTradeUrl(EmporiumException):
+class InvalidTradeUrl(FortException):
     pass
 
 def apiassert(truthy, msg):

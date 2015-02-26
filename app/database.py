@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from flask import g
 from psycopg2.extras import NamedTupleCursor, Json
 
-from emporium import app
+from fort import app
 from settings import CRYPT
 
 from util.custom import bind_custom_types
@@ -25,7 +25,7 @@ PG_CONN_STRING = "host={host} port={port} user={user} password={pw} connect_time
     user=app.config.get("PG_USERNAME"),
     pw=app.config.get("PG_PASSWORD"))
 
-def get_connection(database='emporium'):
+def get_connection(database='fort'):
     """
     Returns a psycopg2 postgres connection. In production this will
     hit PGBouncer, and be pooled. `database` can be a valid database name.
@@ -67,7 +67,7 @@ class Cursor(object):
     should be used for the duration of a request, errors and exceptions
     are scoped within the context of the cursor, allow rollback semantics.
     """
-    def __init__(self, database='emporium'):
+    def __init__(self, database='fort'):
         self.db = get_connection(database)
         self.cursor = self.db.cursor()
 
