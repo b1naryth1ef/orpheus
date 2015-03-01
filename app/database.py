@@ -5,8 +5,6 @@ from flask import g
 from psycopg2.extras import NamedTupleCursor, Json
 
 from fort import app
-from settings import CRYPT
-
 from util.custom import bind_custom_types
 
 log = logging.getLogger(__name__)
