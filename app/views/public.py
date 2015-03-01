@@ -5,7 +5,6 @@ from helpers.user import authed
 
 public = Blueprint("public", __name__)
 
-tos_content = Markdown().convert(open("docs/tos.md").read())
 rules_content = Markdown().convert(open("docs/rules.md").read())
 humans_content = open("static/humans.txt").read()
 
@@ -35,8 +34,4 @@ def route_humans():
 @public.route("/rules")
 def route_faq():
     return render_template("prose.html", content=rules_content)
-
-@public.route("/tos")
-def route_tos():
-    return render_template("prose.html", content=tos_content)
 
