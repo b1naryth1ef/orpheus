@@ -60,7 +60,6 @@ class PostgresDBCheck(Check):
         with Cursor() as c:
             try:
                 c.execute("SELECT 1337 AS v")
-                raise Exception("Test exception")
                 assert(c.fetchone().v == 1337)
             except Exception as e:
                 self.send_message(AlertLevel.CRITICAL, [], {

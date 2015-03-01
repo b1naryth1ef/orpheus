@@ -14,7 +14,6 @@ class Session(object):
     def __init__(self, id=None):
         self._id = id or request.cookies.get("s")
         if self._id and redis.exists("session:%s" % self._id):
-            log.debug('loading session %s', self._id)
             self._data = json.loads(redis.get("session:%s" % self._id))
         else:
             self._id = None
@@ -50,7 +49,6 @@ class Session(object):
 
     def save(self, response):
         if not self._changed:
-            log.debug('not saving session; it remains unchanged')
             return
 
         # TODO: pipeline/setex
@@ -59,8 +57,6 @@ class Session(object):
 
         # TODO: domain?
         response.set_cookie("s", self._id, expires=(time.time() + ttl))
-
-        log.debug('saving session %s', self._id)
         redis.set("session:%s" % self._id, json.dumps(self._data))
         redis.expire("session:%s" % self._id, ttl if ttl != -1 else SESSION_TTL)
         return True
