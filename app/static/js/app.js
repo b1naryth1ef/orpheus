@@ -84,7 +84,13 @@ function getCookie(name) {
 }
 
 app.openWebSocket = function () {
-    this.ws = new WebSocket("ws://" + window.location.hostname + ":7080");
+    if (window.location.protocol != "https:") {
+        prefix = "ws://";
+    } else {
+        prefix = "wss://";
+    }
+
+    this.ws = new WebSocket(prefix + window.location.hostname + ":7080");
 
     this.ws.onopen = (function (eve) {
         console.log("WS was opened");
