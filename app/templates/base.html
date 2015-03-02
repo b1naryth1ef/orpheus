@@ -119,6 +119,10 @@
       </header>
       <section>
         <div class="content-wrapper">
+          <div class="alert alert-warning hide" id="no-trade-url-alert" style="text-align: center">
+            <b>Uh Oh!</b> Looks like you haven't setup a trade URL yet, which we'll need to send you trade offers. Go <a href="/settings">set one up</a> today to get started!
+          </div>
+
           {% block content %}
           {% endblock %}
         </div>

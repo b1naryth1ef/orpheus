@@ -138,8 +138,13 @@ app.setup = function (userData) {
 
         $(".authed").show();
         $(".unauthed").hide();
+
         if (this.user.group === "super" || this.user.group === "admin") {
             $(".admin").show();
+        }
+
+        if (this.user.settings && !this.user.settings.trade_url) {
+            $("#no-trade-url-alert").removeClass("hide");
         }
     } else {
         this.user = null;
