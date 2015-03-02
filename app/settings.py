@@ -9,10 +9,11 @@ TESTING = os.getenv("TESTING")
 # A list of email to send alert emails too
 ALERT_EMAILS = ["b1naryth1ef@gmail.com"]
 
-if ENV == "PROD":
-    SECRET = json.load(open("/home/fort/secret.json", "r"))
-else:
-    SECRET = json.load(open("secret.json", "r"))
+try:
+    SECRET = json.load(open("/etc/secret.json", "r"))
+except:
+    print "Invalid Secret File. Does /etc/secret.json exist?"
+    raise
 
 # Postgres connection information
 PG_HOST = "localhost"
