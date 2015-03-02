@@ -9,7 +9,11 @@ ONE_WEEK_PAST = datetime.utcnow() + relativedelta(weeks=-1)
 ONE_WEEK_FUTURE = datetime.utcnow() + relativedelta(weeks=1)
 
 # B1NZY_USER = ("76561198037632722", "jSiDJlpo", True, "SUPER")
-RANDOM_STEAMIDS = json.load(open(os.path.join(cur_dir, "random_steamids.json"), "r"))[:30000]
+RANDOM_STEAMIDS = json.load(open(os.path.join(cur_dir, "data/random_steamids.json"), "r"))[:30000]
+
+def generate_bots(t, db):
+    with open("data/devbots.sql") as f:
+        t.execute(f.read())
 
 def generate_users(t, db):
     for steamid in RANDOM_STEAMIDS:
@@ -165,6 +169,7 @@ def generate_bets(t, db):
         t.execute(q, entry)
 
 DATA_GENERATORS = [
+    generate_bots,
     generate_users,
     generate_games,
     generate_teams,

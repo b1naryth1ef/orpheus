@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, sys, getpass, argparse, psycopg2
+import os, sys, getpass, argparse, psycopg2, redis
 
 DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -68,6 +68,9 @@ def main():
         for ctype in cursor.fetchall():
             print "  Dropping type '%s'" % ctype[1]
             cursor.execute("DROP TYPE %s" % ctype[1])
+
+        print "  Flushing redis..."
+        redis.Redis().flushall()
 
         print "  DONE!"
         db.commit()
