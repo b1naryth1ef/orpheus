@@ -91,5 +91,5 @@ def create_bet(user, match, team, items):
 
         queue_trade(bot, tid.id)
 
-    return bid.id
+    return bet.id
 
