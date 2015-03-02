@@ -171,7 +171,7 @@ def match_to_json(m, user=None):
             match['me']['state'] = mybet.state
 
             if total_value > mybet.value and mybet.team in values:
-                my_return = ((total_value * 1.0) / values[mybet.team]) * mybet.value
+                my_return = ((float(total_value) * 1.0) / float(values[mybet.team])) * float(mybet.value)
             else:
                 my_return = mybet.value
 
