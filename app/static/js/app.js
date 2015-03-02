@@ -127,8 +127,15 @@ app.setup = function (userData) {
     this.wsDelay = 10;
     this.openWebSocket();
 
+    if (userData.notifications) {
+        _.each(userData.notifications, function (item) {
+            $.notify(item[1], item[0])
+        })
+    }
+
     if (userData.authed) {
         this.user = userData.user;
+
         $(".authed").show();
         $(".unauthed").hide();
         if (this.user.group === "super" || this.user.group === "admin") {
@@ -136,6 +143,7 @@ app.setup = function (userData) {
         }
     } else {
         this.user = null;
+
         $(".authed").hide();
         $(".unauthed").show();
     }

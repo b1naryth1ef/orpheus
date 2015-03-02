@@ -58,7 +58,14 @@ settings.onSave = (function () {
         },
         success: (function (data) {
             if (data.success) {
-                window.location = '/settings';
+                $.ajax("/api/flash", {
+                    data: {
+                        msg: "Settings Saved",
+                    },
+                    success: function () {
+                        window.location = '/settings';
+                    }
+                });
             } else {
                 $.notify("Error saving settings: " + data.message, "danger");
             }

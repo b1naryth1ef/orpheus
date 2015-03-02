@@ -1,6 +1,6 @@
 import json, logging, traceback, sys
 
-from flask import request, g, redirect, render_template
+from flask import request, g, redirect, render_template, get_flashed_messages
 from psycopg2 import OperationalError
 
 from fort import app
@@ -57,12 +57,12 @@ def page_not_found_handler(exception):
 
 @app.context_processor
 def app_context_processor():
-    try:
-        return {
-            "user": get_user_info(g.user)
-        }
-    except:
-        return {}
+    base = {
+        "notifications": get_flashed_messages(with_categories=True)
+    }
+
+    base.update(get_user_info(g.user))
+    return {"user": base}
 
 @app.template_filter("jsonify")
 def jsonify_filter(x):

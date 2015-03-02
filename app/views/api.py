@@ -2,7 +2,7 @@ import json, requests
 
 from cStringIO import StringIO
 from datetime import datetime
-from flask import Blueprint, request, g, send_file, redirect
+from flask import Blueprint, request, g, send_file, redirect, flash
 
 from database import Cursor, redis
 
@@ -27,6 +27,11 @@ def route_status():
         assert(res.v == 1)
     except:
         raise APIError("Site is currently experiencing issues.")
+    return APIResponse()
+
+@api.route("/flash")
+def route_flash():
+    flash(request.values.get("msg"), request.values.get("type", "success"))
     return APIResponse()
 
 @api.route("/stats/overview")
