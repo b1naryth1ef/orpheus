@@ -137,4 +137,20 @@ match.routeRegex(/^\/match\/(\d+)$/, function (route, id) {
             }).bind(this)
         });
     }).bind(this));
+
+    // TODO: this should probably also be a seperate function
+    $(".matches-container").delegate(".btn-switchteam", "click", (function (ev) {
+        $.ajax("/api/match/" + this.cachedMatch.id + "/switchteam", {
+            type: "POST",
+            data: { },
+            success: (function (data) {
+                if (!data.success) {
+                    $.notify("Unable to Switch Team: " + data.message, "danger");
+                } else {
+                    $.notify("Team Switched!", "success");
+                    this.renderSingleMatch(this.cachedMatch.id);
+                }
+            }).bind(this)
+        });
+    }).bind(this));
 });

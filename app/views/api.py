@@ -79,6 +79,39 @@ MATCH_CONFIRM_BET_FIELDS = [
     "max_value_item", "max_value_total"
 ]
 
+@api.route("/match/<int:match_id>/switchteam", methods=["POST"])
+@authed()
+def route_switch_team(match_id):
+    # Get the match.
+    match = g.cursor.select("matches", *MATCH_CONFIRM_BET_FIELDS, id=match_id).fetchone()
+
+    # Ensure it is a valid match and a bet change is still allowed
+    apiassert(match, "Invalid Match ID")
+    apiassert(match.active, "Invalid Match ID")
+    apiassert(match.public_date.replace(tzinfo=None) < datetime.utcnow(), "Invalid Match ID")
+    apiassert(match.lock_date.replace(tzinfo=None) > datetime.utcnow(), "Match is Locked")
+
+    # Find the bet
+    g.cursor.execute("SELECT * FROM bets WHERE better=%s AND match=%s AND state!='CANCELLED'", (g.user, match.id))
+
+    bet = g.cursor.fetchone()
+
+    if bet == None:
+        raise APIError("Switch Team Failed, Bet not Found")
+
+    # Find the other team
+    newTeam = 0
+
+    if bet.team == match.teams[0]:
+        newTeam = match.teams[1]
+    else:
+        newTeam = match.teams[0]
+
+    #Update the bet
+    g.cursor.execute("UPDATE bets SET team=%s WHERE better=%s AND match=%s", (newTeam, g.user, match.id))
+
+    return APIResponse()
+
 @api.route("/match/<int:match_id>/bet", methods=["POST"])
 @authed()
 def route_match_bet(match_id):
