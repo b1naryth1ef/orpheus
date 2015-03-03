@@ -6,7 +6,7 @@ from flask import g
 from fort import steam
 from database import Cursor, redis
 
-from util import create_enum
+from util import create_enum, convert_steamid
 from util.steam import SteamAPIError
 from util.errors import UserError, APIError, InvalidTradeUrl
 
@@ -105,9 +105,10 @@ def get_user_info(uid):
         log.exception("Failed to get and cache nickname (%s)" % resp.steamid)
         info = {}
 
+
     # Rebuild the trade url because UX
     resp.settings['trade_url'] = 'https://steamcommunity.com/tradeoffer/new/?partner=%s&token=%s' % (
-        resp.steamid, resp.trade_token) if resp.trade_token else ""
+        convert_steamid(resp.steamid), resp.trade_token) if resp.trade_token else ""
 
     return {
         "authed": True,
@@ -144,10 +145,17 @@ def user_save_settings(uid, obj):
 
     with Cursor() as c:
         if trade_url:
-            token = re.findall("token=([a-zA-Z0-9\-]+)", trade_url)
-            if len(token) != 1 or len(token[0]) < 5:
-                raise InvalidTradeUrl("Invalid trade_url")
-            c.execute(INSERT_BOTH_SETTINGS, (Cursor.json(obj), token[0], uid))
+            comps = dict(re.findall("([a-zA-Z0-9\-]+)=([a-zA-Z0-9\-]+)", trade_url))
+
+            if u'token' not in comps or u'partner' not in comps:
+                raise InvalidTradeUrl("maliformed URL")
+
+            # Grab the users steamid
+            user = c.execute("SELECT steamid FROM users WHERE id=%s", (uid, )).fetchone()
+
+            if convert_steamid(comps['partner']) != user.steamid:
+                raise InvalidTradeUrl("trade url is for the wrong account")
+            c.execute(INSERT_BOTH_SETTINGS, (Cursor.json(obj), comps['token'], uid))
         else:
             c.execute(INSERT_ONLY_SETTINGS, (Cursor.json(obj), uid))
 

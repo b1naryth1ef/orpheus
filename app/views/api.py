@@ -298,8 +298,8 @@ def user_settings_save():
 
     try:
         user_save_settings(g.user, data_to_save)
-    except InvalidTradeUrl:
-        raise APIError("Invalid Trade URL")
+    except InvalidTradeUrl as e:
+        raise APIError("Invalid Trade URL, %s" % e.msg)
 
     return APIResponse()
 

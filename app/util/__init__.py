@@ -34,3 +34,10 @@ def json_encoder(obj):
     if isinstance(obj, decimal.Decimal):
         return str(float(obj))
     raise Exception("Unsupported type: %s" % obj.__class__.__name__)
+
+def convert_steamid(id):
+    if len(id) == 17:
+        return int(id[3:]) - 61197960265728
+    else:
+        return '765' + str(int(id) + 61197960265728)
+

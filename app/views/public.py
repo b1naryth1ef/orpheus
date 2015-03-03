@@ -16,7 +16,6 @@ def route_index():
 def route_bet_mid(matchid):
     return render_template("match.html")
 
-
 @public.route("/profile/<id>")
 @public.route("/profile")
 def route_profile(id=None):
