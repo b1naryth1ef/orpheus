@@ -1,9 +1,4 @@
 <div class="row">
-  <% if (match.extra.note) { %>
-  <div role="alert" class="alert alert-warning">
-    <strong>Match Note: </strong> <%= match.extra.note %>
-  </div>
-  <% } %>
   <div class="col-lg-3 col-sm-6">
     <div class="panel widget bg-primary">
       <div class="row row-table">
@@ -69,7 +64,7 @@
           <% if (match && match.itemstate != 'OPEN') { %>
             <h2>Betting for this match is closed</h2>
           <% } else if (_.isEmpty(match.me)) { %>
-            <button id="bet-btn" type="button" class="btn btn-large btn-square btn-success">
+            <button id="bet-btn" type="button" class="btn btn-large btn-success" style="width: 100%">
               <h2>Place a Bet</h2>
             </button>
             <% } else { %>
@@ -119,6 +114,11 @@
           </ul>
           <div class="tab-content">
             <div id="matchinfo" role="tabpanel" class="tab-pane active">
+              <% if (match.extra.note) { %>
+              <div role="alert" class="alert alert-warning">
+                <strong>Match Note: </strong> <%= match.extra.note %>
+              </div>
+              <% } %>
               <div class="row">
                 <% for (iteam in match.teams) { %>
                   <% var team = match.teams[iteam] %>
