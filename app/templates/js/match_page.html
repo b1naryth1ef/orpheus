@@ -57,10 +57,10 @@
   </div>
 </div>
 <div class="row">
+  <% if (app.user && app.user.token) { %>
   <div class="col-lg-2">
     <div class="panel panel-default">
       <div class="panel-body">
-        <% if (app.user) { %>
           <% if (match && match.itemstate != 'OPEN') { %>
             <h2>Betting for this match is closed</h2>
           <% } else if (_.isEmpty(match.me)) { %>
@@ -94,12 +94,10 @@
                   </button>
               </div>
             <% } %>
-          <% } else { %>
-            <h2>Login to place a bet!</h2>
-          <% } %>
       </div>
     </div>
   </div>
+  <% } %>
   <div class="col-lg-10">
     <div id="panelDemo14" class="panel panel-default">
       <div class="panel-body">
