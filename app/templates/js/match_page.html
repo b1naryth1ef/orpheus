@@ -57,16 +57,17 @@
   </div>
 </div>
 <div class="row">
-  <% if (app.user && app.user.token) { %>
   <div class="col-lg-2">
     <div class="panel panel-default">
       <div class="panel-body">
-          <% if (match && match.itemstate != 'OPEN') { %>
-            <h2>Betting for this match is closed</h2>
-          <% } else if (_.isEmpty(match.me)) { %>
-            <button id="bet-btn" type="button" class="btn btn-large btn-success" style="width: 100%">
-              <h2>Place a Bet</h2>
-            </button>
+        <% if (app.user) { %>
+          <% if (app.user.token) { %>
+            <% if (match && match.itemstate != 'OPEN') { %>
+              <h2>Betting for this match is closed</h2>
+            <% } else if (_.isEmpty(match.me)) { %>
+              <button id="bet-btn" type="button" class="btn btn-large btn-success" style="width: 100%">
+                <h2>Place a Bet</h2>
+              </button>
             <% } else { %>
               <% if (match.me.state == "NEW") { %>
                 <div role="alert" class="alert alert-warning">
@@ -75,7 +76,7 @@
               <% } %>
               <h3 style='text-align: center'>$<%- match.me.value %> for $<%- match.me.return %> return</h3>
               <div class="row row-centered">
-              <% for (index in _.range(4)) { %>
+                <% for (index in _.range(4)) { %>
                 <% var item = match.me.items[index] %>
                 <% if (!item) { %>
                   <div class="col-sm-2 col-centered bet-slot">
@@ -88,16 +89,21 @@
                   </div>
                 <% } %>
               <% } %>
-                  <h3 style='text-align: center'>You've Bet On: <%- match.teams[match.me.team].name %></h3>
-                  <button type="button" class="mb-sm btn btn-success btn-switchteam">
-                      <h4>Switch Team</h4>
-                  </button>
-              </div>
+              <h3 style='text-align: center'>You've Bet On: <%- match.teams[match.me.team].name %></h3>
+              <button type="button" class="mb-sm btn btn-success btn-switchteam">
+                <h4>Switch Team</h4>
+              </button>
+            </div>
             <% } %>
+          <% } else { %>
+            <h2>Please <a href="/settings">set a trade token</a> before betting</h2>
+          <% } %>
+        <% } else { %>
+          <h2>Please <a href="/auth/login">login</a> to place a bet</h2>
+        <% } %>
       </div>
     </div>
   </div>
-  <% } %>
   <div class="col-lg-10">
     <div id="panelDemo14" class="panel panel-default">
       <div class="panel-body">
@@ -107,11 +113,11 @@
               <a href="#matchinfo" aria-controls="home" role="tab" data-toggle="tab" aria-expanded="true">Match Info</a>
             </li>
             <% if (!app.user || !app.user.settings.ui.disable_streams) { %>
-              <% for (stream in match.extra.streams) { %>
-              <li role="presentation" class="">
-                <a href="#stream-<%- stream %>" role="tab" data-toggle="tab"><%- match.extra.streams[stream] %></a>
-              </li>
-              <% } %>
+            <% for (stream in match.extra.streams) { %>
+            <li role="presentation" class="">
+              <a href="#stream-<%- stream %>" role="tab" data-toggle="tab"><%- match.extra.streams[stream] %></a>
+            </li>
+            <% } %>
             <% } %>
           </ul>
           <div class="tab-content">
@@ -123,15 +129,15 @@
               <% } %>
               <div class="row">
                 <% for (iteam in match.teams) { %>
-                  <% var team = match.teams[iteam] %>
-                  <div class="col-md-6">
-                    <img src="<%- team.logo %>" style="max-height: 256px" class="img-rounded <%=(match.results && match.results.winner == team.id) ? 'team-won' : ''%>"/>
-                    <h1><%= team.name %></h1>
-                    <h3><%= team.odds * 100 %>%</h3>
-                    <h3 class="close-header">Bets: <%= team.stats.players %></h3>
-                    <h3 class="close-header">Skins: <%= team.stats.skins %></h3>
-                    <h3 class="close-header">Value: $<%= team.stats.value %></h3>
-                  </div>
+                <% var team = match.teams[iteam] %>
+                <div class="col-md-6">
+                  <img src="<%- team.logo %>" style="max-height: 256px" class="img-rounded <%=(match.results && match.results.winner == team.id) ? 'team-won' : ''%>"/>
+                  <h1><%= team.name %></h1>
+                  <h3><%= team.odds * 100 %>%</h3>
+                  <h3 class="close-header">Bets: <%= team.stats.players %></h3>
+                  <h3 class="close-header">Skins: <%= team.stats.skins %></h3>
+                  <h3 class="close-header">Value: $<%= team.stats.value %></h3>
+                </div>
                 <% } %>
               </div>
               <% if (match.results && match.results.meta.length) { %>
@@ -152,26 +158,26 @@
                   <h1>Match Information</h1>
                   <h3><b>League:</b> <a href="<%= match.event.website %>"><%= match.event.name %> (<%= match.event.league %>)</a></h3>
                   <% if (match.extra.maps) { %>
-                      <% for (map in match.extra.maps) { %>
-                      <h3><b>Map Pool:</b> <%= match.extra.maps[map] %></h3>
-                      <% } %>
+                  <% for (map in match.extra.maps) { %>
+                  <h3><b>Map Pool:</b> <%= match.extra.maps[map] %></h3>
+                  <% } %>
                   <% } %>
                 </div>
               </div>
             </div>
             <% if (!app.user || !app.user.settings.ui.disable_streams) { %>
-              <% for (stream in match.extra.streams) { %>
-              <div id="stream-<%- stream %>" role="tabpanel" class="tab-pane">
-                <div class="embed-responsive embed-responsive-16by9">
-                  <% var streamUrl = match.extra.streams[stream] %>
-                  <% if (streamUrl.indexOf("http://twitch.tv/") == 0) { %>
-                    <iframe src="<%- streamUrl %>/embed" frameborder="0" scrolling="no"></iframe>
-                  <% } else { %>
-                    <iframe src="<%- streamUrl %>" frameborder="0" scrolling="no"></iframe>
-                  <% } %>
-                </div>
+            <% for (stream in match.extra.streams) { %>
+            <div id="stream-<%- stream %>" role="tabpanel" class="tab-pane">
+              <div class="embed-responsive embed-responsive-16by9">
+                <% var streamUrl = match.extra.streams[stream] %>
+                <% if (streamUrl.indexOf("http://twitch.tv/") == 0) { %>
+                <iframe src="<%- streamUrl %>/embed" frameborder="0" scrolling="no"></iframe>
+                <% } else { %>
+                <iframe src="<%- streamUrl %>" frameborder="0" scrolling="no"></iframe>
+                <% } %>
               </div>
-              <% } %>
+            </div>
+            <% } %>
             <% } %>
           </div>
         </div>
