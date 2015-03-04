@@ -320,6 +320,7 @@ def admin_match_results():
         match_state = "RESULT"
         match_results['winner'] = int(winner)
         match_results['meta'] = request.json['meta']
+        match_results['results'] = request.json['results']
     elif request.json['state'] == 'state-closed':
         match_state = "CLOSED"
     elif request.json['state'] == 'state-locked':

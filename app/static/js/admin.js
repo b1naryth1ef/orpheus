@@ -279,6 +279,14 @@ admin.saveMatchDraft = (function () {
             })
         }
     }
+	
+	var scores = {};
+	
+	$(".field-score").each((function (index, item) {
+		scores[$(item).attr('id')] = $(item).val();
+	}).bind(this));
+	
+	data.results = {final: scores};
 
     $.ajax("/admin/api/match/results", {
         type: 'POST',
