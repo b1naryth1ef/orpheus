@@ -28,14 +28,28 @@ LIMIT 1;
 
 LOCK_ITEM_SQL = "UPDATE items SET price=%s WHERE id=%s"
 
+# TODO: move this back to straight sequellll
 def find_avail_bot(items_count):
     # Max size minus what we need to store
     size_expected = 999 - items_count
 
     with Cursor() as c:
-        bot = c.execute(FIND_AVAIL_BOT_SQL, (size_expected, size_expected)).fetchone()
+        bots = c.execute("""
+            SELECT id, array_length(inventory, 1) as ilen FROM bots WHERE status='USED'
+            AND (array_length(inventory, 1) < %s) OR (inventory='{}')
+        """, (size_expected, )).fetchall(as_list=True)
 
-    return bot.id if bot else 0
+        # N + FUCKIN 1 BAAABY!!!!
+        for bot in bots:
+            extra = c.execute("""
+                SELECT sum(array_length(items_in, 1)) as ex FROM trades
+                WHERE bot_ref=%s AND state in ('NEW', 'IN-PROGRESS', 'OFFERED')
+                AND items_in != '{}';
+            """, (bot.id, )).fetchone().ex
+
+            if (bot.ilen or 0) + (extra or 0) < size_expected:
+                return bot.id
+    return 0
 
 def create_bet(user, match, team, items):
     with Cursor() as c:
