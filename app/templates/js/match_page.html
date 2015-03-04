@@ -70,8 +70,9 @@
               </button>
             <% } else { %>
               <% if (match.me.state == "NEW") { %>
-                <div role="alert" class="alert alert-warning">
-                  You have a pending bet placed on team <%- match.teams[match.me.team].name %>!
+                <div role="alert" class="alert alert-warning" style="text-align: center">
+                  You have a pending bet placed on team <%- match.teams[match.me.team].name %>! <br />
+                  <b>PIN:</b> <%- match.me.pin %>
                 </div>
               <% } %>
               <h3 style='text-align: center'>$<%- match.me.value %> for $<%- match.me.return %> return</h3>

@@ -1,4 +1,4 @@
-import time, json
+import time, json, hashlib
 from datetime import datetime
 
 from database import Cursor, redis
@@ -27,6 +27,11 @@ LIMIT 1;
 """
 
 LOCK_ITEM_SQL = "UPDATE items SET price=%s WHERE id=%s"
+
+def get_pin(id):
+    m = hashlib.md5()
+    m.update(str(id))
+    return m.hexdigest()[:12]
 
 # TODO: move this back to straight sequellll
 def find_avail_bot(items_count):
@@ -94,7 +99,7 @@ def create_bet(user, match, team, items):
             'ttype': TradeType.BET,
             'to_id': user.steamid,
             'token': user.trade_token,
-            'message': 'I should do this...',
+            'message': 'CSGO Fort Bet. Match #%s. Pin: %s' % (match, get_pin(bet.id)),
             'items_in': items,
             'items_out': [],
             'created_at': datetime.utcnow(),

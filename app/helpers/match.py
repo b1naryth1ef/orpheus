@@ -6,7 +6,7 @@ from flask import g
 from database import Cursor
 from util.errors import InvalidRequestError, ValidationError, FortException
 from helpers.user import UserGroup
-from helpers.bet import BetState
+from helpers.bet import BetState, get_pin
 
 def validate_match_team_data(obj):
     if not isinstance(obj, list):
@@ -165,6 +165,7 @@ def match_to_json(m, user=None):
             items = c.execute(MATCH_GET_ITEMS_QUERY, (mybet.id, )).fetchall()
 
             match['me']['id'] = mybet.id
+            match['me']['pin'] = get_pin(mybet.id)
             match['me']['team'] = mybet.team
             match['me']['state'] = mybet.state
             match['me']['value'] = mybet.value
