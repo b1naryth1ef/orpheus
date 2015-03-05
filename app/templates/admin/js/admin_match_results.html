@@ -17,8 +17,8 @@
                 <select id="field-winner" class="form-control m-b">
                   <option value=""></option>
                   <% for (team in match.teams) { %>
-                  <% var team = teams[team] %>
-                  <option value="<%= team.id %>"><%= team.name %> (<%= team.tag %>)</option>
+                    <% var team = teams[team] %>
+                      <option value="<%= team.id %>"><%= team.name %> (<%= team.tag %>)</option>
                   <% } %>
                 </select>
               </div>
@@ -27,10 +27,15 @@
 		  <fieldset>
             <label class="col-sm-2 control-label">Score</label>
 			<br><br>
-		    <% for (team in match.teams) { %>
-            <% var team = teams[team] %>
-			<label class="col-sm-2 control-label">(<%= team.tag %>)</label>
-			<input type="text" style="width:100px" class="form-control field-score" id="<%= team.id %>">
+            <% for (map in match.extra.maps) { %>
+              <label class="col-sm-2 control-label"><%= match.extra.maps[map] %></label>
+              <br><br>
+		      <% for (team in match.teams) { %>
+                <% var team = teams[team] %>
+			      <label class="col-sm-2 control-label"><%= team.tag %></label>
+			      <input type="text" style="width:100px" class="form-control field-score" map="<%= match.extra.maps[map] %>" id="<%= team.id %>">
+              <% } %>
+              <br>
             <% } %>
 		  </fieldset>
           <fieldset>

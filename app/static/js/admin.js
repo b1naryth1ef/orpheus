@@ -279,15 +279,24 @@ admin.saveMatchDraft = (function () {
             })
         }
     }
-	
-	var scores = {};
-	
-	$(".field-score").each((function (index, item) {
-		scores[$(item).attr('id')] = $(item).val();
+    
+    data.results = {final: {}};
+    
+    $(".field-score").each((function (index, item) {
+        var teamid = $(item).attr('id');
+        var mapplayed = $(item).attr('map');
+        
+        if (data.results.final[mapplayed] === undefined) {
+            data.results.final[mapplayed] = {};
+        }
+        
+        if(data.results.final[mapplayed][teamid] === undefined) {
+            data.results.final[mapplayed][teamid] = {};
+        }
+        
+        data.results.final[mapplayed][teamid] = $(item).val();
 	}).bind(this));
-	
-	data.results = {final: scores};
-
+    
     $.ajax("/admin/api/match/results", {
         type: 'POST',
         data: JSON.stringify(data),

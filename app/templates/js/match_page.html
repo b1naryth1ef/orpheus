@@ -141,14 +141,25 @@
                 </div>
                 <% } %>
               </div>
-              <% if (match.results && match.results.meta.length) { %>
+              <% if (match.results) { %>
               <hr>
               <div class="row">
                 <div class="col-md-12">
                   <h2>Winner: <%= match.teams[match.results.winner].name %></h2>
-                  <% for (meta in match.results.meta) { %>
-                  <% var meta = match.results.meta[meta] %>
-                  <h2><a href="<%= meta.value %>"><%= meta.type %></a></h2>
+                  <% if (match.results.final) { %>
+                    <% var mapindex = 0 %>
+                    <% for (map in match.results.final) { %>
+                      <h3>MAP:<%= Object.keys(match.results.final)[mapindex++] %></h3>
+                      <% for (team in match.teams) { %>
+                        <h4><%= match.teams[team].name %>: <%= match.results.final[map][team] %></h4>
+                      <% } %>
+                    <% } %>
+                  <% } %>
+                  <% if (match.results.meta) { %>
+                    <% for (meta in match.results.meta) { %>
+                      <% var meta = match.results.meta[meta] %>
+                      <h2><a href="<%= meta.value %>"><%= meta.type %></a></h2>
+                    <% } %>
                   <% } %>
                 </div>
               </div>
