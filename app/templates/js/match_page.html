@@ -147,11 +147,10 @@
                 <div class="col-md-12">
                   <h2>Winner: <%= match.teams[match.results.winner].name %></h2>
                   <% if (match.results.final) { %>
-                    <% var mapindex = 0 %>
                     <% for (map in match.results.final) { %>
-                      <h3>MAP:<%= Object.keys(match.results.final)[mapindex++] %></h3>
-                      <% for (team in match.teams) { %>
-                        <h4><%= match.teams[team].name %>: <%= match.results.final[map][team] %></h4>
+                      <h3><%= map %></h4>
+                      <% for (team in match.results.final[map]) { %>
+                        <%= match.teams[team].name %>: <%= match.results.final[map][team] || "??" %><br />
                       <% } %>
                     <% } %>
                   <% } %>
