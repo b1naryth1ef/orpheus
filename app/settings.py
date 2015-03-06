@@ -32,8 +32,8 @@ if TESTING:
     PG_PASSWORD = "test"
     R_DB = 2
 
-if ENV in ["PROD", "DEV"]:
-    PG_PASSWORD = ""
+if ENV == "PROD":
+    PG_PASSWORD = SECRET['postgres_password']
 
 MANDRILL_API_KEY = SECRET.get("mandrill_key")
 STEAM_API_KEY = SECRET.get("steamapi_key")
