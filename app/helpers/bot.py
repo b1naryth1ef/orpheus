@@ -19,3 +19,9 @@ def get_bot_space():
 
         return b_cap.s or 0, b_cap.c or 0
 
+def create_bot_item_transfer(*args, **kwargs):
+    pass
+
+def create_return_trade(*args, **kwargs):
+    pass
+

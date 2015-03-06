@@ -7,8 +7,8 @@ from flask import Blueprint, request, g, send_file, redirect, flash
 from database import Cursor, redis
 
 from helpers.match import match_to_json
-from helpers.bot import get_bot_space
-from helpers.bet import BetState, create_bet
+from helpers.bot import get_bot_space, create_bot_item_transfer, create_return_trade
+from helpers.bet import BetState, create_bet, find_avail_bot
 from helpers.user import (UserGroup, gache_user_info, user_save_settings,
     authed, USER_SETTING_SAVE_PARAMS)
 
@@ -311,4 +311,45 @@ def user_settings_save():
 def route_item_image(id):
     image = g.cursor.execute("SELECT meta->'image' as i FROM items WHERE id=%s", (id, )).fetchone()
     return redirect("https://steamcommunity-a.akamaihd.net/economy/image/%s" % image.i)
+
+@api.route("/returns/list")
+def route_returns_list():
+    pass
+
+@api.route("/returns/request", methods=['POST'])
+def route_returns_request():
+    req = request.json['returns']
+
+    with Cursor() as c:
+        c.execute("""
+            SELECT count(i.id) as c, b.id, b.id as bid, array_length(b.inventory, 1) as invl,
+                b.inventory
+            FROM items i JOIN bots b ON b.inventory @> ARRAY[i.id]
+            WHERE state!='LOCKED' AND i.id IN %s
+            GROUP BY b.id ORDER BY c DESC""", (tuple(req), ))
+
+        results = c.fetchall(as_list=True)
+
+        if len(results) != len(req):
+            raise APIError("Some items requested for returned are not available!")
+
+        offers = []
+
+        space = 999 - results[0].invl
+        if space >= len(results) - results[0].c:
+            # Transfer all items to bot A
+            dependencies = []
+            for other in results[1:]:
+                items = list(set(req) & set(other.inventory))
+                dependencies.append(create_bot_item_transfer(results[0].bid, items))
+
+            offers.append(create_return_trade(results[0].bid, req, depends=dependencies))
+        else:
+            for other in results[1:]:
+                offers.append(create_return_trade(other.bid,
+                    list(set(req) & set(other.inventory))))
+
+        return APIResponse({
+            "offers": offers
+        })
 
