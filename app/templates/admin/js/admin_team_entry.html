@@ -1,0 +1,45 @@
+<div id="team-modal" class="modal fade in" style="display: block; padding-right: 17px;">
+  <div class="modal-backdrop fade in" style="height: 560px;"></div>
+  <div class="modal-dialog modal-lg" data-id=<%- create ? "" : team.id %>>
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" data-dismiss="modal" class="close">×</button>
+        <h4 class="modal-title">
+          <h4><%- create ? "Create" : "Edit" %> Team</h4>
+      </div>
+      <div class="modal-body">
+        <div id="match-modal-error" class="alert alert-danger" style="display: none;"></div>
+        <div class="form-group">
+          <fieldset>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Tag</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control team-field" data-name="tag", value=<%- create ? "" : team.tag %>>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Name</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control team-field" data-name="name" value=<%- create ? "" : team.name %>>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Logo</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control team-field" data-name="logo" value=<%- create ? "" : team.logo %>>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" data-dismiss="modal" class="btn btn-danger">Close</button>
+        <button type="button" class="btn btn-success" id="team-save">Save Team</button>
+      </div>
+    </div>
+  </div>
+</div>
