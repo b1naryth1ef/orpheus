@@ -383,3 +383,96 @@ admin.route("/admin/matches", function () {
     }).bind(this));
 })
 
+admin.saveTeam = (function (eve) {
+    var id = $($(eve.target).parents()[2]).attr("data-id");
+    var data = _.reduce(_.map($(".team-field"), function (el) {
+        var val = {};
+        val[$(el).attr("data-name")] = getDataFromField(el);
+        return val
+    }), function (a, b) { return _.extend(a, b) });
+
+    if (id) {
+        var url = "/admin/api/teams/" + id + "/edit";
+    } else {
+        var url = "/admin/api/teams/create";
+    }
+
+    $.ajax(url, {
+        type: 'POST',
+        data: JSON.stringify(data),
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        success: (function (resp) {
+            $("#team-modal").modal("hide");
+            if (resp.success) {
+                $.notify("Team Saved!", "success");
+                this.loadTeams();
+            } else {
+                $.notify("Error: " + resp.message, "danger");
+            }
+        }).bind(this)
+    });
+}).bind(admin);
+
+admin.renderTeams = (function () {
+    $("#teams-content").empty();
+    for (team in this.teamCache) {
+        $("#teams-content").append(this.app.render("admin_team_row", {
+            team: this.teamCache[team],
+            hidden: true
+        }));
+
+        $(".team-row:hidden").fadeIn();
+    }
+}).bind(admin)
+
+admin.loadTeams = (function () {
+    this.page = this.page || 1;
+    this.max_pages = 0;
+
+    this.teamCache = {};
+
+    $.when(
+        $.get("/admin/api/team/list", (function (data) {
+            this.teamCache = data.teams;
+        }).bind(this))
+    ).then((function () {
+        this.renderTeams();
+    }).bind(this));
+}).bind(admin);
+
+admin.renderSingleTeamEntry = (function (team) {
+    $("#team-modal").modal("hide");
+    console.log(team);
+    $("#team-modal-location").empty().html(this.app.render("admin_team_entry", {
+        team: team,
+        create: false,
+    }));
+    setupDateFields();
+    $("#team-modal").modal("show");
+}).bind(admin);
+
+admin.route("/admin/teams", function () {
+    this.loadTeams();
+
+    $("#team-add-button").click((function (eve) {
+        $("#team-modal").modal("hide");
+        console.log(this.eventCache);
+        $("#team-modal-location").empty().html(this.app.render("admin_team_entry", {
+            create: true,
+        }));
+        setupDateFields();
+        $("#team-modal").modal("show");
+    }).bind(this));
+
+    $("#teams-table").delegate(".team-edit", "click", (function (eve) {
+        eve.stopImmediatePropagation();
+        var teamRow = $(eve.target).parent().parent();
+        this.renderSingleTeamEntry(this.teamCache[teamRow.attr("data-id")]);
+    }).bind(this));
+
+    $("#team-modal-location").delegate("#team-save", "click", (function (eve) {
+        eve.stopImmediatePropagation();
+        this.saveTeam(eve);
+    }).bind(this));
+})

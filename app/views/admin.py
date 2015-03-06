@@ -34,6 +34,7 @@ def admin_dashboard():
         users_count=g.cursor.count("users"),
         games_count=g.cursor.count("games"),
         matches_count=g.cursor.count("matches"),
+        teams_count=g.cursor.count("teams"),
         bets_count=g.cursor.count("bets"),
         b_used=bot_used,
         b_total=bot_total,
@@ -54,6 +55,10 @@ def admin_games():
 @admin.route("/matches")
 def admin_matches():
     return render_template("admin/matches.html")
+
+@admin.route("/teams")
+def admin_teams():
+    return render_template("admin/teams.html")
 
 USERS_LIST_QUERY = """
 SELECT id, steamid, email, active, last_login, ugroup
@@ -376,6 +381,67 @@ def admin_team_list():
         }
 
     return APIResponse({"teams": teams, "pages": pages})
+    
+TEAM_FIELDS = {
+    "tag", "name", "logo"
+}
+    
+def parse_team_payload(obj):
+    diff = TEAM_FIELDS - set(obj.keys())
+    
+    if len(diff) != 0:
+        raise APIError("Missing fields: %s" % ', '.join(diff))
+
+    if not obj['tag']:
+        raise APIError("Need a tag")
+
+    tag = str(obj['tag'])
+
+    if not obj['name']:
+        raise APIError("Need a name")
+
+    name = str(obj['name'])
+
+    if not obj['logo']:
+        raise APIError("Need a logo")
+
+    logo = str(obj['logo'])
+    
+    return tag, name, logo
+    
+@admin.route("/api/teams/create", methods=["POST"])
+def admin_team_create():
+    tag, name, logo = parse_team_payload(request.json)
+
+    with Cursor() as c:
+        c.insert("teams", {
+            "tag": tag,
+            "name": name,
+            "logo": logo
+        })
+
+    return APIResponse()
+    
+@admin.route("/api/teams/<id>/edit", methods=["POST"])
+def admin_team_edit(id):
+    tag, name, logo = parse_team_payload(request.json)
+
+    data = {
+        "id": id,
+        "tag": tag,
+        "name": name,
+        "logo": logo
+    }
+    print data
+
+    with Cursor() as c:
+        pre, post = c.paramify(data)
+        c.execute("""
+            UPDATE teams SET
+                tag=%(tag)s, name=%(name)s, logo=%(logo)s
+            WHERE id=%(id)s""", data)
+
+    return APIResponse()
 
 EVENT_LIST_QUERY = """
 SELECT * FROM events {} ORDER BY id LIMIT %s OFFSET %s;
