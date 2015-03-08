@@ -34,6 +34,7 @@ def admin_dashboard():
         users_count=g.cursor.count("users"),
         games_count=g.cursor.count("games"),
         matches_count=g.cursor.count("matches"),
+        events_count=g.cursor.count("events"),
         teams_count=g.cursor.count("teams"),
         bets_count=g.cursor.count("bets"),
         b_used=bot_used,
@@ -59,6 +60,10 @@ def admin_matches():
 @admin.route("/teams")
 def admin_teams():
     return render_template("admin/teams.html")
+
+@admin.route("/events")
+def admin_events():
+    return render_template("admin/events.html")
 
 USERS_LIST_QUERY = """
 SELECT id, steamid, email, active, last_login, ugroup
@@ -357,9 +362,7 @@ def admin_bots_export():
 
     return APIResponse({"bots": res})
 
-TEAM_LIST_QUERY = """
-SELECT * FROM teams ORDER BY id LIMIT %s OFFSET %s;
-"""
+TEAM_LIST_QUERY = "SELECT * FROM teams ORDER BY id LIMIT %s OFFSET %s"
 
 @admin.route("/api/team/list")
 def admin_team_list():
@@ -371,6 +374,7 @@ def admin_team_list():
     g.cursor.execute(TEAM_LIST_QUERY, paginate(page, per_page=100))
 
     teams = {}
+    
     for entry in g.cursor.fetchall():
         teams[entry.id] = {
             "id": entry.id,
@@ -381,33 +385,19 @@ def admin_team_list():
         }
 
     return APIResponse({"teams": teams, "pages": pages})
-    
+
+# TODO: Move all of the team stuff into it's own helper file.
 TEAM_FIELDS = {
     "tag", "name", "logo"
 }
     
-def parse_team_payload(obj):
-    diff = TEAM_FIELDS - set(obj.keys())
+def parse_team_payload(payload):
+    empty_fields = [i for i in TEAM_FIELDS if not payload.get(i)]
     
-    if len(diff) != 0:
-        raise APIError("Missing fields: %s" % ', '.join(diff))
-
-    if not obj['tag']:
-        raise APIError("Need a tag")
-
-    tag = str(obj['tag'])
-
-    if not obj['name']:
-        raise APIError("Need a name")
-
-    name = str(obj['name'])
-
-    if not obj['logo']:
-        raise APIError("Need a logo")
-
-    logo = str(obj['logo'])
+    if len(empty_fields):
+        raise APIError("Missing Fields: %s" % ' '.join(empty_fields))
     
-    return tag, name, logo
+    return payload['tag'], payload['name'], payload['logo']
     
 @admin.route("/api/teams/create", methods=["POST"])
 def admin_team_create():
@@ -417,7 +407,9 @@ def admin_team_create():
         c.insert("teams", {
             "tag": tag,
             "name": name,
-            "logo": logo
+            "logo": logo,
+            "created_by": g.user,
+            "created_at": datetime.utcnow()
         })
 
     return APIResponse()
@@ -432,47 +424,117 @@ def admin_team_edit(id):
         "name": name,
         "logo": logo
     }
-    print data
 
     with Cursor() as c:
-        pre, post = c.paramify(data)
         c.execute("""
-            UPDATE teams SET
-                tag=%(tag)s, name=%(name)s, logo=%(logo)s
-            WHERE id=%(id)s""", data)
+            UPDATE teams
+            SET tag=%(tag)s, name=%(name)s, logo=%(logo)s
+            WHERE id=%(id)s"""
+            , data)
 
     return APIResponse()
+    
+# TODO: Move all of the event stuff into it's own helper file.
+# Also, add games and streams, just need to learn more js/html.
 
-EVENT_LIST_QUERY = """
-SELECT * FROM events {} ORDER BY id LIMIT %s OFFSET %s;
-"""
+EVENT_FIELDS = { "name", "website", "league", "logo", "splash", "etype", "start_date", "end_date" }
+EVENT_LIST_QUERY = "SELECT * FROM events {} ORDER BY id LIMIT %s OFFSET %s;"
+
+def parse_event_payload(payload):
+    empty_fields = [i for i in EVENT_FIELDS if not payload.get(i)]
+    
+    if len(empty_fields):
+        raise APIError("Missing Fields: %s" % ' '.join(empty_fields))
+    
+    return payload['name'], payload['website'], payload['league'], payload['logo'], payload['splash'], payload['etype'], payload['start_date'], payload['end_date'], payload.get("active", False)
 
 @admin.route("/api/event/list")
 def admin_event_list():
     page = int(request.values.get("page", 1))
 
     q = ""
+    
     if request.values.get("active"):
         q = "WHERE active=true AND start_date < now() AND (end_date > now() OR end_date IS NULL)"
 
     g.cursor.execute("SELECT count(*) as c FROM events {}".format(q))
+    
     pages = (g.cursor.fetchone().c / 100) + 1
 
     g.cursor.execute(EVENT_LIST_QUERY.format(q), paginate(page, per_page=100))
 
     events = {}
+    
     for entry in g.cursor.fetchall():
         events[entry.id] = {
             "id": entry.id,
             "name": entry.name,
-            "type": entry.etype,
+            "etype": entry.etype,
             "website": entry.website,
             "league": entry.league,
             "logo": entry.logo,
             "splash": entry.splash,
             "streams": entry.streams,
             "games": entry.games,
+            "start_date": int(entry.start_date.strftime("%s")) if entry.start_date else "",
+            "end_date": int(entry.end_date.strftime("%s")) if entry.end_date else "",
+            "active": entry.active,
+        }
+        
+    g.cursor.execute("SELECT unnest(enum_range(NULL::EVENT_TYPE))")
+    
+    eventtypes = {}
+    
+    for entry in g.cursor.fetchall():
+        eventtypes[entry.unnest] = {
+            "etype": entry.unnest
         }
 
-    return APIResponse({"events": events, "pages": pages})
+    return APIResponse({"events": events, "eventtypes": eventtypes, "pages": pages})
 
+@admin.route("/api/events/create", methods=["POST"])
+def admin_event_create():
+    name, website, league, logo, splash, etype, start_date, end_date, active = parse_event_payload(request.json)
+    
+    with Cursor() as c:
+        c.insert("events", {
+            "name": name,
+            "website": website,
+            "league": league,
+            "logo": logo,
+            "splash": splash,
+            "etype": etype,
+            "start_date": datetime.fromtimestamp(int(start_date)),
+            "end_date": datetime.fromtimestamp(int(end_date)),
+            "active": active
+        })
+
+    return APIResponse()
+    
+@admin.route("/api/events/<id>/edit", methods=["POST"])
+def admin_event_edit(id):
+    name, website, league, logo, splash, etype, start_date, end_date, active = parse_event_payload(request.json)
+
+    data = {
+            "id": id,
+            "name": name,
+            "website": website,
+            "league": league,
+            "logo": logo,
+            "splash": splash,
+            "etype": etype,
+            "start_date": datetime.fromtimestamp(int(start_date)),
+            "end_date": datetime.fromtimestamp(int(end_date)),
+            "active": active
+        }
+
+    with Cursor() as c:
+        c.execute("""
+            UPDATE events
+            SET name=%(name)s, website=%(website)s, league=%(league)s, logo=%(logo)s, splash=%(splash)s,
+            etype=%(etype)s, start_date=%(start_date)s, end_date=%(end_date)s, active=%(active)s
+            WHERE id=%(id)s"""
+            , data)
+
+    return APIResponse()
+    

@@ -1,0 +1,119 @@
+<div id="event-modal" class="modal fade in" style="display: block; padding-right: 17px;">
+  <div class="modal-backdrop fade in" style="height: 560px;"></div>
+  <div class="modal-dialog modal-lg" data-id=<%- create ? "" : event.id %>>
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" data-dismiss="modal" class="close">×</button>
+        <h4 class="modal-title">
+          <h4><%- create ? "Create" : "Edit" %> Event</h4>
+      </div>
+      <div class="modal-body">
+        <div id="event-modal-error" class="alert alert-danger" style="display: none;"></div>
+        <div class="form-group">
+          <fieldset>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Name</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control event-field" data-name="name", value="<%- create ? "" : event.name %>">
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Website</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control event-field" data-name="website" value="<%- create ? "" : event.website %>">
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">League</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control event-field" data-name="league" value="<%- create ? "" : event.league %>">
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Logo</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control event-field" data-name="logo" value="<%- create ? "" : event.logo %>">
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Splash</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control event-field" data-name="splash" value="<%- create ? "" : event.splash %>">
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Type</label>
+              <div class="col-sm-10">
+                <select class="form-control m-b event-field" data-name="etype">
+                  <% if (!create) { %>
+                    <option><%- event.etype %></option>
+                  <% } %>
+                  <% for (eventtype in eventtypes) { %>
+                    <% if (!create) { %>
+                      <% if (eventtype != event.etype) { %>
+                        <option><%- eventtype %></option>
+                      <% } %>
+                    <% } else { %>
+                      <option><%- eventtype %></option>
+                    <% } %>
+                  <% } %>
+                </select>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <div class="form-group mb">
+              <label class="col-sm-2 control-label mb">Start Date</label>
+              <div class="col-sm-10">
+                <div data-name="start_date" class="input-group date event-field date-field" data-default="<%= !create ? event.start_date : "" %>">
+                  <input type="text" class="form-control">
+                  <span class="input-group-addon">
+                    <span class="fa fa-calendar"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <div class="form-group mb">
+              <label class="col-sm-2 control-label mb">End Date</label>
+              <div class="col-sm-10">
+                <div data-name="end_date" class="input-group date event-field date-field" data-default="<%= !create ? event.end_date : "" %>">
+                  <input type="text" class="form-control">
+                  <span class="input-group-addon">
+                    <span class="fa fa-calendar"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Active</label>
+              <div class="col-sm-10">
+                <label class="switch switch-lg">
+                  <input type="checkbox" <%= event.active ? "checked" : "" %> data-name="active" class="event-field">
+                  <span></span>
+                </label>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" data-dismiss="modal" class="btn btn-danger">Close</button>
+        <button type="button" class="btn btn-success" id="event-save">Save Event</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -240,7 +240,6 @@ admin.loadMatches = (function () {
 
 admin.renderSingleMatchEntry = (function (match) {
     $("#match-modal").modal("hide");
-    console.log(match);
     $("#match-modal-location").empty().html(this.app.render("admin_match_entry", {
         match: match,
         games: this.gameCache,
@@ -349,7 +348,6 @@ admin.route("/admin/matches", function () {
 
     $("#match-add-button").click((function (eve) {
         $("#match-modal").modal("hide");
-        console.log(this.eventCache);
         $("#match-modal-location").empty().html(this.app.render("admin_match_entry", {
             games: this.gameCache,
             teams: this.teamCache,
@@ -443,7 +441,6 @@ admin.loadTeams = (function () {
 
 admin.renderSingleTeamEntry = (function (team) {
     $("#team-modal").modal("hide");
-    console.log(team);
     $("#team-modal-location").empty().html(this.app.render("admin_team_entry", {
         team: team,
         create: false,
@@ -457,11 +454,12 @@ admin.route("/admin/teams", function () {
 
     $("#team-add-button").click((function (eve) {
         $("#team-modal").modal("hide");
-        console.log(this.eventCache);
         $("#team-modal-location").empty().html(this.app.render("admin_team_entry", {
             create: true,
         }));
+        
         setupDateFields();
+        
         $("#team-modal").modal("show");
     }).bind(this));
 
@@ -474,5 +472,101 @@ admin.route("/admin/teams", function () {
     $("#team-modal-location").delegate("#team-save", "click", (function (eve) {
         eve.stopImmediatePropagation();
         this.saveTeam(eve);
+    }).bind(this));
+})
+
+admin.saveEvent = (function (eve) {
+    var id = $($(eve.target).parents()[2]).attr("data-id");
+    var data = _.reduce(_.map($(".event-field"), function (el) {
+        var val = {};
+        val[$(el).attr("data-name")] = getDataFromField(el);
+        return val
+    }), function (a, b) { return _.extend(a, b) });
+
+    if (id) {
+        var url = "/admin/api/events/" + id + "/edit";
+    } else {
+        var url = "/admin/api/events/create";
+    }
+
+    $.ajax(url, {
+        type: 'POST',
+        data: JSON.stringify(data),
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        success: (function (resp) {
+            $("#event-modal").modal("hide");
+            if (resp.success) {
+                $.notify("Event Saved!", "success");
+                this.loadEvents();
+            } else {
+                $.notify("Error: " + resp.message, "danger");
+            }
+        }).bind(this)
+    });
+}).bind(admin);
+
+admin.renderEvents = (function () {
+    $("#events-content").empty();
+    
+    for (event in this.eventCache) {
+        $("#events-content").append(this.app.render("admin_event_row", {
+            event: this.eventCache[event],
+            hidden: true
+        }));
+
+        $(".event-row:hidden").fadeIn();
+    }
+}).bind(admin)
+
+admin.loadEvents = (function () {
+    this.eventCache = {};
+    this.eventTypes = {};
+
+    $.when(
+        $.get("/admin/api/event/list", (function (data) {
+            this.eventCache = data.events;
+            this.eventTypes = data.eventtypes;
+        }).bind(this))
+    ).then((function () {
+        this.renderEvents();
+    }).bind(this));
+}).bind(admin);
+
+admin.renderSingleEventEntry = (function (event) {
+    $("#event-modal").modal("hide");
+    $("#event-modal-location").empty().html(this.app.render("admin_event_entry", {
+        event: event,
+        eventtypes: this.eventTypes,
+        create: false,
+    }));
+    
+    setupDateFields();
+    
+    $("#event-modal").modal("show");
+}).bind(admin);
+
+admin.route("/admin/events", function () {
+    this.loadEvents();
+
+    $("#event-add-button").click((function (eve) {
+        $("#event-modal").modal("hide");
+        $("#event-modal-location").empty().html(this.app.render("admin_event_entry", {
+            eventtypes: this.eventTypes,
+            create: true,
+        }));
+        setupDateFields();
+        $("#event-modal").modal("show");
+    }).bind(this));
+
+    $("#events-table").delegate(".event-edit", "click", (function (eve) {
+        eve.stopImmediatePropagation();
+        var eventRow = $(eve.target).parent().parent();
+        this.renderSingleEventEntry(this.eventCache[eventRow.attr("data-id")]);
+    }).bind(this));
+
+    $("#event-modal-location").delegate("#event-save", "click", (function (eve) {
+        eve.stopImmediatePropagation();
+        this.saveEvent(eve);
     }).bind(this));
 })
