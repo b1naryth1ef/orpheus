@@ -9,10 +9,12 @@ from helpers.user import UserGroup, authed
 from helpers.game import create_game
 from helpers.match import create_match, match_to_json
 from helpers.bot import get_bot_space
+from helpers.common import get_enum_array
 
 from util import paginate
 from util.errors import UserError, APIError, FortException
 from util.responses import APIResponse
+
 
 admin = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -480,15 +482,8 @@ def admin_event_list():
             "end_date": int(entry.end_date.strftime("%s")) if entry.end_date else "",
             "active": entry.active,
         }
-        
-    g.cursor.execute("SELECT unnest(enum_range(NULL::EVENT_TYPE))")
     
-    eventtypes = {}
-    
-    for entry in g.cursor.fetchall():
-        eventtypes[entry.unnest] = {
-            "etype": entry.unnest
-        }
+    eventtypes = get_enum_array("EVENT_TYPE")
 
     return APIResponse({"events": events, "eventtypes": eventtypes, "pages": pages})
 

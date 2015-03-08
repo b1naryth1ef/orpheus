@@ -20,3 +20,14 @@ def create_exception(exception, meta):
 
     return id
 
+def get_enum_array(enum_type):
+    enum_values = {}
+    
+    with Cursor() as c:
+        c.execute("SELECT unnest(enum_range(NULL::{0}))".format(enum_type))
+        
+        for entry in c.fetchall():
+            enum_values[entry.unnest] = entry.unnest
+        
+    return enum_values
+    
