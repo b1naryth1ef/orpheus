@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, sys, getpass, argparse, psycopg2, redis
+import os, sys, getpass, argparse, psycopg2, redis, time
 
 DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -7,6 +7,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-D", "--dropall", help="Drop all databases before creating", action="store_true")
 parser.add_argument("-c", "--create", help="Create all unknown tables", action="store_true")
 parser.add_argument("-m", "--migration", help="Run a migration", action="store_true")
+parser.add_argument("-n", "--new", help="Create a new migration", action="store_true")
 parser.add_argument("-u", "--username", help="PSQL Username", default="fort")
 parser.add_argument("-s", "--server", help="PSQL Host", default="localhost")
 parser.add_argument("-d", "--database", help="PSQL Database", default="fort")
@@ -35,6 +36,8 @@ AND     NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem 
 AND     n.nspname NOT IN ('pg_catalog', 'information_schema')
 """
 
+MIGRATION_TEMPLATE = open("migrations/template.py", "r").read()
+
 def open_database_connection(pw):
     return psycopg2.connect("host={host} port={port} dbname={db} user={user} password='{pw}'".format(
         host=args.server,
@@ -44,13 +47,26 @@ def open_database_connection(pw):
         port=50432 if args.server != "localhost" else 5432))
 
 def main():
-    if not args.dropall and not args.create and not args.migration:
+    if not args.dropall and not args.create and not args.migration and not args.new:
         parser.print_help()
         sys.exit(0)
 
     password = args.password or getpass.getpass("DB Password > ")
     db = open_database_connection(password)
     is_prod_db = args.database == "fort"
+
+    if args.new:
+        migrations = set(os.listdir("migrations")) - {"template.py"}
+        id = str(int(max(migrations)) + 1).zfill(4)
+        print "Creating migration #%s" % id
+
+        os.mkdir("migrations/%s" % id)
+        
+        with open("migrations/%s/migrate.py" % id, "w") as f:
+            f.write(MIGRATION_TEMPLATE.format(num=id, date=time.time()))
+        
+        print "  DONE"
+        sys.exit(0)
 
     if args.dropall:
         print "Dropping all tables and types..."
@@ -107,7 +123,7 @@ def main():
         print "  DONE!"
 
     if args.migration:
-        migration = sorted(os.listdir(os.path.join(DIR, "migrations")))[-1]
+        migration = max(set(os.listdir("migrations")) - {"template.py"})
         migration_path = os.path.join(DIR, "migrations", migration)
         print "Running migration %s..." % migration
 
