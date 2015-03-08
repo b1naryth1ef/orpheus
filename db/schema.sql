@@ -85,6 +85,7 @@ CREATE TABLE bots (
     username       varchar(255),
     password       varchar(255),
     apikey         varchar(32),
+    token          varchar(32),
     sentry         bytea,
     status         bot_status,
     inventory      numeric[],
