@@ -484,6 +484,8 @@ def admin_event_list():
         }
     
     eventtypes = get_enum_array("EVENT_TYPE")
+    
+    print(eventtypes)
 
     return APIResponse({"events": events, "eventtypes": eventtypes, "pages": pages})
 

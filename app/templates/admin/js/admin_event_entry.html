@@ -58,13 +58,13 @@
                   <% if (!create) { %>
                     <option><%- event.etype %></option>
                   <% } %>
-                  <% for (eventtype in eventtypes) { %>
+                  <% for (etype in eventtypes) { %>
                     <% if (!create) { %>
-                      <% if (eventtype != event.etype) { %>
-                        <option><%- eventtype %></option>
+                      <% if (eventtypes[etype] != event.etype) { %>
+                        <option><%- eventtypes[etype] %></option>
                       <% } %>
                     <% } else { %>
-                      <option><%- eventtype %></option>
+                      <option><%- eventtypes[etype] %></option>
                     <% } %>
                   <% } %>
                 </select>
