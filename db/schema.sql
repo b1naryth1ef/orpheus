@@ -77,7 +77,7 @@ CREATE INDEX ON users (steamid);
     active: whether this bot can be used
 */
 
-CREATE TYPE bot_status AS ENUM ('NEW', 'COOLDOWN', 'AVAIL', 'USED', 'INVALID');
+CREATE TYPE bot_status AS ENUM ('NEW', 'COOLDOWN', 'NEEDGAME', 'AVAIL', 'USED', 'INVALID');
 
 CREATE TABLE bots (
     id             SERIAL PRIMARY KEY,

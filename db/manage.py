@@ -133,6 +133,7 @@ def main():
         code = {}
         exec open(os.path.join(migration_path, "migrate.py"), "r").read() in code
 
+        db.autocommit = True
         print "  running pre-migration..."
         if code["before"](db) is False:
             print "  ERROR: pre-migration failed!"
