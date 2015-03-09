@@ -112,6 +112,31 @@
               </div>
             </div>
           </fieldset>
+          <fieldset>
+              <label class="col-sm-2 control-label">Match state</label>
+	      <div class="col-sm-10">
+	      <select data-name="bet_state" class="form-control m-b match-field">
+		      <% for (var i = 0; i < match.states.length; i++){ %>
+		      <% var state = match.states[i] %>
+		      <option <%= (state == match.bet_state) ? "selected" : "" %> value="<%= state %>"> <%= state %>  </option> 
+		      <% } %>
+	      </select>
+      </div>
+	      <!-- <span class="help-block m-b-none">OPEN means open for betting<br>WAITING means items are locked and awaiting match completion<br>RESULT means that a result's been entered<br>LOCKED means that the match has been locked for some reason<br>CLOSED means items are getting returned<br>COMPLETED means winnings have been distributed</span> -->            
+      </fieldset>
+      <fieldset>
+              <label class="col-sm-2 control-label">Match item state</label>
+	      <div class="col-sm-10">
+	      <select data-name="bet_itemstate" class="form-control m-b match-field">
+		      <% for (var i = 0; i < match.itemstates.length; i++){ %>
+		      <% var itemstate = match.itemstates[i] %>
+		      <option <%= (itemstate == match.bet_itemstate) ? "selected" : "" %> value="<%= itemstate %>"> <%= itemstate %>  </option>
+		      <% } %>
+	      </select>
+      </div>
+	      <!-- <span class="help-block m-b-none">OPEN means open for betting</span> -->            
+         </fieldset>
+
           <% } %>
         </div>
       </div>

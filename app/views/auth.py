@@ -13,7 +13,7 @@ from helpers.user import create_user, gache_user_info, authed
 
 auth = Blueprint("auth", __name__, url_prefix="/auth")
 steam_id_re = re.compile('steamcommunity.com/openid/id/(.*?)$')
-auto_admin_steamids = ["76561198037632722", "76561198063284164", "76561198057181896", "76561197960659425"]
+auto_admin_steamids = ["76561198037632722", "76561198063284164", "76561198057181896", "76561197960659425", "76561198142815401"]
 log = logging.getLogger(__name__)
 
 @oid.after_login

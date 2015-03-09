@@ -99,6 +99,13 @@ def match_to_json(m, user=None):
     match['teams'] = {}
     match['extra'] = {}
     match['stats'] = {}
+    match['bet_state'] = m.state 
+    match['bet_itemstate'] = m.itemstate
+
+    # These 2 need to be defined based on the frontend/db/schema.sql match_state
+    # and match_item_state enums
+    match['states'] = ['OPEN', 'WAITING', 'RESULT', 'LOCKED', 'CLOSED', 'COMPLETED']
+    match['itemstates'] = ['OPEN', 'LOCKED', 'RETURNED', 'DISTRIBUTED']
 
     match['event'] = {
         "id": event.id,
@@ -111,6 +118,7 @@ def match_to_json(m, user=None):
         "games": event.games,
         "type": event.etype
     }
+
 
     # This will most definitily require some fucking caching at some point
     bet_stats = c.execute(MATCH_GET_BETS_INFO_QUERY, (m.id, )).fetchall(as_list=True)

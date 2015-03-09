@@ -243,13 +243,16 @@ def parse_match_payload(obj):
             ((request.json['team1'], request.json['team2']),)).fetchall()
         if not len(teams_ok) == 2 and len(set(map(lambda i: i.id, teams_ok))) == len(teams_ok):
             raise APIError("Invalid Team ID's")
+        
+        bet_state = request.json["bet_state"]
 
-        return match_date, public_date, maps, game_ok.id, event_ok.id, map(lambda i: i.id, teams_ok), obj.get("active", False)
+        bet_itemstate = request.json["bet_itemstate"]
+
+        return match_date, public_date, maps, game_ok.id, event_ok.id, map(lambda i: i.id, teams_ok), obj.get("active", False), bet_state, bet_itemstate
 
 @admin.route("/api/match/create", methods=["POST"])
 def admin_match_create():
-    match_date, public_date, maps, game, event, teams, active = parse_match_payload(request.json)
-
+    match_date, public_date, maps, game, event, teams, active, _, _ = parse_match_payload(request.json)
     with Cursor() as c:
         c.insert("matches", {
             "state": "OPEN",
@@ -273,7 +276,7 @@ def admin_match_create():
 
 @admin.route("/api/match/<id>/edit", methods=["POST"])
 def admin_match_edit(id):
-    match_date, public_date, maps, game, event, teams, active = parse_match_payload(request.json)
+    match_date, public_date, maps, game, event, teams, active, bet_state, bet_itemstate = parse_match_payload(request.json)
 
     data = {
         "id": id,
@@ -282,7 +285,9 @@ def admin_match_edit(id):
         "teams": teams,
         "active": active,
         "match_date": match_date,
-        "public_date": public_date
+        "public_date": public_date,
+        "bet_state": bet_state,
+        "bet_itemstate": bet_itemstate
     }
     print data
 
@@ -290,7 +295,7 @@ def admin_match_edit(id):
         pre, post = c.paramify(data)
         c.execute("""
             UPDATE matches SET
-                event=%(event)s, game=%(game)s, teams=%(teams)s, active=%(active)s, match_date=%(match_date)s,
+                event=%(event)s, game=%(game)s, teams=%(teams)s, active=%(active)s, match_date=%(match_date)s, state=%(bet_state)s, itemstate=%(bet_itemstate)s,
                 public_date=%(public_date)s
             WHERE id=%(id)s""", data)
 
