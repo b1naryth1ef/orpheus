@@ -27,7 +27,7 @@ CREATE TYPE item_state AS ENUM ('UNKNOWN', 'EXTERNAL', 'INTERNAL', 'LOCKED');
 
 CREATE TABLE items (
   id           numeric PRIMARY KEY,
-  owner        bigint,
+  owner        varchar(255),
   type_id      integer REFERENCES itemtypes(id),
   class_id     integer NOT NULL,
   instance_id  integer NOT NULL,

@@ -40,7 +40,7 @@ def create_user(steamid, group=UserGroup.NORMAL):
             "last_login": now,
             "ugroup": group,
             "settings": Cursor.json(DEFAULT_SETTINGS)
-        }).fetchone().id
+        })
 
 def build_error(msg, typ, api=False):
     if api:

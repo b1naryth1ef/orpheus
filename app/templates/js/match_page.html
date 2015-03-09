@@ -79,7 +79,7 @@
               <div class="row row-centered">
                 <% for (index in _.range(4)) { %>
                 <% var item = match.me.items[index] %>
-                <% if (!item) { %>
+                <% if (!item || !item.image) { %>
                   <div class="col-sm-2 col-centered bet-slot">
                     <em style="font-size: 9em;" class="fa fa-question"></em>
                   </div>

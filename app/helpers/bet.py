@@ -81,7 +81,7 @@ def create_bet(user, match, team, items):
             'state': BetState.NEW,
             'created_at': datetime.utcnow(),
             'value': sum(map(lambda i: i.price, items_q)),
-        }).fetchone()
+        })
 
         # Find a bot that has inventory space
         bot = find_avail_bot(len(items))
@@ -104,11 +104,11 @@ def create_bet(user, match, team, items):
             'items_out': [],
             'created_at': datetime.utcnow(),
             'user_ref': user.id,
-            'bet_ref': bet.id,
+            'bet_ref': bet,
             'bot_ref': bot,
-        }).fetchone()
+        })
 
-        queue_trade(bot, tid.id)
+        queue_trade(bot, tid)
 
     return bet.id
 

@@ -11,6 +11,14 @@ humans_content = open("static/humans.txt").read()
 @public.route("/")
 def route_index():
     return render_template("index.html")
+    
+@public.route("/events")
+def route_event_list():
+    return render_template("events.html")
+
+@public.route("/event/<int:eventid>")
+def route_event_page(eventid):
+    return render_template("event.html")
 
 @public.route("/match/<int:matchid>")
 def route_bet_mid(matchid):
@@ -33,4 +41,4 @@ def route_humans():
 @public.route("/rules")
 def route_faq():
     return render_template("prose.html", content=rules_content)
-
+    

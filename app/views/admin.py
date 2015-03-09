@@ -289,7 +289,6 @@ def admin_match_edit(id):
         "bet_state": bet_state,
         "bet_itemstate": bet_itemstate
     }
-    print data
 
     with Cursor() as c:
         pre, post = c.paramify(data)

@@ -34,7 +34,7 @@ def create_match(user, game, teams, meta, lock_date, match_date, public_date,
         raise ValidationError("Match meta data must be a dictionary")
 
     with Cursor() as c:
-        c.insert("matches", {
+        return c.insert("matches", {
             "game": game,
             "teams": teams,
             "meta": meta,
@@ -47,8 +47,6 @@ def create_match(user, game, teams, meta, lock_date, match_date, public_date,
             "created_at": datetime.utcnow(),
             "created_by": user
         })
-
-        return c.fetchone().id
 
 # This query gets all items pertaining to a match (e.g. winnings or items placed)
 MATCH_GET_ITEMS_QUERY = """
@@ -195,7 +193,7 @@ def match_to_json(m, user=None):
                     "id": item.id,
                     "name": item.name,
                     "price": item.price,
-                    "image": item.meta['image'],
+                    "image": item.meta.get('image'),
                 }
 
                 if item.id in mybet.items:
