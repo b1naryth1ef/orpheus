@@ -19,9 +19,22 @@ def get_bot_space():
 
         return b_cap.s or 0, b_cap.c or 0
 
-def create_bot_item_transfer(*args, **kwargs):
+def create_bot_item_transfer(from_bot, to_bot, items):
     pass
 
-def create_return_trade(*args, **kwargs):
-    pass
+def create_return_trade(bot_id, user_id, items):
+    with Cursor() as c:
+        u = c.execute("SELECT trade_token, steamid FROM users WHERE id=%s", (user_id, )).fetchone()
+
+        return c.insert("trades", {
+            "token": u.trade_token,
+            "state": "NEW",
+            "ttype": "RETURNS",
+            "to_id": u.steamid,
+            "message": "CSGO Fort Bet Returns",
+            "items_out": items,
+            "created_at": datetime.utcnow(),
+            "bot_ref": bot_id,
+            "user_ref": user_id
+        })
 

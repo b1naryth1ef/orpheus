@@ -284,7 +284,6 @@ def admin_match_edit(id):
         "match_date": match_date,
         "public_date": public_date
     }
-    print data
 
     with Cursor() as c:
         pre, post = c.paramify(data)

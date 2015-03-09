@@ -320,34 +320,33 @@ def route_returns_list():
 def route_returns_request():
     req = request.json['returns']
 
+    if len(req) > 25:
+        raise APIError("Too many returns requested at once")
+
     with Cursor() as c:
         c.execute("""
-            SELECT count(i.id) as c, b.id, b.id as bid, array_length(b.inventory, 1) as invl,
-                b.inventory
-            FROM items i JOIN bots b ON b.inventory @> ARRAY[i.id]
-            WHERE state!='LOCKED' AND i.id IN %s
-            GROUP BY b.id ORDER BY c DESC""", (tuple(req), ))
+            SELECT i.id as iid, b.id as bid FROM items i
+            JOIN bots b ON b.steamid=i.owner
+            JOIN bets bt ON (
+                bt.items @> ARRAY[i.id]
+                OR bt.winnings @> ARRAY[i.id])
+            WHERE i.state='INTERNAL' AND bt.state='WON' AND bt.better=%s
+            AND i.state='INTERNAL' AND i.id IN %s;
+        """, (g.user, tuple(req), ))
+        items = c.fetchall(as_list=True)
 
-        results = c.fetchall(as_list=True)
+        if len(items) != len(req):
+            raise APIError("Invalid items requested")
 
-        if len(results) != len(req):
-            raise APIError("Some items requested for returned are not available!")
+        # Meh we could do this in sql easier #ohwell
+        trades = {k: [] for k in set(map(lambda i: i.bid, items))}
+
+        for item in items:
+            trades[item.bid].append(item.iid)
 
         offers = []
-
-        space = 999 - results[0].invl
-        if space >= len(results) - results[0].c:
-            # Transfer all items to bot A
-            dependencies = []
-            for other in results[1:]:
-                items = list(set(req) & set(other.inventory))
-                dependencies.append(create_bot_item_transfer(results[0].bid, items))
-
-            offers.append(create_return_trade(results[0].bid, req, depends=dependencies))
-        else:
-            for other in results[1:]:
-                offers.append(create_return_trade(other.bid,
-                    list(set(req) & set(other.inventory))))
+        for bot_id, items in trades.items():
+            offers.append(create_return_trade(bot_id, g.user, items))
 
         return APIResponse({
             "offers": offers

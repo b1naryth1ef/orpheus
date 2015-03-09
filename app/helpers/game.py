@@ -18,5 +18,5 @@ def create_game(user, name, appid, meta=None, view_perm=UserGroup.NORMAL):
             "active": True,
             "created_by": user,
             "created_at": datetime.utcnow()
-        }).fetchone().id
+        })
 

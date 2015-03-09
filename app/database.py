@@ -133,7 +133,7 @@ class Cursor(object):
             values=', '.join(map(lambda i: "%({})s".format(i), obj.keys()))
         )
 
-        return self.execute(query_string, obj)
+        return self.execute(query_string, obj).fetchone().id
 
     def paramify(self, obj):
         return ', '.join(obj.keys()), ', '.join(map(lambda i: "%({})s".format(i), obj.keys()))
