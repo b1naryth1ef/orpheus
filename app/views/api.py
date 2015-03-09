@@ -11,6 +11,8 @@ from helpers.bot import get_bot_space, create_bot_item_transfer, create_return_t
 from helpers.bet import BetState, create_bet, find_avail_bot
 from helpers.user import (UserGroup, gache_user_info, user_save_settings,
     authed, USER_SETTING_SAVE_PARAMS)
+    
+from helpers.common import get_enum_array
 
 from util import paginate
 from util.queue import JobQueue
@@ -352,3 +354,64 @@ def route_returns_request():
             "offers": offers
         })
 
+# TODO: This is also in admin.py, it really really needs to go into a helper file.
+# Once all base functionality is complete I'll go throught and refactor as much as I can.
+# Also, this 
+EVENT_FIELDS = { "name", "website", "league", "logo", "splash", "etype", "start_date", "end_date" }
+EVENT_LIST_QUERY = "SELECT * FROM events {} ORDER BY id LIMIT %s OFFSET %s;"
+        
+@api.route("/events/list", methods=["POST"])
+def api_event_list():
+    page = int(request.values.get("page", 1))
+
+    q = ""
+    
+    if request.values.get("active"):
+        q = "WHERE active=true AND start_date < now() AND (end_date > now() OR end_date IS NULL)"
+
+    g.cursor.execute("SELECT count(*) as c FROM events {}".format(q))
+    
+    pages = (g.cursor.fetchone().c / 100) + 1
+
+    g.cursor.execute(EVENT_LIST_QUERY.format(q), paginate(page, per_page=100))
+
+    events = {}
+    
+    for entry in g.cursor.fetchall():
+        events[entry.id] = {
+            "id": entry.id,
+            "name": entry.name,
+            "etype": entry.etype,
+            "website": entry.website,
+            "league": entry.league,
+            "logo": entry.logo,
+            "splash": entry.splash,
+            "streams": entry.streams,
+            "games": entry.games,
+            "start_date": int(entry.start_date.strftime("%s")) if entry.start_date else "",
+            "end_date": int(entry.end_date.strftime("%s")) if entry.end_date else "",
+            "active": entry.active,
+        }
+    
+    eventtypes = get_enum_array("EVENT_TYPE")
+
+    return APIResponse({"events": events, "eventtypes": eventtypes, "pages": pages})
+    
+EVENT_MATCH_LIST_QUERY = """
+SELECT * FROM matches
+WHERE now() > public_date AND active=true AND event={0}
+ORDER BY match_date
+"""
+
+@api.route("/events/<int:id>/list")
+def route_event_match_list(id):
+    g.cursor.execute(EVENT_MATCH_LIST_QUERY.format(id))
+    
+    print("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
+    
+    matches = map(match_to_json, g.cursor.fetchall())
+
+    return APIResponse({
+        "matches": matches
+    })
+    

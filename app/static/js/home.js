@@ -6,7 +6,9 @@ home.renderMatches = function () {
         $(".matches-container").empty();
 
         _.each(data.matches, (function (item) {
-            $(".matches-container").append(this.app.render("match_frontpage", {match: item}));
+            $(".matches-container").append(this.app.render("match_frontpage", {
+                match: item
+            }));
         }).bind(this));
     }).bind(this);
 
@@ -23,4 +25,3 @@ home.route("/", function () {
         window.location = "/match/" + matchID;
     }).bind(this));
 });
-
