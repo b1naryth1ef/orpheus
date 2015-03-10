@@ -7,7 +7,7 @@ from database import Cursor
 from util.errors import InvalidRequestError, ValidationError, FortException
 from helpers.user import UserGroup
 from helpers.bet import BetState, get_pin
-
+from helpers.common import get_enum_array
 def validate_match_team_data(obj):
     if not isinstance(obj, list):
         raise ValidationError("Team data must be a list")
@@ -99,11 +99,9 @@ def match_to_json(m, user=None):
     match['stats'] = {}
     match['bet_state'] = m.state 
     match['bet_itemstate'] = m.itemstate
-
-    # These 2 need to be defined based on the frontend/db/schema.sql match_state
-    # and match_item_state enums
-    match['states'] = ['OPEN', 'WAITING', 'RESULT', 'LOCKED', 'CLOSED', 'COMPLETED']
-    match['itemstates'] = ['OPEN', 'LOCKED', 'RETURNED', 'DISTRIBUTED']
+    
+    match['states'] = get_enum_array('match_state')
+    match['itemstates'] = get_enum_array('match_item_state')
 
     match['event'] = {
         "id": event.id,
