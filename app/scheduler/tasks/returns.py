@@ -33,7 +33,7 @@ def apply_draft_items():
         log.info("Applying %s items", len(items))
 
         # Blank out winnings
-        c.execute("UPDATE bets SET winnings='{}' WHERE match=%s AND state>='CONFIRMED'",
+        c.execute("UPDATE bets SET winnings='{}', state='LOST' WHERE match=%s AND state>='CONFIRMED'",
             (match.mid, ))
 
         for idx, entry in enumerate(items):
