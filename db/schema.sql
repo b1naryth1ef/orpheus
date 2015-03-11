@@ -3,6 +3,16 @@
 */
 
 /*
+  Tracks migrations in the database
+*/
+
+CREATE TABLE schemaversion (
+  version INT PRIMARY KEY
+);
+
+INSERT INTO schemaversion VALUES (0);
+
+/*
   Represents steam items in the database
 */
 

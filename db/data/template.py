@@ -1,6 +1,6 @@
 """
-Migration #%(num)s
-Added: %(date)s
+Migration #{num}
+Added: {date}
 """
 
 def before(db):

@@ -132,21 +132,10 @@ betters = range(1, len(RANDOM_STEAMIDS))
 
 BETS = [
     {
-        "better": random.randint(1, 10000),
-        "match": 1,
-        "team": random.choice([1, 2]),
-        "value": random.randint(1, 40),
-        "items": [(random.randint(1, 25), 'NULL', 'NULL', random.randint(1, 20)) for i in range(4)],
-        "state": "CONFIRMED",
-        "created_at": datetime.utcnow(),
-    } for i in range(2500)
-] + [
-    {
         "better": betters.pop(0),
         "match": 3,
         "team": random.choice([5, 6]),
         "value": random.randint(1, 40),
-        "items": [(random.randint(1, 25), 'NULL', 'NULL', random.randint(1, 20)) for i in range(4)],
         "state": "CONFIRMED",
         "created_at": datetime.utcnow(),
     } for i in range(25000)
@@ -163,9 +152,7 @@ def generate_bets(t, db):
         if index % 10000 == 0:
             print "    Bet #%s" % index
             db.commit()
-        data = entry['items']
-        del entry['items']
-        q = BET_QUERY.format(', '.join(map(lambda i: ("(%s, %s, %s, '{\"price\": %s}')" % i) + "::steam_item", data)))
+        q = BET_QUERY.format(", ".join([str(random.randint(1, 25)) for i in range(4)]))
         t.execute(q, entry)
 
 DATA_GENERATORS = [
@@ -175,6 +162,6 @@ DATA_GENERATORS = [
     generate_teams,
     generate_events,
     generate_matches,
-    # generate_bets
+    generate_bets
 ]
 

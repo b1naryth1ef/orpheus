@@ -1,11 +1,13 @@
+"""
+Migration #0001
+Added: 1426041732.44
+"""
 
 def before(db):
     pass
 
 def during(db):
-    cursor = db.cursor()
-    cursor.execute("ALTER TABLE bots ADD COLUMN token varchar(32)")
-    db.commit()
+    pass
 
 def after(db):
     pass

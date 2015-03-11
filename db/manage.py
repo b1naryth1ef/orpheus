@@ -4,19 +4,19 @@ import os, sys, getpass, argparse, psycopg2, redis, time
 DIR = os.path.dirname(os.path.realpath(__file__))
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-D", "--dropall", help="Drop all databases before creating", action="store_true")
-parser.add_argument("-c", "--create", help="Create all unknown tables", action="store_true")
-parser.add_argument("-m", "--migration", help="Run a migration", action="store_true")
-parser.add_argument("-n", "--new", help="Create a new migration", action="store_true")
+
+parser.add_argument("-F", "--flushall", help="Flush all tables and data", action="store_true")
+parser.add_argument("-C", "--create", help="Create all unknown tables", action="store_true")
+parser.add_argument("-G", "--generate", help="Generate test data", action="store_true")
+parser.add_argument("-M", "--migrate", help="Run any required migrations", action="store_true")
+parser.add_argument("-a", "--addmigration", help="Create a new empty migration", action="store_true")
+
 parser.add_argument("-u", "--username", help="PSQL Username", default="fort")
-parser.add_argument("-s", "--server", help="PSQL Host", default="localhost")
-parser.add_argument("-d", "--database", help="PSQL Database", default="fort")
-parser.add_argument("-p", "--password", help="PSQL Password", default=None)
-parser.add_argument("-g", "--generate", help="Generate fake data", action="store_true")
+parser.add_argument("-H", "--host", help="PSQL Host", default="localhost")
+parser.add_argument("-d", "--database", help="PSQL DB", default="fort")
+parser.add_argument("-p", "--port", help="PSQL Port", default="5432")
 
 args = parser.parse_args()
-
-args.username = args.username if args.username.startswith("fort_") else "fort"
 
 # Lists all the tables in a database
 LIST_TABLES_SQL = """
@@ -36,40 +36,90 @@ AND     NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem 
 AND     n.nspname NOT IN ('pg_catalog', 'information_schema')
 """
 
-MIGRATION_TEMPLATE = open("migrations/template.py", "r").read()
+MIGRATION_TEMPLATE = open("data/template.py", "r").read()
 
 def open_database_connection(pw):
     return psycopg2.connect("host={host} port={port} dbname={db} user={user} password='{pw}'".format(
-        host=args.server,
+        host=args.host,
         user=args.username,
         db=args.database,
         pw=pw,
-        port=50432 if args.server != "localhost" else 5432))
+        port=int(args.port)))
+
+def add_migration():
+    migrations = set(os.listdir("migrations"))
+    id = str(int(max(migrations)) + 1).zfill(4)
+    print "Creating migration #%s" % id
+
+    os.mkdir("migrations/%s" % id)
+
+    with open("migrations/%s/migrate.py" % id, "w") as f:
+        f.write(MIGRATION_TEMPLATE.format(num=id, date=time.time()))
+
+    print "  DONE"
+    sys.exit(0)
+
+def run_migrations(db):
+    c = db.cursor()
+    c.execute("SELECT max(version) FROM schemaversion")
+    current = c.fetchone()[0]
+    c.close()
+
+    new_migrations = filter(lambda i: int(i) > current, os.listdir("migrations"))
+
+    if not len(new_migrations):
+        print "No migrations to run"
+        return 1
+
+    print "Running %s migrations..." % len(new_migrations)
+
+    for migration in new_migrations:
+        migration_path = os.path.join(DIR, "migrations", migration)
+        print "  running migration %s..." % migration
+
+        if not os.path.exists(os.path.join(migration_path, "migrate.py")):
+            print "  ERROR: No migrate.py for migration, cannot run!"
+
+        code = {}
+        exec open(os.path.join(migration_path, "migrate.py"), "r").read() in code
+
+        print "  running pre-migration..."
+        if code["before"](db) is False:
+            print "  ERROR: pre-migration failed!"
+            return sys.exit(1)
+
+        print "  running migration..."
+        if code["during"](db) is False:
+            print "  ERROR: migration failed!"
+            return sys.exit(1)
+
+        print "  running post-migration..."
+        if code["after"](db) is False:
+            print "  ERROR: post-migration failed!"
+            return sys.exit(1)
+
+        c = db.cursor()
+        c.execute("INSERT INTO schemaversion VALUES (%s)", (int(migration), ))
+        db.commit()
+        print "  migration %s finished" % migration
+
+    print "Finished running migrations"
 
 def main():
-    if not args.dropall and not args.create and not args.migration and not args.new:
+    if not any((args.flushall, args.create, args.generate, args.migrate, args.addmigration)):
         parser.print_help()
-        sys.exit(0)
+        sys.exit(1)
 
-    password = args.password or getpass.getpass("DB Password > ")
+    if args.addmigration:
+        sys.exit(add_migration())
+
+    password = getpass.getpass("DB Password > ")
     db = open_database_connection(password)
+    db.autocommit = True
     is_prod_db = args.database == "fort"
 
-    if args.new:
-        migrations = set(os.listdir("migrations")) - {"template.py"}
-        id = str(int(max(migrations)) + 1).zfill(4)
-        print "Creating migration #%s" % id
-
-        os.mkdir("migrations/%s" % id)
-        
-        with open("migrations/%s/migrate.py" % id, "w") as f:
-            f.write(MIGRATION_TEMPLATE.format(num=id, date=time.time()))
-        
-        print "  DONE"
-        sys.exit(0)
-
-    if args.dropall:
-        print "Dropping all tables and types..."
+    if args.flushall:
+        print "Flushing all tables and types..."
         if is_prod_db and raw_input("You are about to drop everything in production. Are you sure? ").lower()[0] != 'y':
             print "ERROR: Yeah right! Please confirm before dropping all tables!"
             return sys.exit(1)
@@ -122,34 +172,8 @@ def main():
         db.commit()
         print "  DONE!"
 
-    if args.migration:
-        migration = max(set(os.listdir("migrations")) - {"template.py"})
-        migration_path = os.path.join(DIR, "migrations", migration)
-        print "Running migration %s..." % migration
-
-        if not os.path.exists(os.path.join(migration_path, "migrate.py")):
-            print "ERROR: No migrate.py for migration, cannot run!"
-
-        code = {}
-        exec open(os.path.join(migration_path, "migrate.py"), "r").read() in code
-
-        db.autocommit = True
-        print "  running pre-migration..."
-        if code["before"](db) is False:
-            print "  ERROR: pre-migration failed!"
-            return sys.exit(1)
-
-        print "  running migration..."
-        if code["during"](db) is False:
-            print "  ERROR: migration failed!"
-            return sys.exit(1)
-
-        print "  running post-migration..."
-        if code["after"](db) is False:
-            print "  ERROR: post-migration failed!"
-            return sys.exit(1)
-
-        print "MIGRATION FOR %s FINISHED!" % migration
+    if args.migrate:
+        sys.exit(run_migrations(db))
 
 main()
 
