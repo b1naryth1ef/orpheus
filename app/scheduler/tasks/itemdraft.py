@@ -76,7 +76,7 @@ def run_item_drafts():
 
         # Calculate return value for winners
         draft_bets = map(lambda i: (i.id, value_mod * int(i.value)), won_bets)
-        
+
         try:
             log.info("[Draft #%s] starting pre-draft", draft.id)
             pre_draft(draft.id, draft_bets, lost_items)

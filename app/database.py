@@ -95,6 +95,9 @@ class Cursor(object):
 
         return ResultSetIterable(self.cursor)
 
+    def commit(self):
+        self.db.commit()
+
     def __enter__(self):
         self.db.set_session(autocommit=False)
         return self
