@@ -38,11 +38,11 @@ AND     n.nspname NOT IN ('pg_catalog', 'information_schema')
 
 MIGRATION_TEMPLATE = open("data/template.py", "r").read()
 
-def open_database_connection(pw):
+def open_database_connection(pw, db):
     return psycopg2.connect("host={host} port={port} dbname={db} user={user} password='{pw}'".format(
         host=args.host,
         user=args.username,
-        db=args.database,
+        db=db,
         pw=pw,
         port=int(args.port)))
 
@@ -114,8 +114,10 @@ def main():
         sys.exit(add_migration())
 
     password = getpass.getpass("DB Password > ")
-    db = open_database_connection(password)
+    db = open_database_connection(password, args.database)
+    draft_db = open_database_connection(password, args.database + "_draft")
     db.autocommit = True
+    draft_db.autocommit = True
     is_prod_db = args.database == "fort"
 
     if args.flushall:
@@ -135,18 +137,26 @@ def main():
             print "  Dropping type '%s'" % ctype[1]
             cursor.execute("DROP TYPE %s" % ctype[1])
 
+        cursor = draft_db.cursor()
+        cursor.execute(LIST_TABLES_SQL)
+        for table in cursor.fetchall():
+            print "  Dropping draft table '%s'" % table[0]
+            cursor.execute("DROP TABLE %s CASCADE" % table[0])
+
         print "  Flushing redis..."
         redis.Redis().flushall()
 
         print "  DONE!"
-        db.commit()
 
     if args.create:
         print "Creating all tables..."
         with open(os.path.join(DIR, "schema.sql"), "r") as f:
             cursor = db.cursor()
             cursor.execute(f.read())
-            db.commit()
+
+        with open(os.path.join(DIR, "data/draft_schema.sql"), "r") as f:
+            cursor = draft_db.cursor()
+            cursor.execute(f.read())
 
         print "  Conforming table ownership..."
         with db.cursor() as c:
@@ -158,7 +168,6 @@ def main():
             for ttype in c.fetchall():
                 c.execute("ALTER TYPE %s OWNER TO %s" % (ttype[1], args.username))
 
-        db.commit()
         print "  DONE!"
 
     if args.generate:
@@ -169,7 +178,6 @@ def main():
             for gen in DATA_GENERATORS:
                 print "  running %s" % gen.__name__
                 gen(c, db)
-        db.commit()
         print "  DONE!"
 
     if args.migrate:

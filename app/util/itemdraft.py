@@ -4,32 +4,6 @@ from database import Cursor
 
 log = logging.getLogger(__name__)
 
-def create_tables():
-    with Cursor("draft") as c:
-        c.execute("""
-        CREATE TABLE IF NOT EXISTS betters (
-            id INTEGER PRIMARY KEY,
-            draft_id INTEGER,
-            value REAL,
-            needed REAL,
-            current REAL
-        );
-
-        CREATE UNIQUE INDEX better_base ON betters (id, draft_id);
-        CREATE INDEX better_needed ON betters (needed);
-
-        CREATE TABLE IF NOT EXISTS items (
-            id SERIAL PRIMARY KEY,
-            draft_id INTEGER,
-            item_id INTEGER,
-            value REAL,
-            better INTEGER REFERENCES betters
-        );
-
-        CREATE INDEX item_base ON items (id, draft_id, item_id);
-        CREATE INDEX item_value ON items (value);
-        """)
-
 CREATE_BETTER_SQL = """INSERT INTO betters
 (id, draft_id, value, needed, current)
 VALUES (%(id)s, %(draft_id)s, %(value)s, %(needed)s, %(current)s)"""
@@ -39,9 +13,13 @@ CREATE_ITEM_SQL = """INSERT INTO items
 VALUES (%(draft_id)s, %(item_id)s, %(value)s, %(better)s)"""
 
 def pre_draft(draft, betters, items):
-    create_tables()
+    with Cursor("fort_draft") as c:
+        log.info("Deleting old draft data...")
 
-    with Cursor("draft") as c:
+        # This is in theory dangerous, might wanna change it at some point
+        c.execute("DELETE FROM items WHERE draft_id=%s", (draft, ))
+        c.execute("DELETE FROM betters WHERE draft_id=%s", (draft, ))
+
         log.info("Inserting %s betters..." % len(betters))
         for (id, need) in betters:
             c.execute(CREATE_BETTER_SQL, {
@@ -65,7 +43,7 @@ ITEMS_FOR_DRAFT_QUERY = """
 SELECT id, value FROM items WHERE draft_id=%s AND better IS NULL ORDER BY value DESC
 """
 def run_draft(draft):
-    c = Cursor("draft")
+    c = Cursor("fort_draft")
     items = c.execute(ITEMS_FOR_DRAFT_QUERY, (draft, )).fetchall(as_list=True)
     for i, item in enumerate(items):
         if not i % 100:

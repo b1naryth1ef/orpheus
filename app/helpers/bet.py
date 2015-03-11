@@ -26,8 +26,6 @@ WHERE b.status='USED' AND (
 LIMIT 1;
 """
 
-LOCK_ITEM_SQL = "UPDATE items SET price=%s WHERE id=%s"
-
 def get_pin(id):
     m = hashlib.md5()
     m.update(str(id))
@@ -55,6 +53,8 @@ def find_avail_bot(items_count):
             if (bot.ilen or 0) + (extra or 0) < size_expected:
                 return bot.id
     return 0
+
+LOCK_ITEM_SQL = "UPDATE items SET price=%s WHERE id=%s"
 
 def create_bet(user, match, team, items):
     with Cursor() as c:
@@ -99,7 +99,7 @@ def create_bet(user, match, team, items):
             'ttype': TradeType.BET,
             'to_id': user.steamid,
             'token': user.trade_token,
-            'message': 'CSGO Fort Bet. Match #%s. Pin: %s' % (match, get_pin(bet.id)),
+            'message': 'CSGO Fort Bet. Match #%s. Pin: %s' % (match, get_pin(bet)),
             'items_in': items,
             'items_out': [],
             'created_at': datetime.utcnow(),
@@ -110,5 +110,5 @@ def create_bet(user, match, team, items):
 
         queue_trade(bot, tid)
 
-    return bet.id
+    return bet
 

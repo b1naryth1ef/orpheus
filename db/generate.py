@@ -152,8 +152,36 @@ def generate_bets(t, db):
         if index % 10000 == 0:
             print "    Bet #%s" % index
             db.commit()
-        q = BET_QUERY.format(", ".join([str(random.randint(1, 25)) for i in range(4)]))
+        q = BET_QUERY.format(", ".join([str(random.randint(1, 40000)) for i in range(4)]))
         t.execute(q, entry)
+
+
+ITEM_TYPE_QUERY = """
+INSERT INTO itemtypes (id, name) VALUES
+(%(id)s, %(name)s);
+"""
+
+ITEM_QUERY = """
+INSERT INTO items (id, type_id, class_id, instance_id, price, state) VALUES
+(%(id)s, %(type)s, %(id)s, %(id)s, %(price)s, 'INTERNAL');
+"""
+
+def generate_items(t, db):
+    types = range(1, 25000)
+
+    for entry in types:
+        t.execute(ITEM_TYPE_QUERY, {
+            "id": entry,
+            "name": "Test Item #%s" % entry
+        })
+
+    for id in range(50000):
+        t.execute(ITEM_QUERY, {
+            "id": id,
+            "type": random.choice(types),
+            "price": random.randint(100, 4000) / 100.0
+        })
+
 
 DATA_GENERATORS = [
     generate_bots,
@@ -162,6 +190,7 @@ DATA_GENERATORS = [
     generate_teams,
     generate_events,
     generate_matches,
+    generate_items,
     generate_bets
 ]
 

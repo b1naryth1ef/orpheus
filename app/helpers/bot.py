@@ -2,6 +2,7 @@ from datetime import datetime
 from database import Cursor
 
 from util import create_enum
+from helpers.trade import queue_trade
 
 BotStatus = create_enum('NEW', 'COOLDOWN', 'AVAIL', 'USED', 'INVALID')
 
@@ -26,7 +27,7 @@ def create_return_trade(bot_id, user_id, items):
     with Cursor() as c:
         u = c.execute("SELECT trade_token, steamid FROM users WHERE id=%s", (user_id, )).fetchone()
 
-        return c.insert("trades", {
+        tid = c.insert("trades", {
             "token": u.trade_token,
             "state": "NEW",
             "ttype": "RETURNS",
@@ -37,4 +38,7 @@ def create_return_trade(bot_id, user_id, items):
             "bot_ref": bot_id,
             "user_ref": user_id
         })
+
+        queue_trade(bot_id, tid)
+        return tid
 

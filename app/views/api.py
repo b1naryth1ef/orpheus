@@ -316,7 +316,28 @@ def route_item_image(id):
 
 @api.route("/returns/list")
 def route_returns_list():
-    pass
+    with Cursor() as c:
+        c.execute("""
+            SELECT i.id as iid, bt.id as bid, i.meta->'image' as image FROM items i
+            JOIN bots b ON b.steamid=i.owner
+            JOIN bets bt ON (
+                bt.items @> ARRAY[i.id]
+                OR bt.winnings @> ARRAY[i.id])
+            WHERE i.state='INTERNAL' AND bt.state='WON' AND bt.better=%s
+            AND i.state='INTERNAL';
+        """, (g.user, ))
+
+        returns = []
+        for entry in c.fetchall():
+            returns.append({
+                "id": entry.iid,
+                "bet": entry.bid,
+                "image": entry.image,
+            })
+
+        return APIResponse({
+            "returns": returns
+        })
 
 @api.route("/returns/request", methods=['POST'])
 def route_returns_request():
