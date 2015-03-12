@@ -1,0 +1,43 @@
+{% extends "admin/index.html" %}
+{% block content %}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4>News Posts</h4>
+  </div>
+  <div class="table-responsive" id="news-table">
+    <table id="table-ext-1" class="table table-bordered table-hover">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Category</th>
+          <th>Content</th>
+          <th>Edit</th>
+        </tr>
+      </thead>
+      <tbody id="news-content"></tbody>
+    </table>
+  </div>
+  <div class="panel-footer">
+    <div class="row">
+      <div class="col-lg-2">
+        <div class="input-group">
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-sm btn-success" id="news-add-button">Add News Post</button>
+          </span>
+        </div>
+      </div>
+      <div class="col-lg-8"></div>
+      <div class="col-lg-2 text-right">
+        <ul class="pagination pagination-sm" id="news-pagination">
+          <li><a id="news-page-last"><em class="fa fa-arrow-left fa-2x"></em></a></li>
+          <li><a id="news-page-current" style="font-size: 20px"></a></li>
+          <li><a id="news-page-next"><em class="fa fa-arrow-right fa-2x"></em></a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="news-modal-location"></div>
+{% endblock %}
+

@@ -1,0 +1,29 @@
+<tr style="<%- hidden ? "display: none;" : "" %>" class="news-row" data-id="<%= news_post.id %>">
+  <td style="width: 3%"><%= news_post.id %></td>
+  <td style="width: 11%">
+    <% if (news_post.title.length > 7) { %>
+      <%= news_post.title.substring(0, 7) %>...
+    <% } else { %>
+      <%= news_post.title %>
+    <% } %>
+  </td>
+  <td style="width: 11%">
+    <% if (news_post.category.length > 7) { %>
+      <%= news_post.category.substring(0, 7) %>...
+    <% } else { %>
+      <%= news_post.category %>
+    <% } %>
+  </td>
+  <td style="width: 60%">
+    <% if (news_post.content.length > 100) { %>
+      <%= news_post.content.substring(0, 100) %>...
+    <% } else { %>
+      <%= news_post.content %>
+    <% } %>
+  </td>
+  <td style="width: 15%">
+    <a href="#" class="btn btn-info btn-sm news-edit">Edit</a>
+    <a href="#" class="btn btn-danger btn-sm news-delete">Delete</a>
+  </td>
+</tr>
+

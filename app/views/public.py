@@ -34,6 +34,10 @@ def route_profile(id=None):
 def route_settings():
     return render_template("settings.html")
 
+@public.route("/news")
+def route_news_page():
+    return render_template("news.html")
+
 @public.route("/humans.txt")
 def route_humans():
     return humans_content

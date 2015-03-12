@@ -570,3 +570,112 @@ admin.route("/admin/events", function () {
         this.saveEvent(eve);
     }).bind(this));
 })
+
+admin.route("/admin/news", (function () {
+    this.render_news_posts();
+
+    $("#news-add-button").click((function (event) {
+        $("#news-modal").modal("hide");
+    
+        $("#news-modal-location").empty().html(this.app.render("admin_news_entry", {
+            create: true,
+        })).bind(this);
+        
+        setupDateFields();
+        
+        $("#news-modal").modal("show");
+    }).bind(this));
+
+    $("#news-table").delegate(".news-edit", "click", (function (event) {
+        event.stopImmediatePropagation();
+        
+        var news_post_id = ($(event.target).parent().parent()).attr("data-id");
+        
+        var on_success = (function (data) {            
+            $("#news-modal").modal("hide");
+        
+            $("#news-modal-location").empty().html(this.app.render("admin_news_entry", {
+                create: false,
+                news_post: data.news_post
+            })).bind(this);
+            
+            setupDateFields();
+            
+            $("#news-modal").modal("show");
+        }).bind(this)
+        
+        $.ajax("/admin/api/news/" + news_post_id, {
+                success: on_success
+        })
+    }).bind(this));
+
+    $("#news-modal-location").delegate("#news-save", "click", (function (event) {
+        event.stopImmediatePropagation();
+        
+        this.save_news_post(event);
+    }).bind(this));
+}).bind(admin))
+
+admin.render_news_posts = (function () {
+    var onSuccess = (function (data) {
+        $("#news-content").empty();
+        
+        _.each(data.news_posts, (function (news_post) {
+            $("#news-content").append(this.app.render("admin_news_row", {
+                hidden: true,
+                news_post: news_post
+            })).bind(this);
+            
+            $(".news-row:hidden").fadeIn();
+        }).bind(this))
+    }).bind(this)
+    
+    $.ajax("/admin/api/news", {
+            success: onSuccess
+    })
+}).bind(admin)
+
+admin.save_news_post = (function (eve) {
+    var news_post_id = $($(eve.target).parents()[2]).attr("data-id");
+    
+    var data = _.reduce(_.map($(".news-field"), function (field) {
+        var values = {};
+        
+        if ($(field).attr("data-name") == "content") {
+            values[$(field).attr("data-name")] = $(field).html();
+        } else {
+            values[$(field).attr("data-name")] = getDataFromField(field);
+        }
+        
+        return values
+    }), (function (a, b) { return _.extend(a, b) }).bind(this));
+    
+    data["id"] = news_post_id;
+
+    if (news_post_id) {
+        var url = "/admin/api/news/edit/" + news_post_id;
+    } else {
+        var url = "/admin/api/news/create";
+    }
+    
+    var on_success = (function (data) {
+        $("#news-modal").modal("hide");
+        
+        if (data.success) {
+            $.notify("News Post Saved!", "success");
+            
+            this.render_news_posts();
+        } else {
+            $.notify("Error: " + data.message, "danger");
+        }
+    }).bind(this);
+
+    $.ajax(url, {
+        type: 'POST',
+        data: JSON.stringify(data),
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        success: on_success
+    });
+}).bind(admin);
+

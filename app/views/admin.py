@@ -11,6 +11,8 @@ from helpers.match import create_match, match_to_json
 from helpers.bot import get_bot_space
 from helpers.common import get_enum_array
 
+from helpers.news import create_news_post, get_news_post, get_news_posts, parse_json_news_post, update_news_post
+
 from util import paginate
 from util.errors import UserError, APIError, FortException
 from util.responses import APIResponse
@@ -39,6 +41,7 @@ def admin_dashboard():
         events_count=g.cursor.count("events"),
         teams_count=g.cursor.count("teams"),
         bets_count=g.cursor.count("bets"),
+        newsposts_count=g.cursor.count("newsposts"),
         b_used=bot_used,
         b_total=bot_total,
         b_cap=b_cap,
@@ -66,6 +69,10 @@ def admin_teams():
 @admin.route("/events")
 def admin_events():
     return render_template("admin/events.html")
+
+@admin.route("/news")
+def admin_news():
+    return render_template("admin/news.html")
 
 USERS_LIST_QUERY = """
 SELECT id, steamid, email, active, last_login, ugroup
@@ -450,7 +457,7 @@ def parse_event_payload(payload):
     empty_fields = [i for i in EVENT_FIELDS if not payload.get(i)]
     
     if len(empty_fields):
-        raise APIError("Missing Fields: %s" % ' '.join(empty_fields))
+        raise APIError("Missing Fields: %s" % ', '.join(empty_fields))
     
     return payload['name'], payload['website'], payload['league'], payload['logo'], payload['splash'], payload['etype'], payload['start_date'], payload['end_date'], payload.get("active", False)
 
@@ -536,4 +543,49 @@ def admin_event_edit(id):
             , data)
 
     return APIResponse()
+
+@admin.route("/api/news/create", methods = ['POST'])
+def admin_api_create_news_post():
+    id, title, category, content, is_public = parse_json_news_post(request.json)
     
+    create_news_post(title, category, content, None, is_public, g.user)
+    
+    return APIResponse()
+
+@admin.route("/api/news/edit/<int:newspost_id>", methods = ['POST'])
+def admin_api_edit_news_post(newspost_id):
+    id, title, category, content, is_public = parse_json_news_post(request.json)
+    
+    update_news_post(id, title, category, content, None, is_public)
+    
+    return APIResponse()
+
+@admin.route("/api/news/<int:newspost_id>")
+def admin_api_get_news_post(newspost_id):
+    news_post = get_news_post(newspost_id, True)
+    
+    if not news_post:
+        raise APIError("Couldn't Find News Post: {0}".format(newspost_id))
+    
+    return APIResponse({
+        "news_post": news_post
+    })
+
+@admin.route("/api/news", methods = ['GET'])
+def admin_api_get_news_posts():
+    active_only = request.args.get('activeOnly')
+
+    if active_only:
+        if str(active_only).lower() == 'true':
+            active_only = True
+        else:
+            active_only = False
+    else:
+        active_only = False
+    
+    news_posts = get_news_posts(active_only, True)
+    
+    return APIResponse({
+        "news_posts": news_posts
+    })
+

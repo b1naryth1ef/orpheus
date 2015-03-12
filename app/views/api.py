@@ -14,6 +14,8 @@ from helpers.user import (UserGroup, gache_user_info, user_save_settings,
 
 from helpers.common import get_enum_array
 
+from helpers.news import get_news_post, get_news_posts
+
 from util import paginate
 from util.queue import JobQueue
 from util.errors import UserError, APIError, InvalidRequestError, InvalidTradeUrl, apiassert
@@ -425,5 +427,24 @@ def route_event_match_list(id):
 
     return APIResponse({
         "matches": matches
+    })
+
+@api.route("/news/<int:newspost_id>", methods = ['GET'])
+def api_get_news_post(newspost_id):    
+    news_post = get_news_post(newspost_id, False)
+    
+    if not news_post:
+        raise APIError("Couldn't Find News Post: {0}".format(newspost_id))
+    
+    return APIResponse({
+        "news_post": news_post
+    })
+
+@api.route("/news", methods = ['GET'])
+def api_get_news_posts():    
+    news_posts = get_news_posts()
+    
+    return APIResponse({
+        "news_posts": news_posts
     })
 

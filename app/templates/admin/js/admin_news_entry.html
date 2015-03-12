@@ -1,0 +1,57 @@
+<div id="news-modal" class="modal fade in" style="display: block; padding-right: 17px;">
+  <div class="modal-backdrop fade in" style="height: 560px;"></div>
+  <div class="modal-dialog modal-lg" data-id="<%- create ? "" : news_post.id %>">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" data-dismiss="modal" class="close">×</button>
+        <h4 class="modal-title">
+          <h4><%- create ? "Create" : "Edit" %> News Post</h4>
+      </div>
+      <div class="modal-body">
+        <div id="news-modal-error" class="alert alert-danger" style="display: none;"></div>
+        <div class="form-group">
+          <fieldset>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Title</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control news-field" data-name="title", value="<%- create ? "" : news_post.title %>">
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Category</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control news-field" data-name="category" value="<%- create ? "" : news_post.category %>">
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Content</label>
+              <div class="col-sm-10">
+                <div style="overflow:scroll; height:250px;max-height:250px" class="form-control news-field" contenteditable="true" data-name="content"><%- create ? "" : news_post.content %></div>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Is Public</label>
+              <div class="col-sm-10">
+                <label class="switch switch-lg">
+                  <input type="checkbox" <%= create ? "" :(news_post.is_public ? "checked" : "") %> data-name="is_pubic" class="news-field">
+                  <span></span>
+                </label>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" data-dismiss="modal" class="btn btn-danger">Cancel</button>
+        <button type="button" class="btn btn-success" id="news-save">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
