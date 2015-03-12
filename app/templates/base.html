@@ -32,12 +32,12 @@
                 </a>
               </li>
               <li>
-                <a href="/events" class="authed">
+                <a href="/events">
                   <em class="fa fa-university fa-2x"></em>
                 </a>
               </li>
               <li>
-                <a href="/profile" class="authed">
+                <a href="/profile" fort-user="true">
                   <em class="icon-user fa-2x"></em>
                 </a>
               </li>
@@ -47,14 +47,14 @@
                 </a>
               </li>
             </ul>
-            <ul class="nav navbar-nav navbar-right unauthed">
+            <ul class="nav navbar-nav navbar-right" fort-user="false">
               <a href="/auth/login" class="navbar-brand">
                 <div class="brand-logo">
                   <img src="/static/img/steam_login.png" alt="login" class="img-responsive">
                 </div>
               </a>
             </ul>
-            <div class="authed">
+            <div fort-user="true">
               <ul class="nav navbar-nav navbar-right">
                 <li class="dropdown dropdown-list">
                   <a href="#" data-toggle="dropdown" aria-expanded="false">
@@ -148,12 +148,7 @@
     {% endblock %}
     <script src="/static/js/templates.js"></script>
     <script src="/static/js/app.js"></script>
-    <script src="/static/js/util.js"></script>
-    <script src="/static/js/home.js"></script>
-    <script src="/static/js/match.js"></script>
-    <script src="/static/js/profile.js"></script>
-    <script src="/static/js/settings.js"></script>
-    <script src="/static/js/events.js"></script>
+    <script src="/static/js/compiled.js"></script>
     {% block post_scripts %}
     {% endblock %}
 

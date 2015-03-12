@@ -12,7 +12,7 @@ def main():
 
     if sys.argv[1] == "web":
         setup_logging("web")
-        from fort import app, setup, get_js_templates
+        from fort import app, setup, get_js_templates, get_js_source
 
         port = 5000
         if len(sys.argv) > 2 and sys.argv[2] == "test":
@@ -20,8 +20,11 @@ def main():
             app.config["TESTING"] = True
             port = 8321
 
+        # Files we listen for changes on
+        extra = list(get_js_templates()) + list(get_js_source())
+
         setup()
-        app.run("0.0.0.0", port=port, debug=True, extra_files=list(get_js_templates()))
+        app.run("0.0.0.0", port=port, debug=True, extra_files=extra)
         sys.exit(0)
 
     if sys.argv[1] == "queue":
