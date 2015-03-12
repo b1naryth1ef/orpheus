@@ -1,7 +1,5 @@
 import socket, os, json
 
-from util.secure import SecureLoader
-
 ENV = os.getenv("ENV", "LOCAL")
 HOST = socket.gethostname().lower()
 TESTING = os.getenv("TESTING")

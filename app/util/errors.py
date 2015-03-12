@@ -3,7 +3,7 @@ from util import flashy
 
 class ResponseException(Exception):
     def to_response(self):
-        raise NotImplementtedError("Must define to_response on `%s`" % self.__class__.__name__)
+        raise NotImplementedError("Must define to_response on `%s`" % self.__class__.__name__)
 
 class GenericError(ResponseException):
     def __init__(self, msg, code=200):

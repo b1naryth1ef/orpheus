@@ -52,7 +52,8 @@ class SlackMessage(object):
 
     def send_async(self):
         if app.config.get("ENV") != "PROD":
-            log.debug("Would send slack message: %s, %s, %s, %s" % (content, color, fields, username))
+            log.debug("Would send slack message: %s, %s, %s, %s" % (
+                self.text, self.color, self.fields, self.username))
             return
 
         from util.queue import JobQueue
@@ -61,7 +62,8 @@ class SlackMessage(object):
 
     def send(self):
         if app.config.get("ENV") != "PROD":
-            log.debug("Would send slack message: %s, %s, %s, %s" % (content, color, fields, username))
+            log.debug("Would send slack message: %s, %s, %s, %s" % (
+                self.text, self.color, self.fields, self.username))
             return
         self.send_raw(*self.payload())
 

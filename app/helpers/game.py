@@ -6,13 +6,13 @@ from util.errors import ValidationError
 from helpers.user import UserGroup
 
 def create_game(user, name, appid, meta=None, view_perm=UserGroup.NORMAL):
-    if not isinstance(obj, dict):
+    if not isinstance(meta, dict):
         raise ValidationError("Game metadata must be dictionary")
 
     with Cursor() as c:
         return c.insert("games", {
             "name": name,
-            "meta": as_json(meta or {}),
+            "meta": Cursor.json(meta or {}),
             "appid": appid,
             "view_perm": view_perm,
             "active": True,

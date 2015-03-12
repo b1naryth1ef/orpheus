@@ -3,3 +3,5 @@
 *.swp
 design/
 templates.js
+compiled.js
+

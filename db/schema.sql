@@ -66,8 +66,8 @@ CREATE TABLE users (
   email        varchar(255) UNIQUE,
   trade_token  varchar(32) UNIQUE,
   active       boolean,
-  join_date    timestamp with time zone,
-  last_login   timestamp with time zone,
+  join_date    timestamp,
+  last_login   timestamp,
   ugroup       user_group,
   settings     jsonb
 );
@@ -99,7 +99,7 @@ CREATE TABLE bots (
     sentry         bytea,
     status         bot_status,
     inventory      numeric[],
-    last_activity  timestamp with time zone,
+    last_activity  timestamp,
     active         boolean
 );
 
@@ -140,7 +140,7 @@ CREATE TABLE games (
     view_perm   user_group,
     active      boolean,
     created_by  integer REFERENCES users(id),
-    created_at  timestamp with time zone
+    created_at  timestamp
 );
 
 
@@ -156,8 +156,8 @@ CREATE TABLE events (
   streams     varchar(256)[],
   games       integer[],
   etype       event_type,
-  start_date  timestamp with time zone,
-  end_date    timestamp with time zone,
+  start_date  timestamp,
+  end_date    timestamp,
   active      boolean
 );
 
@@ -172,7 +172,7 @@ CREATE TABLE teams (
   logo        text,
   meta        jsonb,
   created_by  integer REFERENCES users(id),
-  created_at  timestamp with time zone
+  created_at  timestamp
 );
 
 
@@ -205,16 +205,16 @@ CREATE TABLE matches (
     results          jsonb,
     max_value_item   decimal,
     max_value_total  decimal,
-    lock_date        timestamp with time zone,
-    match_date       timestamp with time zone,
-    public_date      timestamp with time zone,
-    items_date       timestamp with time zone,
+    lock_date        timestamp,
+    match_date       timestamp,
+    public_date      timestamp,
+    items_date       timestamp,
     view_perm        user_group,
     active           boolean,
     created_by       integer REFERENCES users(id),
-    created_at       timestamp with time zone,
+    created_at       timestamp,
     results_by       integer REFERENCES users(id),
-    results_at       timestamp with time zone
+    results_at       timestamp
 );
 
 
@@ -233,7 +233,7 @@ CREATE TABLE bets (
     items       numeric[],
     winnings    numeric[],
     state       bet_state,
-    created_at  timestamp with time zone
+    created_at  timestamp
 );
 
 CREATE INDEX ON bets USING GIN (items);
@@ -258,7 +258,7 @@ CREATE TABLE trades (
   message     text,
   items_in    numeric[],
   items_out   numeric[],
-  created_at  timestamp with time zone,
+  created_at  timestamp,
 
   /* Optional References */
   bot_ref     integer REFERENCES bots(id),
@@ -278,8 +278,8 @@ CREATE TABLE item_drafts (
     match       integer REFERENCES matches(id),
     team        integer REFERENCES teams(id),
     state       item_draft_state,
-    started_at  timestamp with time zone,
-    ended_at    timestamp with time zone
+    started_at  timestamp,
+    ended_at    timestamp
 );
 
 /*
@@ -291,7 +291,7 @@ CREATE TABLE exceptions (
   etype       varchar(128),
   content     text,
   meta        jsonb,
-  created_at  timestamp with time zone
+  created_at  timestamp
 );
 
 CREATE INDEX ON exceptions (etype);
@@ -303,7 +303,7 @@ CREATE TABLE newsposts (
   content     text,
   meta        jsonb,
   is_public   boolean,
-  created_at  timestamp with time zone,
+  created_at  timestamp,
   created_by  integer references users(id)
 );
 
