@@ -33,27 +33,12 @@ def process_inventory(data, steamid):
     c = Cursor()
     inv = []
 
-    if not isinstance(data['rgInventory'], dict):
-        print data
-
     for item_id, item in data['rgInventory'].iteritems():
         key = item['classid'] + "_" + item['instanceid']
         obj = data['rgDescriptions'][key]
 
         if not obj.get('tradable') or not 'icon_url_large' in obj or not 'actions' in obj:
             continue
-
-        """
-        asset_id = filter(lambda i: i.get("name") == "Inspect in Game...", obj['actions'])
-        if len(asset_id) != 1:
-            continue
-
-        # Try and hack out the assetid because steam sux
-        asset_id = asset_id[0]['link'].rsplit("assetid%D", 1)[-1]
-        if not asset_id.isdigit():
-            log.warning("Got an assetid which is not an integer: %s", asset_id)
-            continue
-        """
 
         # Grab some general information
         item_name = obj['market_hash_name']
@@ -72,19 +57,16 @@ def process_inventory(data, steamid):
                 log.debug("Updating owner for item %s" % item_id)
                 c.execute("UPDATE items SET owner=%s WHERE id=%s", (steamid, item_id))
         else:
-            c.execute("""
-                INSERT INTO items (id, owner, type_id, class_id, instance_id, state, meta)
-                VALUES (%(id)s, %(owner)s, %(type_id)s, %(class_id)s, %(instance_id)s, %(state)s, %(meta)s);
-            """, {
+            c.insert("items",{
                 "id": item_id,
                 "owner": steamid,
                 "type_id": type_id,
                 "class_id": item['classid'],
                 "instance_id": item['instanceid'],
                 "state": ItemState.EXTERNAL,
+                "image": item_image,
                 "meta": c.json({
                     "desc": obj.get('descriptions', []),
-                    "image": item_image
                 })
             })
 

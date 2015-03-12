@@ -106,7 +106,7 @@ def route_switch_team(match_id):
     return APIResponse()
 
 MATCH_CONFIRM_BET_FIELDS = [
-    "id", "teams", "lock_date", "match_date", "public_date", "active",
+    "id", "state", "itemstate", "teams", "lock_date", "match_date", "public_date", "active",
     "max_value_item", "max_value_total"
 ]
 
@@ -125,7 +125,7 @@ def route_match_bet(match_id):
         raise APIError("You must set a trade token to bet!")
 
     # Make sure this seems mildly valid
-    apiassert(0 < len(items) <= 4, "Too many items")
+    apiassert(0 < len(items) <= 4, "Invalid Items")
 
     # Grab some info for the match
     match = g.cursor.select("matches", *MATCH_CONFIRM_BET_FIELDS, id=match_id).fetchone()
@@ -143,7 +143,8 @@ def route_match_bet(match_id):
     apiassert(match, "Invalid match ID")
     apiassert(match.active, "Invalid match ID")
     apiassert(match.public_date.replace(tzinfo=None) < datetime.utcnow(), "Invalid match ID")
-    apiassert(match.lock_date.replace(tzinfo=None) > datetime.utcnow(), "Match is locked")
+    apiassert(match.state == "OPEN", "Match is locked")
+    apiassert(match.itemstate == "OPEN", "Match is locked")
     apiassert(team in match.teams, "Invalid Team")
 
     # Make sure this user doesn't already have a bet on this match
@@ -303,20 +304,19 @@ def user_settings_save():
 
 @api.route("/item/image/<id>")
 def route_item_image(id):
-    image = g.cursor.execute("SELECT meta->'image' as i FROM items WHERE id=%s", (id, )).fetchone()
-    return redirect("https://steamcommunity-a.akamaihd.net/economy/image/%s" % image.i)
+    item = g.cursor.execute("SELECT image FROM items WHERE id=%s", (id, )).fetchone()
+    return redirect("https://steamcommunity-a.akamaihd.net/economy/image/%s" % item.image)
 
 @api.route("/returns/list")
 def route_returns_list():
     with Cursor() as c:
         c.execute("""
-            SELECT i.id as iid, bt.id as bid, i.meta->'image' as image FROM items i
-            JOIN bots b ON b.steamid=i.owner
+            SELECT i.id as iid, bt.id as bid, image, i.price FROM items i
+            LEFT JOIN bots b ON b.steamid=i.owner
             JOIN bets bt ON (
                 bt.items @> ARRAY[i.id]
                 OR bt.winnings @> ARRAY[i.id])
-            WHERE i.state='INTERNAL' AND bt.state='WON' AND bt.better=%s
-            AND i.state='INTERNAL';
+            WHERE i.state='INTERNAL' AND bt.state='WON' AND bt.better=%s;
         """, (g.user, ))
 
         returns = []
@@ -325,6 +325,7 @@ def route_returns_list():
                 "id": entry.iid,
                 "bet": entry.bid,
                 "image": entry.image,
+                "price": entry.price
             })
 
         return APIResponse({

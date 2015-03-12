@@ -76,7 +76,7 @@ class SteamAPI(object):
         self.key = key
 
     def market(self, appid):
-        return SteamMarketAPI(self, appid)
+        return SteamMarketAPI(self, appid, self.key)
 
     def request(self, url, data, verb="GET", **kwargs):
         url = "http://api.steampowered.com/%s" % url
@@ -208,22 +208,29 @@ class SteamAPI(object):
 
 
 class SteamMarketAPI(object):
-    def __init__(self, steam, appid, retries=5):
+    def __init__(self, steam, appid, key, retries=5):
         self.steam = steam
         self.appid = appid
+        self.key = key
         self.retries = retries
 
-    def get_asset_class_info(self, assetid, key):
+    def get_asset_class_info(self, assetid, instanceid=None):
         url = API_FMT.format(iface="ISteamEconomy", cmd="GetAssetClassInfo")
 
-        r = retry_request(lambda f: f.get(url, params={
-            "key": key,
+        ikey = str(assetid)
+        data = {
+            "key": self.key,
             "appid": self.appid,
             "class_count": 1,
             "classid0": assetid
-        }, timeout=10))
+        }
 
-        return r.json()["result"]
+        if instanceid:
+            ikey = "%s_%s" % (assetid, instanceid)
+            data['instanceid0'] = instanceid
+
+        r = retry_request(lambda f: f.get(url, params=data, timeout=10))
+        return r.json()["result"][ikey]
 
     def get_inventory(self, id):
         data = self.steam.getUserInfo(id)["profileurl"]

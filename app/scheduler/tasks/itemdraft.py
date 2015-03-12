@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 # Grabs any locked matches where we haven't already created a draft
 FIND_MATCH_DRAFT_QUERY = """
 SELECT id, teams FROM matches
-WHERE (state='LOCKED' OR state='RESULT') AND itemstate='LOCKED'
+WHERE (state in ('LOCKED', 'WAITING', 'RESULT')) AND itemstate='LOCKED'
 AND id NOT IN (SELECT match FROM item_drafts);
 """
 

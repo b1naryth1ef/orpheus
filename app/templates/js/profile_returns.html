@@ -1,0 +1,20 @@
+<div class="col-md-4">
+  <div class="panel panel-default">
+    <div class="panel-body">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="row row-centered">
+            <h3>Returns</h3>
+            <% for (item in returns) { %>
+              <% var item = bet.items[item] %>
+              <div class="col-sm-2 col-centered bet-slot">
+                <img src="/api/item/image/<%= item %>" style="max-height: 125px; max-width: 125px;"/>
+              </div>
+            <% } %>
+            <button type="button" class="btn btn-primary btn-lg" fort-action="request-returns">Request Returns</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

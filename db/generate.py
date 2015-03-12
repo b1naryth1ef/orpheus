@@ -157,8 +157,8 @@ def generate_bets(t, db):
 
 
 ITEM_TYPE_QUERY = """
-INSERT INTO itemtypes (id, name) VALUES
-(%(id)s, %(name)s);
+INSERT INTO itemtypes (name) VALUES
+(%(name)s);
 """
 
 ITEM_QUERY = """
@@ -171,7 +171,6 @@ def generate_items(t, db):
 
     for entry in types:
         t.execute(ITEM_TYPE_QUERY, {
-            "id": entry,
             "name": "Test Item #%s" % entry
         })
 

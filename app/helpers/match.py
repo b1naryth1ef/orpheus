@@ -97,9 +97,9 @@ def match_to_json(m, user=None):
     match['teams'] = {}
     match['extra'] = {}
     match['stats'] = {}
-    match['bet_state'] = m.state 
+    match['bet_state'] = m.state
     match['bet_itemstate'] = m.itemstate
-    
+
     match['states'] = get_enum_array('match_state')
     match['itemstates'] = get_enum_array('match_item_state')
 
@@ -191,7 +191,7 @@ def match_to_json(m, user=None):
                     "id": item.id,
                     "name": item.name,
                     "price": item.price,
-                    "image": item.meta.get('image'),
+                    "image": item.image,
                 }
 
                 if item.id in mybet.items:

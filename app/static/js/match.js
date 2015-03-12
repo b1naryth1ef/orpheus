@@ -71,7 +71,14 @@ match.addItemToSlot = function ($item) {
     $item.addClass("bet-slot").addClass("col-centered");
 }
 
+match.refreshFromSocket = function (data) {
+    if (data.id == this.cachedMatch.id) {
+        this.renderSingleMatch(id);
+    }
+}
+
 match.routeRegex(/^\/match\/(\d+)$/, function (route, id) {
+    app.waitForEvent("refresh-match", this.refreshFromSocket);
     this.renderSingleMatch(id);
     this.inventoryView = new InventoryView(this.app, "#bet-inventory");
     this.cachedInventory = null;

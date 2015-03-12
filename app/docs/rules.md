@@ -40,6 +40,9 @@ When initially placing bets, users agree that they are transferring ownership of
 ### Bet and Item Value
 Bets are assigned a total value when they are initially placed, based on our internal systems valuation. Users agree that this value is valid for the duration of CSGO Fort's ownership of any and all items. CSGO Fort reserves the right to, without notice, change or adjust this value internally.
 
+## CSGO Fort Levy
+For every match, CSGO Fort takes 5% of the total pot as a general levy. This 5% is then split up into two sets, 40% going to teams and orginizations for the match (email contact AT csgofort for more details on registering your team or org), and 60% going towards the site itself. We reserve the right to adjust this levy at will.
+
 ## Matches
 
 ### External Influence
