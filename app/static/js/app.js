@@ -135,7 +135,7 @@ app.setup = function (userData) {
     this.openWebSocket();
 
     // Call this on page close
-    $.unload(app.teardown);
+    $(window).unload(app.teardown);
 
     if (userData.notifications) {
         _.each(userData.notifications, function (item) {
