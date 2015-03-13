@@ -2,10 +2,10 @@ var events = app.view("events");
 
 events.renderMatches = function(id) {
     var renderMatchesFromData = (function (data) {
-        $(".matches-container").empty();
+        $(".events-container").empty();
 
         _.each(data.matches, (function (item) {
-            $(".matches-container").append(this.app.render("match_frontpage", {
+            $(".events-container").append(this.app.render("match_frontpage", {
                 match: item
             }));
         }).bind(this));
@@ -48,7 +48,7 @@ events.route("/events", function () {
 events.routeRegex(/^\/event\/(\d+)$/, function (route, id) {
     this.renderMatches(id);
 
-    $(".matches-container").delegate(".match-row", "click", (function (ev) {
+    $(".events-container").delegate(".match-row", "click", (function (ev) {
         var eventID = $(ev.target).closest(".match-row").attr("data-id");
         window.location = "/match/" + eventID;
     }).bind(this));

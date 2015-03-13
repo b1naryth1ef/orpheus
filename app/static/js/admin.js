@@ -55,7 +55,7 @@ admin.route("/admin/users", function () {
         }
     }).bind(this));
 
-    $("#btn-search").click((function (eve) {
+    $("#btn-search").click((function (ev) {
         this.query = $("#search-box").val();
         this.loadUsers();
     }).bind(this));
@@ -135,8 +135,8 @@ admin.route("/admin/games", function () {
         $("#game-modal").modal("show");
     }).bind(this));
 
-    $("#games-content").delegate(".game-edit", "click", (function (eve) {
-        var id =  $($(eve.target).parents()[1]).attr("data-id");
+    $("#games-content").delegate(".game-edit", "click", (function (ev) {
+        var id =  $($(ev.target).parents()[1]).attr("data-id");
         $("#game-modal-location").html(this.app.render("admin_game_modal", {
             create: false,
             game: this.gamesCache[id],
@@ -160,13 +160,13 @@ admin.route("/admin/games", function () {
             $.ajax("/admin/api/game/create", {
                 data: data,
                 type: "POST",
-                success: (function (eve) {
-                    if (eve.success) {
+                success: (function (ev) {
+                    if (ev.success) {
                         this.loadGames();
                         $("#game-modal").modal("hide");
                         $.notify("Game created!", "success");
                     } else {
-                        $.notify("Error creating game: " + eve.message, "danger");
+                        $.notify("Error creating game: " + ev.message, "danger");
                     }
                 }).bind(this)
             });
@@ -175,13 +175,13 @@ admin.route("/admin/games", function () {
             $.ajax("/admin/api/game/edit", {
                 data: data,
                 type: "POST",
-                success: (function (eve) {
-                    if (eve.success) {
+                success: (function (ev) {
+                    if (ev.success) {
                         this.loadGames();
                         $("#game-modal").modal("hide");
                         $.notify("Game saved!", "success");
                     } else {
-                        $.notify("Error saving game: " + eve.message, "danger");
+                        $.notify("Error saving game: " + ev.message, "danger");
                     }
                 }).bind(this)
             });
@@ -278,24 +278,24 @@ admin.saveMatchDraft = (function () {
             })
         }
     }
-    
+
     data.results = {final: {}};
-    
+
     $(".field-score").each((function (index, item) {
         var teamid = $(item).attr('id');
         var mapplayed = $(item).attr('map');
-        
+
         if (data.results.final[mapplayed] === undefined) {
             data.results.final[mapplayed] = {};
         }
-        
+
         if(data.results.final[mapplayed][teamid] === undefined) {
             data.results.final[mapplayed][teamid] = {};
         }
-        
+
         data.results.final[mapplayed][teamid] = $(item).val();
 	}).bind(this));
-    
+
     $.ajax("/admin/api/match/results", {
         type: 'POST',
         data: JSON.stringify(data),
@@ -312,8 +312,8 @@ admin.saveMatchDraft = (function () {
     })
 }).bind(admin);
 
-admin.saveMatch = (function (eve) {
-    var id = $($(eve.target).parents()[2]).attr("data-id");
+admin.saveMatch = (function (ev) {
+    var id = $($(ev.target).parents()[2]).attr("data-id");
     var data = _.reduce(_.map($(".match-field"), function (el) {
         var val = {};
         val[$(el).attr("data-name")] = getDataFromField(el);
@@ -346,7 +346,7 @@ admin.saveMatch = (function (eve) {
 admin.route("/admin/matches", function () {
     this.loadMatches();
 
-    $("#match-add-button").click((function (eve) {
+    $("#match-add-button").click((function (ev) {
         $("#match-modal").modal("hide");
         $("#match-modal-location").empty().html(this.app.render("admin_match_entry", {
             games: this.gameCache,
@@ -358,31 +358,31 @@ admin.route("/admin/matches", function () {
         $("#match-modal").modal("show");
     }).bind(this));
 
-    $("#matches-table").delegate(".match-edit", "click", (function (eve) {
-        eve.stopImmediatePropagation();
-        var matchRow = $(eve.target).parent().parent();
+    $("#matches-table").delegate(".match-edit", "click", (function (ev) {
+        ev.stopImmediatePropagation();
+        var matchRow = $(ev.target).parent().parent();
         this.renderSingleMatchEntry(this.matchCache[matchRow.attr("data-id")]);
     }).bind(this));
 
-    $("#matches-table").delegate(".match-draft", "click", (function (eve) {
-        eve.stopImmediatePropagation();
-        var matchRow = $(eve.target).parent().parent();
+    $("#matches-table").delegate(".match-draft", "click", (function (ev) {
+        ev.stopImmediatePropagation();
+        var matchRow = $(ev.target).parent().parent();
         this.renderMatchDraft(this.matchCache[matchRow.attr("data-id")]);
     }).bind(this));
 
-    $("#match-modal-location").delegate("#match-draft-save", "click", (function (eve) {
-        eve.stopImmediatePropagation();
+    $("#match-modal-location").delegate("#match-draft-save", "click", (function (ev) {
+        ev.stopImmediatePropagation();
         this.saveMatchDraft();
     }).bind(this));
 
-    $("#match-modal-location").delegate("#match-save", "click", (function (eve) {
-        eve.stopImmediatePropagation();
-        this.saveMatch(eve);
+    $("#match-modal-location").delegate("#match-save", "click", (function (ev) {
+        ev.stopImmediatePropagation();
+        this.saveMatch(ev);
     }).bind(this));
 })
 
-admin.saveTeam = (function (eve) {
-    var id = $($(eve.target).parents()[2]).attr("data-id");
+admin.saveTeam = (function (ev) {
+    var id = $($(ev.target).parents()[2]).attr("data-id");
     var data = _.reduce(_.map($(".team-field"), function (el) {
         var val = {};
         val[$(el).attr("data-name")] = getDataFromField(el);
@@ -452,31 +452,31 @@ admin.renderSingleTeamEntry = (function (team) {
 admin.route("/admin/teams", function () {
     this.loadTeams();
 
-    $("#team-add-button").click((function (eve) {
+    $("#team-add-button").click((function (ev) {
         $("#team-modal").modal("hide");
         $("#team-modal-location").empty().html(this.app.render("admin_team_entry", {
             create: true,
         }));
-        
+
         setupDateFields();
-        
+
         $("#team-modal").modal("show");
     }).bind(this));
 
-    $("#teams-table").delegate(".team-edit", "click", (function (eve) {
-        eve.stopImmediatePropagation();
-        var teamRow = $(eve.target).parent().parent();
+    $("#teams-table").delegate(".team-edit", "click", (function (ev) {
+        ev.stopImmediatePropagation();
+        var teamRow = $(ev.target).parent().parent();
         this.renderSingleTeamEntry(this.teamCache[teamRow.attr("data-id")]);
     }).bind(this));
 
-    $("#team-modal-location").delegate("#team-save", "click", (function (eve) {
-        eve.stopImmediatePropagation();
-        this.saveTeam(eve);
+    $("#team-modal-location").delegate("#team-save", "click", (function (ev) {
+        ev.stopImmediatePropagation();
+        this.saveTeam(ev);
     }).bind(this));
 })
 
-admin.saveEvent = (function (eve) {
-    var id = $($(eve.target).parents()[2]).attr("data-id");
+admin.saveEvent = (function (ev) {
+    var id = $($(ev.target).parents()[2]).attr("data-id");
     var data = _.reduce(_.map($(".event-field"), function (el) {
         var val = {};
         val[$(el).attr("data-name")] = getDataFromField(el);
@@ -508,7 +508,7 @@ admin.saveEvent = (function (eve) {
 
 admin.renderEvents = (function () {
     $("#events-content").empty();
-    
+
     for (event in this.eventCache) {
         $("#events-content").append(this.app.render("admin_event_row", {
             event: this.eventCache[event],
@@ -533,23 +533,23 @@ admin.loadEvents = (function () {
     }).bind(this));
 }).bind(admin);
 
-admin.renderSingleEventEntry = (function (event) {
+admin.renderSingleEventEntry = (function (ev) {
     $("#event-modal").modal("hide");
     $("#event-modal-location").empty().html(this.app.render("admin_event_entry", {
-        event: event,
+        ev: ev,
         eventtypes: this.eventTypes,
         create: false,
     }));
-    
+
     setupDateFields();
-    
+
     $("#event-modal").modal("show");
 }).bind(admin);
 
 admin.route("/admin/events", function () {
     this.loadEvents();
 
-    $("#event-add-button").click((function (eve) {
+    $("#event-add-button").click((function (ev) {
         $("#event-modal").modal("hide");
         $("#event-modal-location").empty().html(this.app.render("admin_event_entry", {
             eventtypes: this.eventTypes,
@@ -559,123 +559,115 @@ admin.route("/admin/events", function () {
         $("#event-modal").modal("show");
     }).bind(this));
 
-    $("#events-table").delegate(".event-edit", "click", (function (eve) {
-        eve.stopImmediatePropagation();
-        var eventRow = $(eve.target).parent().parent();
+    $("#events-table").delegate(".event-edit", "click", (function (ev) {
+        ev.stopImmediatePropagation();
+        var eventRow = $(ev.target).parent().parent();
         this.renderSingleEventEntry(this.eventCache[eventRow.attr("data-id")]);
     }).bind(this));
 
-    $("#event-modal-location").delegate("#event-save", "click", (function (eve) {
-        eve.stopImmediatePropagation();
-        this.saveEvent(eve);
+    $("#event-modal-location").delegate("#event-save", "click", (function (ev) {
+        ev.stopImmediatePropagation();
+        this.saveEvent(ev);
     }).bind(this));
 })
 
 admin.route("/admin/news", (function () {
-    this.render_news_posts();
+    this.renderNewsPosts();
 
-    $("#news-add-button").click((function (event) {
+    $("#news-add-button").click((function (ev) {
         $("#news-modal").modal("hide");
-    
+
         $("#news-modal-location").empty().html(this.app.render("admin_news_entry", {
             create: true,
         })).bind(this);
-        
+
         setupDateFields();
-        
+
         $("#news-modal").modal("show");
     }).bind(this));
 
-    $("#news-table").delegate(".news-edit", "click", (function (event) {
-        event.stopImmediatePropagation();
-        
-        var news_post_id = ($(event.target).parent().parent()).attr("data-id");
-        
-        var on_success = (function (data) {            
-            $("#news-modal").modal("hide");
-        
-            $("#news-modal-location").empty().html(this.app.render("admin_news_entry", {
-                create: false,
-                news_post: data.news_post
-            })).bind(this);
-            
-            setupDateFields();
-            
-            $("#news-modal").modal("show");
-        }).bind(this)
-        
-        $.ajax("/admin/api/news/" + news_post_id, {
-                success: on_success
-        })
+    $("#news-table").delegate(".news-edit", "click", (function (ev) {
+        ev.stopImmediatePropagation();
+
+        var newsPostID = ($(ev.target).parent().parent()).attr("data-id");
+        this.renderSingleNewsPost(newsPostID);
     }).bind(this));
 
-    $("#news-modal-location").delegate("#news-save", "click", (function (event) {
-        event.stopImmediatePropagation();
-        
-        this.save_news_post(event);
+    $("#news-modal-location").delegate("#news-save", "click", (function (ev) {
+        ev.stopImmediatePropagation();
+
+        this.saveNewsPost(ev);
     }).bind(this));
 }).bind(admin))
 
-admin.render_news_posts = (function () {
-    var onSuccess = (function (data) {
+admin.renderSingleNewsPost = (function (id) {
+    $.get("/api/news/" + id, (function (data) {
+        $("#news-modal").modal("hide");
+
+        $("#news-modal-location").empty().html(this.app.render("admin_news_entry", {
+            create: false,
+            news_post: data.post
+        })).bind(this);
+
+        setupDateFields();
+
+        $("#news-modal").modal("show");
+    }).bind(this));
+}).bind(admin);
+
+admin.renderNewsPosts = (function () {
+    $.get("/api/news/list", (function (data) {
         $("#news-content").empty();
-        
-        _.each(data.news_posts, (function (news_post) {
+
+        _.each(data.posts, (function (post) {
             $("#news-content").append(this.app.render("admin_news_row", {
                 hidden: true,
-                news_post: news_post
+                news_post: post
             })).bind(this);
-            
+
             $(".news-row:hidden").fadeIn();
         }).bind(this))
-    }).bind(this)
-    
-    $.ajax("/admin/api/news", {
-            success: onSuccess
-    })
-}).bind(admin)
+    }).bind(this));
+}).bind(admin);
 
-admin.save_news_post = (function (eve) {
-    var news_post_id = $($(eve.target).parents()[2]).attr("data-id");
-    
+admin.saveNewsPost = (function (ev) {
+    var newsPostID = $($(ev.target).parents()[2]).attr("data-id");
+
     var data = _.reduce(_.map($(".news-field"), function (field) {
         var values = {};
-        
+
         if ($(field).attr("data-name") == "content") {
             values[$(field).attr("data-name")] = $(field).html();
         } else {
             values[$(field).attr("data-name")] = getDataFromField(field);
         }
-        
+
         return values
     }), (function (a, b) { return _.extend(a, b) }).bind(this));
-    
-    data["id"] = news_post_id;
 
-    if (news_post_id) {
-        var url = "/admin/api/news/edit/" + news_post_id;
+    if (newsPostID) {
+        var url = "/admin/api/news/" + newsPostID + "/edit";
+        data.id = newsPostID;
     } else {
         var url = "/admin/api/news/create";
     }
-    
-    var on_success = (function (data) {
-        $("#news-modal").modal("hide");
-        
-        if (data.success) {
-            $.notify("News Post Saved!", "success");
-            
-            this.render_news_posts();
-        } else {
-            $.notify("Error: " + data.message, "danger");
-        }
-    }).bind(this);
 
     $.ajax(url, {
         type: 'POST',
         data: JSON.stringify(data),
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
-        success: on_success
+        success: (function (data) {
+            $("#news-modal").modal("hide");
+
+            if (data.success) {
+                $.notify("News Post Saved!", "success");
+
+                this.renderNewsPosts();
+            } else {
+                $.notify("Error: " + data.message, "danger");
+            }
+        }).bind(this)
     });
 }).bind(admin);
 

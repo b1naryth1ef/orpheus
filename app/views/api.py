@@ -13,7 +13,7 @@ from helpers.user import (UserGroup, gache_user_info, user_save_settings,
     authed, USER_SETTING_SAVE_PARAMS)
 
 from helpers.common import get_enum_array
-from helpers.news import get_news_post, get_news_posts
+from helpers.news import newspost_to_json
 
 from tasks.inventory import push_steam_inventory
 
@@ -87,7 +87,9 @@ def route_switch_team(match_id):
     apiassert(match.lock_date.replace(tzinfo=None) > datetime.utcnow(), "Match is Locked")
 
     # Find the bet
-    g.cursor.execute("SELECT id, team FROM bets WHERE better=%s AND match=%s AND state!='CANCELLED'", (g.user, match.id))
+    g.cursor.execute("""
+        SELECT id, team FROM bets WHERE better=%s AND match=%s AND state!='CANCELLED'
+    """, (g.user, match.id))
 
     bet = g.cursor.fetchone()
 
@@ -150,7 +152,8 @@ def route_match_bet(match_id):
     apiassert(team in match.teams, "Invalid Team")
 
     # Make sure this user doesn't already have a bet on this match
-    g.cursor.execute("SELECT * FROM bets WHERE better=%s AND match=%s AND state>='CONFIRMED'", (g.user, match.id))
+    g.cursor.execute("SELECT * FROM bets WHERE better=%s AND match=%s AND state>='CONFIRMED'",
+        (g.user, match.id))
     apiassert(g.cursor.fetchone() == None, "Bet already created")
 
     # Ensure we have space for the items
@@ -424,22 +427,31 @@ def route_event_match_list(id):
         "matches": matches
     })
 
-@api.route("/news/<int:newspost_id>", methods = ['GET'])
-def api_get_news_post(newspost_id):
-    news_post = get_news_post(newspost_id, False)
+@api.route("/news/<int:id>", methods = ['GET'])
+def api_get_news_post(id):
+    g.cursor.execute("""
+        SELECT ns.*, u.steamid FROM newsposts ns
+        LEFT JOIN users u ON u.id=ns.created_by
+        WHERE ns.is_public=true AND ns.id=%s
+    """, (id, ))
+    post = g.cursor.fetchone()
 
-    if not news_post:
-        raise APIError("Couldn't Find News Post: {0}".format(newspost_id))
+    if not post:
+        raise APIError("Couldn't Find News Post: {0}".format(id))
 
     return APIResponse({
-        "news_post": news_post
+        "post": newspost_to_json(post)
     })
 
-@api.route("/news", methods = ['GET'])
+@api.route("/news/list", methods = ['GET'])
 def api_get_news_posts():
-    news_posts = get_news_posts()
+    g.cursor.execute("""
+        SELECT ns.*, u.steamid FROM newsposts ns
+        LEFT JOIN users u ON u.id=ns.created_by
+        WHERE ns.is_public=true ORDER BY ns.created_at LIMIT 100
+    """)
 
     return APIResponse({
-        "news_posts": news_posts
+        "posts": map(newspost_to_json, g.cursor.fetchall())
     })
 

@@ -13,12 +13,9 @@ def route_index():
     return render_template("index.html")
     
 @public.route("/events")
-def route_event_list():
-    return render_template("events.html")
-
 @public.route("/event/<int:eventid>")
-def route_event_page(eventid):
-    return render_template("event.html")
+def route_events_page(eventid=None):
+    return render_template("events.html")
 
 @public.route("/match/<int:matchid>")
 def route_bet_mid(matchid):

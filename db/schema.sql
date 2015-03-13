@@ -309,7 +309,7 @@ CREATE TABLE newsposts (
   meta        jsonb,
   is_public   boolean,
   created_at  timestamp,
-  created_by  integer references users(id)
+  created_by  integer REFERENCES users(id)
 );
 
 CREATE INDEX ON newsposts (category);
