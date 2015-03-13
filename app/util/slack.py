@@ -56,9 +56,9 @@ class SlackMessage(object):
                 self.text, self.color, self.fields, self.username))
             return
 
-        from util.queue import JobQueue
+        from tasks.slack import slack_async_message
         args, kwargs = self.payload()
-        return JobQueue("slack_msg").fire({"args": args, "kwargs": kwargs})
+        slack_async_message.queue({"args": args, "kwargs": kwargs})
 
     def send(self):
         if app.config.get("ENV") != "PROD":

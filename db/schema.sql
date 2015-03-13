@@ -12,18 +12,19 @@ CREATE TABLE schemaversion (
 
 INSERT INTO schemaversion VALUES (0);
 
+
 /*
-  Represents steam items in the database
+  Represents a cached item price in the database
 */
 
-CREATE TABLE itemtypes (
-  id     SERIAL PRIMARY KEY,
-  name   text NOT NULL UNIQUE,
-  price  decimal,
-  meta   jsonb
+CREATE TABLE itemprices (
+  id      SERIAL PRIMARY KEY,
+  name    text,
+  price   numeric,
+  updated timestamp
 );
 
-CREATE INDEX ON itemtypes (name);
+CREATE INDEX on itemprices (name);
 
 
 /*
@@ -37,14 +38,18 @@ CREATE TYPE item_state AS ENUM ('UNKNOWN', 'EXTERNAL', 'INTERNAL', 'LOCKED');
 
 CREATE TABLE items (
   id           numeric PRIMARY KEY,
+  name         text NOT NULL,
   owner        varchar(255),
-  type_id      integer REFERENCES itemtypes(id),
+  image        varchar(1024),
   class_id     integer NOT NULL,
   instance_id  integer NOT NULL,
   price        decimal,
   state        item_state,
   meta         jsonb
 );
+
+CREATE INDEX ON items (name);
+CREATE INDEX ON items (class_id, instance_id);
 
 
 /*

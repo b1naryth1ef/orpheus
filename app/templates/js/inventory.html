@@ -22,7 +22,7 @@
       <% var item = rows[row][item] %>
       <div class="col-lg-2 inventory-item" data-page="<%- page %>" data-uid="<%- item.uid %>" data-id="<%- item.id %>">
         <img src="https://steamcommunity-a.akamaihd.net/economy/image/<%= item.image %>" style="max-height: 125px; max-width: 125px;"/>
-        <p>$<%= item.price %></p>
+        <p>$<%= Number(item.price).monetary() %></p>
       </div>
       <% } %>
     </div>

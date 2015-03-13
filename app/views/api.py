@@ -13,11 +13,11 @@ from helpers.user import (UserGroup, gache_user_info, user_save_settings,
     authed, USER_SETTING_SAVE_PARAMS)
 
 from helpers.common import get_enum_array
-
 from helpers.news import get_news_post, get_news_posts
 
+from tasks.inventory import push_steam_inventory
+
 from util import paginate
-from util.queue import JobQueue
 from util.errors import UserError, APIError, InvalidRequestError, InvalidTradeUrl, apiassert
 from util.responses import APIResponse
 
@@ -199,12 +199,7 @@ def route_team_info():
 @authed(api=True)
 def route_user_inventory():
     with Cursor() as c:
-        user = c.execute("SELECT steamid FROM users WHERE id=%s", (g.user, )).fetchone()
-
-        if not user:
-            raise APIError("Invalid User ID")
-
-        JobQueue("inventory").fire({"steamid": user.steamid, "user": g.user})
+        push_steam_inventory.queue(g.user)
         return APIResponse()
 
 USER_BETS_QUERY = """

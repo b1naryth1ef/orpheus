@@ -1,9 +1,11 @@
 import json, time, traceback, logging
 
-from util.email import Email
 
 from fort import app
+from tasks import task
 from database import Cursor, redis
+
+from util.email import Email
 from util.slack import SlackMessage
 
 log = logging.getLogger(__name__)
@@ -79,6 +81,7 @@ class RedisDBCheck(Check):
 
 CHECKS = [TradeQueueSizeCheck(), PostgresDBCheck(), RedisDBCheck()]
 
+@task
 def run_alert_checks():
     for check in CHECKS:
         try:

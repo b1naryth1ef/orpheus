@@ -69,6 +69,8 @@ def gache_user_info(steamid):
     """
     Gets the steam users info, or retreives a cached version of it.
     Cache time: 30 minutes
+
+    TODO: we should invalidate on some things and not others
     """
     info = redis.get("u:%s:info" % steamid)
 

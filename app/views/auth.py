@@ -1,9 +1,10 @@
 import re, logging
 
-from flask import Blueprint, g, redirect
+from flask import Blueprint, g, redirect, flash
 from datetime import datetime
 
 from fort import oid, steam
+from tasks.inventory import load_steam_inventory
 
 from util import flashy
 from util.errors import UserError, APIError
@@ -31,6 +32,7 @@ def create_or_login(resp):
         else:
             raise UserError("Account Disabled. Please contact support for more information")
         next_url = redirect(oid.get_next_url())
+        flash("Welcome Back!", "success")
     else:
         allowed = steam.getGroupMembers("csgofort")
         if int(id) not in allowed:
@@ -46,6 +48,10 @@ def create_or_login(resp):
 
         # Alright, lets try to onboard the user
         next_url = redirect("/?onboard=1")
+        flash("Welcome to CSGO Fort!", "success")
+
+    # Load the inventory to warm up the cache
+    load_steam_inventory.queue(g.user)
 
     g.session["u"] = g.user
     return next_url

@@ -1,6 +1,7 @@
 import logging
 
 from database import Cursor
+from tasks import task
 
 log = logging.getLogger(__name__)
 
@@ -12,9 +13,11 @@ WHERE m.state='RESULT' AND m.itemstate='LOCKED' AND dr.state='COMPLETED'
 LIMIT 1
 """
 
+@task
 def distribute_returns():
     pass
 
+@task
 def apply_draft_items():
     dc = Cursor("fort_draft")
 

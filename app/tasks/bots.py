@@ -4,9 +4,11 @@ from dateutil.relativedelta import relativedelta
 from datetime import datetime
 
 from database import redis, Cursor
+from tasks import task
 
 log = logging.getLogger(__name__)
 
+@task
 def check_single_queue(qid):
     entry = redis.lrange(qid, -1, -1)
     if not len(entry):
@@ -31,6 +33,7 @@ def check_single_queue(qid):
             redis.delete(qid)
             return
 
+@task
 def run_find_stuck_trades():
     map(check_single_queue, redis.keys("bot:*:tradeq"))
 

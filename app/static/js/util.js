@@ -120,3 +120,14 @@ function setupDateFields() {
     })
 }
 
+Number.prototype.monetary = function(size) {
+    var s = String(this),
+        split = s.split(".", 2);
+
+    if (split.length == 1) {
+        return split[0] + ".00"
+    }
+
+    return split[0] + "." + (split[1] + "00").substring(0, 2)
+}
+

@@ -127,6 +127,17 @@ class Cursor(object):
 
         return self.execute(self.cursor.mogrify(query, params))
 
+    def update(self, table, id, obj=None, **kwargs):
+        obj = obj or kwargs
+
+        query_string = "UPDATE {table} SET {sets} WHERE id=%s;".format(
+            table=table,
+            sets=', '.join(map(lambda i: "{}=%s".format(i[0]), obj.items()))
+        )
+
+        obj = obj.values() + [id]
+        return self.execute(query_string, tuple(obj)).cursor.rowcount
+
     def insert(self, table, obj=None, **kwargs):
         obj = obj or kwargs
 

@@ -3,7 +3,7 @@ import sys, os
 
 from util.log import setup_logging
 
-USAGE = "Usage: ./run <web|sched|once|queue|js>"
+USAGE = "Usage: ./run <web|sched|once|tasks|js>"
 
 def main():
     if not len(sys.argv) > 1:
@@ -27,10 +27,11 @@ def main():
         app.run("0.0.0.0", port=port, debug=True, extra_files=extra)
         sys.exit(0)
 
-    if sys.argv[1] == "queue":
-        setup_logging("queue")
-        from util.queue import start_queues
-        start_queues()
+    if sys.argv[1] == "tasks":
+        setup_logging("tasks")
+        from tasks import TaskManager
+        tm = TaskManager()
+        tm.run()
 
     if sys.argv[1] == "sched":
         setup_logging("sched")

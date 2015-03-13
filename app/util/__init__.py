@@ -1,4 +1,4 @@
-import decimal
+import decimal, random
 from flask import flash, redirect
 
 class BaseEnum(object):
