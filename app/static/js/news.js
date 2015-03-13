@@ -9,8 +9,7 @@ news.render_news_posts = (function () {
         $(".news-container").empty();
         
         _.each(data.news_posts, (function (news_post) {
-            console.log(news_post);
-            $(".news-container").append(this.app.render("news_card", {
+            $(".news-container").append(this.app.render("news_post", {
                 news_post: news_post
             })).bind(this);
         }).bind(this))

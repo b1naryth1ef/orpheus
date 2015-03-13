@@ -44,6 +44,7 @@ def create_news_post(title, category, content, meta, is_public, created_by):
             "created_at": datetime.utcnow(),
             "created_by": created_by
         })
+    return
 
 def get_news_post(id, as_admin = False):
     record = None
@@ -91,7 +92,6 @@ def parse_json_news_post(data):
         raise APIError("Missing Fields: %s" % ', '.join(empty_fields))
     
     return data['id'], data['title'], data['category'], data['content'], data.get("is_pubic", False)
-
 
 def record_to_news_post(record):
     user_info = gache_user_info(record.steamid)

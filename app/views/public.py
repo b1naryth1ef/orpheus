@@ -45,4 +45,4 @@ def route_humans():
 @public.route("/rules")
 def route_faq():
     return render_template("prose.html", content=rules_content)
-    
+
