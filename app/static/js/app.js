@@ -123,12 +123,19 @@ app.openWebSocket = function () {
     }).bind(this);
 }
 
+app.teardown = (function () {
+    this.ws.close();
+}).bind(app);
+
 app.setup = function (userData) {
     // Hide everything on load
     $("[fort-user]").hide();
 
     this.wsDelay = 10;
     this.openWebSocket();
+
+    // Call this on page close
+    $.unload(app.teardown);
 
     if (userData.notifications) {
         _.each(userData.notifications, function (item) {
