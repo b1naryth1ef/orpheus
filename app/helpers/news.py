@@ -44,6 +44,7 @@ def create_news_post(title, category, content, meta, is_public, created_by):
             "created_at": datetime.utcnow(),
             "created_by": created_by
         })
+    
     return
 
 def get_news_post(id, as_admin = False):
