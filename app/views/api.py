@@ -432,8 +432,8 @@ def api_get_news_post(id):
     g.cursor.execute("""
         SELECT ns.*, u.steamid FROM newsposts ns
         LEFT JOIN users u ON u.id=ns.created_by
-        WHERE ns.is_public=true AND ns.id=%s
-    """, (id, ))
+        WHERE (ns.is_public=true or %s) AND ns.id=%s
+    """, ((g.group >= UserGroup.ADMIN), id))
     post = g.cursor.fetchone()
 
     if not post:
@@ -448,8 +448,8 @@ def api_get_news_posts():
     g.cursor.execute("""
         SELECT ns.*, u.steamid FROM newsposts ns
         LEFT JOIN users u ON u.id=ns.created_by
-        WHERE ns.is_public=true ORDER BY ns.created_at LIMIT 100
-    """)
+        WHERE (ns.is_public=true OR %s) ORDER BY ns.created_at LIMIT 100
+    """, ((g.group >= UserGroup.ADMIN), ))
 
     return APIResponse({
         "posts": map(newspost_to_json, g.cursor.fetchall())
