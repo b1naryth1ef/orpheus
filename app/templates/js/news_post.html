@@ -1,0 +1,9 @@
+<div class="col-lg-4 center_div_outer">
+    <div class="panel panel-info center_div_inner">
+        <div class="panel-heading" style="height: 66px; line-height: 0px"><p><h4><%= news_post.title %></h4></p><p><i><%= news_post.category %></i></p></div>
+            <div class="panel-body">
+                <p><%= news_post.content %></p>
+            </div>
+        <div class="panel-footer b0 bg-gray-light" style="height: 60px"><p><b><%= news_post.created_by %></b></p><p><%= moment.unix(news_post.created_at).format("MMMM D YYYY") %></p></div>
+    </div>
+</div>
