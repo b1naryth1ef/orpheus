@@ -1,5 +1,6 @@
 import decimal, random
 from flask import flash, redirect
+from psycopg2.extensions import adapt, register_adapter, AsIs
 
 class BaseEnum(object):
     pass
@@ -35,6 +36,10 @@ class EnumAttr(object):
     def __str__(self):
         return self.content
 
+    @staticmethod
+    def psycopg2_adapt(obj):
+        return AsIs("'" + str(obj) + "'")
+
 def create_enum(*args):
     class _T(BaseEnum):
         ORDER = args
@@ -43,6 +48,9 @@ def create_enum(*args):
         setattr(_T, entry, EnumAttr(_T, entry, index))
 
     return _T
+
+register_adapter(EnumAttr, EnumAttr.psycopg2_adapt)
+
 
 def flashy(m, f="danger", u="/"):
     flash(m, f)

@@ -52,6 +52,7 @@ class TaskRunner(object):
 
     def run(self, job):
         # TODO: threadpool eventually?
+        print job
         thread.start_new_thread(self.process, (job, ))
 
 class TaskManager(object):

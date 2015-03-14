@@ -133,14 +133,13 @@ def load_steam_inventory(user_id, push=False, force=False):
         with Cursor() as c:
             temp_key = "u:%s:inv" % str(uuid.uuid4())
             user = c.execute("SELECT steamid FROM users WHERE id=%s", (user_id, )).fetchone()
-            data = steam.market(730).get_inventory(user.steamid)
+            data = market.get_inventory(user.steamid)
 
             ids = []
             for item_id, item in data['rgInventory'].iteritems():
                 ikey = "%s_%s" % (item['classid'], item['instanceid'])
                 ids.append(update_item(user.steamid, item_id, data=data['rgDescriptions'][ikey]))
 
-            # TODO: Pipeline this eventually
             pipe = redis.pipeline()
             pipe.sadd(temp_key, *filter(lambda i: i != -1, ids))
             pipe.sdiff("u:%s:inv" % user_id, temp_key)
@@ -154,4 +153,20 @@ def load_steam_inventory(user_id, push=False, force=False):
 
     if push:
         push_steam_inventory.queue(user_id, diff)
+
+@task
+def update_bot_inventory(bot_id):
+    with Cursor() as c:
+        bot = c.execute("SELECT steamid FROM bots WHERE id=%s", (bot_id, )).fetchone()
+        data = market.get_inventory(bot.steamid)
+
+        if not data.get("success"):
+            return
+
+        ids = []
+        for item_id, item in data['rgInventory'].iteritems():
+            ikey = "%s_%s" % (item['classid'], item['instanceid'])
+            ids.append(update_item(bot.steamid, item_id, data=data['rgDescriptions'][ikey]))
+
+        c.update("bots", bot_id, inventory=map(int, ids))
 
