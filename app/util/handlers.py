@@ -1,7 +1,6 @@
-import json, logging, traceback, sys
+import json, logging, traceback, sys, psycopg2
 
 from flask import request, g, redirect, render_template, get_flashed_messages
-from psycopg2 import OperationalError
 
 from fort import app
 from database import Cursor
@@ -30,7 +29,7 @@ def internal_error_handler(exception):
             "headers": dict(request.headers),
             "values": dict(request.values)
         })
-    except OperationalError:
+    except psycopg2.Error:
         log.exception("Failed to save exception trace: ")
 
     try:

@@ -162,11 +162,11 @@ def main():
         with db.cursor() as c:
             c.execute(LIST_TABLES_SQL)
             for table in c.fetchall():
-                c.execute("ALTER TABLE %s OWNER TO %s" % (table[0], args.username))
+                c.execute("ALTER TABLE %s OWNER TO %s" % (table[0], 'fort'))
 
             c.execute(LIST_TYPES_SQL)
             for ttype in c.fetchall():
-                c.execute("ALTER TYPE %s OWNER TO %s" % (ttype[1], args.username))
+                c.execute("ALTER TYPE %s OWNER TO %s" % (ttype[1], 'fort'))
 
         print "  DONE!"
 
