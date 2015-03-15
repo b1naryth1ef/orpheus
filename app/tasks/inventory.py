@@ -71,18 +71,21 @@ def update_item_price(item_id):
         """, (item_id, )).fetchone()
 
         try:
-            i_vol, i_low, i_med = market.get_item_price(item.name.decode('utf-8'))
+            _, value, _ = market.get_item_price(item.name.decode('utf-8'))
+
+            # Devalue by two cents to give us a buffer
+            value -= .02
 
             if item.pid:
-                c.update("itemprices", item.pid, price=i_low, updated=datetime.utcnow())
+                c.update("itemprices", item.pid, price=value, updated=datetime.utcnow())
             else:
-                c.insert("itemprices", name=item.name, price=i_low, updated=datetime.utcnow())
+                c.insert("itemprices", name=item.name, price=value, updated=datetime.utcnow())
 
-            c.update("items", item_id, price=i_low)
+            c.update("items", item_id, price=value)
         except SteamAPIError:
             log.exception("Failed to get price for item '%s'", item_id)
 
-    return i_low
+    return value
 
 @task
 def update_prices():

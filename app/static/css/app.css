@@ -10052,7 +10052,8 @@ body .jvectormap-zoomout {
     width: 100%;
 }
 
-[fort-user] {
+[fort-user]
+.fort-control[fort-user] {
   display: none;
 }
 

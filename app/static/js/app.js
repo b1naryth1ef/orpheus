@@ -131,6 +131,9 @@ app.setup = function (userData) {
     this.wsDelay = 10;
     this.openWebSocket();
 
+    // Tool tips oooh yeahhh
+    $('[data-toggle="tooltip"]').tooltip()
+
     // Call this on page close
     $(window).unload(app.teardown);
 
