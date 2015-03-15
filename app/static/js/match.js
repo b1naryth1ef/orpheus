@@ -4,8 +4,8 @@ match.inventoryReadyEvent = (function (data) {
     clearTimeout(this.waitingForInventory);
 
     if ($("#bet-modal").data("bs.modal").isShown) {
-        this.cachedInventory = data.inventory;
-        this.inventoryView.render(data.inventory);
+        this.inventoryView.updateData(data.inventory);
+        this.inventoryView.render();
     }
     return false;
 }).bind(match);
@@ -81,7 +81,6 @@ match.routeRegex(/^\/match\/(\d+)$/, function (route, id) {
     app.waitForEvent("refresh-match", this.refreshFromSocket);
     this.renderSingleMatch(id);
     this.inventoryView = new InventoryView(this.app, "#bet-inventory");
-    this.cachedInventory = null;
     this.ignored = [];
 
     $(".matches-container").delegate("#bet-btn", "click", (function (ev) {
@@ -102,11 +101,12 @@ match.routeRegex(/^\/match\/(\d+)$/, function (route, id) {
         if (target.hasClass("bet-slot")) {
             target.detach();
             $(".bet-slot:hidden").first().show();
-            this.ignored = _.without(this.ignored, target.attr("data-id"));
-            this.inventoryView.render(this.cachedInventory, {refresh: true, filtered: this.ignored, keepPage: true});
+            this.inventoryView.filtered = _.without(
+                    this.inventoryView.filtered, target.attr("data-id"));
+            this.inventoryView.render({refresh: true});
         } else if (this.getBetSlots(true).length > 0) {
-            this.ignored.push(target.attr("data-id"));
-            this.inventoryView.render(this.cachedInventory, {refresh: true, filtered: this.ignored, keepPage: true});
+            this.inventoryView.filtered.push(target.attr("data-id"));
+            this.inventoryView.render({refresh: true});
             this.addItemToSlot(target);
         }
     }).bind(this));

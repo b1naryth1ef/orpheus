@@ -15,8 +15,13 @@ var InventoryView = function (app, el, settings) {
     this.el = el;
     this.settings = settings || {};
 
+    this.data = [];
+    this.filtered = [];
+    this.search = undefined;
+    this.fuse = null;
     this.page = 0;
     this.pages = 0;
+
 }
 
 InventoryView.prototype.parseData = function (data) {
@@ -47,30 +52,11 @@ InventoryView.prototype.gotoPage = function (page) {
     $(".inv-paginate[data-page='" + this.page + "']").parent().addClass("active");
 }
 
-InventoryView.prototype.render = function (data, opts) {
-    var opts = opts || {};
+InventoryView.prototype.renderBase = function () {
+    $(this.el).html(this.app.render("inventory_base", {}));
+    console.log($(this.el))
 
-    // This is used for when we "select" inventory items
-    if (opts.filtered) {
-        var data = _.filter(data, function (obj) {
-            if (opts.filtered.indexOf(obj.id) == -1) {
-                return obj
-            }
-        });
-    }
-
-    $(this.el).html(this.app.render("inventory", this.parseData(data)));
-
-    // If we're refreshing, we want to just immediatly update things.
-    //  fading would be too jolty.
-    if (opts.refresh) {
-        $(".inv-page[data-page='" + this.page + "']").show();
-    } else {
-        $(".inv-page[data-page='" + this.page + "']").fadeIn();
-    }
-
-    // Bind pagination events (TODO: delegate)
-    $(".inv-paginate").click((function (ev) {
+    $(this.el).delegate(".inv-paginate", "click", (function (ev) {
         if ($(ev.target).hasClass("back")) {
             if (this.page > 0) {
                 this.gotoPage(this.page - 1);
@@ -83,6 +69,77 @@ InventoryView.prototype.render = function (data, opts) {
             this.gotoPage(parseInt($(ev.target).attr("data-page")));
         }
     }).bind(this));
+
+    $(this.el).delegate(".inventory-search", "keyup", (function (ev) {
+        var entry = $(ev.target).val();
+
+        if (!entry) {
+            this.search = undefined;
+        } else {
+            var result = this.fuse.search(entry);
+            try {
+                this.search = _.map(result, (function (item) {
+                    return item.id
+                }));
+            } catch (e) {
+                this.search = undefined;
+            }
+        }
+        this.render({refresh: true});
+    }).bind(this));
+
+    $(this.el).delegate(".inventory-search-clear", "click", (function (ev) {
+        this.search = undefined;
+        $(".inventory-search").val("");
+        this.render({refresh: true});
+    }).bind(this));
+}
+
+InventoryView.prototype.updateData = function (newData) {
+    this.data = newData;
+    this.fuse = new Fuse(newData, {
+        keys: ["name"],
+    });
+    this.renderBase();
+}
+
+InventoryView.prototype.render = function (opts) {
+    var opts = opts || {};
+    var data = this.data;
+
+    if (opts.resetSearch) {
+        this.search = undefined;
+    }
+
+    // This is used for when we "select" inventory items
+    if (this.filtered.length > 0 || this.search) {
+        var data = _.filter(this.data, (function (obj) {
+            if (this.filtered.indexOf(obj.id) != -1) {
+                return false;
+            }
+
+            if (this.search) {
+                if (this.search.indexOf(obj.id) != -1) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+            return true;
+        }).bind(this));
+    }
+
+    $(".inventory-main").html(this.app.render("inventory", this.parseData(data)));
+    $('[data-toggle="tooltip"]').tooltip()
+
+    // If we're refreshing, we want to just immediatly update things.
+    //  fading would be too jolty.
+    if (opts.refresh) {
+        $(".inv-page[data-page='" + this.page + "']").show();
+    } else {
+        $(".inv-page[data-page='" + this.page + "']").fadeIn();
+    }
 }
 
 function getDataFromField(field) {

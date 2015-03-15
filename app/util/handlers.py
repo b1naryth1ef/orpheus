@@ -60,7 +60,8 @@ def app_context_processor():
         "notifications": get_flashed_messages(with_categories=True)
     }
 
-    base.update(get_user_info(g.user))
+    if 'user' in g:
+        base.update(get_user_info(g.user))
     return {"user": base}
 
 @app.template_filter("jsonify")

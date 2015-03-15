@@ -1,43 +1,28 @@
-<style>
-.inventory-item {
-  background-color: #dde6e9;
-  border: 2px solid #ffffff;
-  border-radius: 8px;
-  -moz-border-radius: 8px;
-  -webkit-border-radius: 8px;
-}
 
-  .inventory-row {
-    text-align: center;
-  }
-</style>
-
-<div class="inventory">
-  <% for (page in pages) { %>
-  <% var rows = pages[page] %>
-  <div class="inv-page" data-page="<%- page %>" style="display: none;">
-    <% for (row in rows) { %>
-    <div class="row inventory-row">
-      <% for (item in rows[row]) { %>
-      <% var item = rows[row][item] %>
-      <div class="col-lg-2 inventory-item" data-page="<%- page %>" data-uid="<%- item.uid %>" data-id="<%- item.id %>">
-        <img src="https://steamcommunity-a.akamaihd.net/economy/image/<%= item.image %>" style="max-height: 125px; max-width: 125px;"/>
-        <p>$<%= Number(item.price).monetary() %></p>
-      </div>
-      <% } %>
+<% for (page in pages) { %>
+<% var rows = pages[page] %>
+<div class="inv-page" data-page="<%- page %>" style="display: none;">
+  <% for (row in rows) { %>
+  <div class="row inventory-row">
+    <% for (item in rows[row]) { %>
+    <% var item = rows[row][item] %>
+    <div class="col-lg-2 inventory-item" data-page="<%- page %>" data-id="<%- item.id %>" data-toggle="tooltip" title="<%- item.name %>">
+      <img src="https://steamcommunity-a.akamaihd.net/economy/image/<%= item.image %>" style="max-height: 125px; max-width: 125px;"/>
+      <p>$<%= Number(item.price).monetary() %></p>
     </div>
     <% } %>
   </div>
   <% } %>
-  <nav style="text-align: center">
-    <ul class="pagination pagination-lg">
-      <li><a href="#" class="inv-paginate back">«</a></li>
-      <% for (page in pages) { %>
-        <li class="<%- page == cur_page ? 'active' :'' %>">
-          <a href="#" class="inv-paginate page" data-page="<%- page %>"><%- parseInt(page) + 1 %></a>
-        </li>
-      <% } %>
-      <li><a href="#" class="inv-paginate forward">»</a></li>
-    </ul>
-  </nav>
 </div>
+<% } %>
+<nav style="text-align: center">
+  <ul class="pagination pagination-lg">
+    <li><a href="#" class="inv-paginate back">«</a></li>
+    <% for (page in pages) { %>
+    <li class="<%- page == cur_page ? 'active' :'' %>">
+      <a href="#" class="inv-paginate page" data-page="<%- page %>"><%- parseInt(page) + 1 %></a>
+    </li>
+    <% } %>
+    <li><a href="#" class="inv-paginate forward">»</a></li>
+  </ul>
+</nav>

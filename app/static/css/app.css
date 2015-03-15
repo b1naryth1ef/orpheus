@@ -10055,3 +10055,16 @@ body .jvectormap-zoomout {
 [fort-user] {
   display: none;
 }
+
+.inventory-item {
+  background-color: #dde6e9;
+  border: 2px solid #ffffff;
+  border-radius: 8px;
+  -moz-border-radius: 8px;
+  -webkit-border-radius: 8px;
+}
+
+.inventory-row {
+  text-align: center;
+}
+
