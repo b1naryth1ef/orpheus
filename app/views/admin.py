@@ -33,7 +33,8 @@ def admin_dashboard():
     rush_conn = redis.get("rush:open")
     bots_online = g.cursor.execute("SELECT count(*) as c FROM bots WHERE status='USED'").fetchone().c
     bot_used, bot_total = get_bot_space()
-    b_cap = 100 - (((float(bot_used or 0) / bot_total)) * 100)
+    if bot_total:
+        b_cap = 100 - (((float(bot_used or 0) / bot_total)) * 100)
     return render_template("admin/index.html",
         users_count=g.cursor.count("users"),
         games_count=g.cursor.count("games"),
