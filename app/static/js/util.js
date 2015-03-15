@@ -90,7 +90,7 @@ InventoryView.prototype.renderBase = function () {
 
     $(this.el).delegate(".inventory-search-clear", "click", (function (ev) {
         this.search = undefined;
-        $(".inventory-search").val("");
+        $("#search-val").val("");
         this.render({refresh: true});
     }).bind(this));
 }
@@ -109,6 +109,7 @@ InventoryView.prototype.render = function (opts) {
 
     if (opts.resetSearch) {
         this.search = undefined;
+        $("#search-val").val("");
     }
 
     // This is used for when we "select" inventory items

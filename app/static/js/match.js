@@ -103,10 +103,10 @@ match.routeRegex(/^\/match\/(\d+)$/, function (route, id) {
             $(".bet-slot:hidden").first().show();
             this.inventoryView.filtered = _.without(
                     this.inventoryView.filtered, target.attr("data-id"));
-            this.inventoryView.render({refresh: true});
+            this.inventoryView.render({refresh: true, resetSearch: app.user.settings.ui.search_clear});
         } else if (this.getBetSlots(true).length > 0) {
             this.inventoryView.filtered.push(target.attr("data-id"));
-            this.inventoryView.render({refresh: true});
+            this.inventoryView.render({refresh: true, resetSearch: app.user.settings.ui.search_clear});
             this.addItemToSlot(target);
         }
     }).bind(this));

@@ -22,7 +22,7 @@ DEFAULT_SETTINGS = {
 }
 
 USER_SETTING_SAVE_PARAMS = [
-    "trade_url", "ui.disable_streams", "ui.disable_push"
+    "trade_url", "ui.disable_streams", "ui.disable_push", "ui.search_clear"
 ]
 
 def create_user(steamid, group=UserGroup.NORMAL):
@@ -132,12 +132,14 @@ UPDATE users SET settings=%s WHERE id=%s
 def user_save_settings(uid, obj):
     assert(isinstance(obj["ui.disable_streams"], bool))
     assert(isinstance(obj["ui.disable_push"], bool))
+    assert(isinstance(obj["ui.search_clear"], bool))
 
     trade_url = obj.get('trade_url')
     obj = {
         "ui": {
             "disable_streams": obj["ui.disable_streams"],
             "disable_push": obj["ui.disable_push"],
+            "search_clear": obj["ui.search_clear"],
        }
     }
 

@@ -25,7 +25,8 @@ class Check(object):
         log.warning("Sending alert %s @ lvl %s" % (self.NAME, level))
 
         slack_color = 'danger' if level == AlertLevel.CRITICAL else 'warning'
-        msg = SlackMessage("Check %s: %s (%s)" % (level, self.NAME.title(), ' '.join(sub_ctx or [])), color=slack_color)
+        msg = SlackMessage("Check %s: %s (%s)" %
+            (level, self.NAME.title(), ' '.join(sub_ctx or [])), color=slack_color)
         for field, value in msg_ctx.items():
             msg.add_custom_field(field, value)
         msg.send()
@@ -39,6 +40,27 @@ class Check(object):
         )
         e.body = "\n".join(map(lambda i: "%s: %s" % i, msg_ctx.items()))
         e.send()
+
+class TaskQueueSizeCheck(Check):
+    NAME = "Task Queue Size Check"
+    THRESHOLD_WARNING = 50
+    THRESHOLD_CRITICAL = 200
+
+    def run(self):
+        warnings, criticals = [], []
+
+        for taskq in redis.keys("jq:*"):
+            size = redis.llen(taskq) or 0
+            if size > self.THRESHOLD_WARNING:
+                warnings.append(taskq)
+            elif size > self.THRESHOLD_CRITICAL:
+                criticals.append(taskq)
+
+        if len(warnings):
+            self.send_message(AlertLevel.WARNING, warnings)
+
+        if len(criticals):
+            self.send_message(AlertLevel.CRITICAL, criticals)
 
 class TradeQueueSizeCheck(Check):
     NAME = "Trade Queue Size Check"
@@ -79,7 +101,7 @@ class RedisDBCheck(Check):
                 "Exception:": traceback.format_exc()
             })
 
-CHECKS = [TradeQueueSizeCheck(), PostgresDBCheck(), RedisDBCheck()]
+CHECKS = [TaskQueueSizeCheck(), TradeQueueSizeCheck(), PostgresDBCheck(), RedisDBCheck()]
 
 @task
 def run_alert_checks():
