@@ -128,9 +128,6 @@ app.teardown = (function () {
 }).bind(app);
 
 app.setup = function (userData) {
-    // Hide everything on load
-    $("[fort-user]").hide();
-
     this.wsDelay = 10;
     this.openWebSocket();
 
