@@ -156,28 +156,16 @@ def generate_bets(t, db):
         t.execute(q, entry)
 
 
-ITEM_TYPE_QUERY = """
-INSERT INTO itemtypes (name) VALUES
-(%(name)s);
-"""
-
 ITEM_QUERY = """
-INSERT INTO items (id, type_id, class_id, instance_id, price, state) VALUES
-(%(id)s, %(type)s, %(id)s, %(id)s, %(price)s, 'INTERNAL');
+INSERT INTO items (id, name, class_id, instance_id, price, state) VALUES
+(%(id)s, %(name)s, %(id)s, %(id)s, %(price)s, 'INTERNAL');
 """
 
 def generate_items(t, db):
-    types = range(1, 25000)
-
-    for entry in types:
-        t.execute(ITEM_TYPE_QUERY, {
-            "name": "Test Item #%s" % entry
-        })
-
     for id in range(50000):
         t.execute(ITEM_QUERY, {
             "id": id,
-            "type": random.choice(types),
+            "name": "Test Item #%s" % id,
             "price": random.randint(100, 4000) / 100.0
         })
 
