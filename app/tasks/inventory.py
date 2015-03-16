@@ -3,6 +3,7 @@ import json, logging, uuid, time
 from fort import steam
 from database import redis, Cursor
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 from util.push import WebPush
 from util.steam import SteamAPIError
@@ -16,7 +17,7 @@ FIVE_MINUTES = 60 * 5
 log = logging.getLogger(__name__)
 market = steam.market(730)
 
-@task
+@task()
 def update_item(owner_id, item_id, class_id=None, instance_id=None, data=None):
     with Cursor() as c:
         data = data or market.get_asset_class_info(class_id, instance_id)
@@ -61,8 +62,11 @@ def update_item(owner_id, item_id, class_id=None, instance_id=None, data=None):
             update_item_price.queue(item_id)
         return item_id
 
-@task
+@task(max_running=2, buffer_time=1)
 def update_item_price(item_id):
+    week_ago = datetime.utcnow() - relativedelta(days=7)
+    value = 0
+
     with Cursor() as c:
         item = c.execute("""
             SELECT i.name, ip.id as pid FROM items i
@@ -71,7 +75,13 @@ def update_item_price(item_id):
         """, (item_id, )).fetchone()
 
         try:
-            _, value, _ = market.get_item_price(item.name.decode('utf-8'))
+            data = market.get_item_price_history(item.name.decode('utf-8'))
+            values = [v for k, v in data.iteritems() if k > week_ago]
+
+            value = (sum(values) / len(values))
+
+            if value <= 0:
+                return
 
             # Devalue by two cents to give us a buffer
             value -= .02
@@ -87,11 +97,11 @@ def update_item_price(item_id):
 
     return value
 
-@task
+@task()
 def update_prices():
     pass
 
-@task
+@task()
 def push_steam_inventory(user_id, changed=False):
     with Cursor() as c:
         if not redis.exists("u:%s:inv" % user_id):
@@ -124,7 +134,7 @@ def push_steam_inventory(user_id, changed=False):
             "new": changed
         })
 
-@task
+@task()
 def load_steam_inventory(user_id, push=False, force=False):
     pipe = redis.pipeline(transaction=False)
     data = pipe.exists("u:%s:inv" % user_id).get("u:%s:inv:updated" % user_id).execute()
@@ -157,7 +167,7 @@ def load_steam_inventory(user_id, push=False, force=False):
     if push:
         push_steam_inventory.queue(user_id, diff)
 
-@task
+@task()
 def update_bot_inventory(bot_id):
     with Cursor() as c:
         bot = c.execute("SELECT steamid FROM bots WHERE id=%s", (bot_id, )).fetchone()

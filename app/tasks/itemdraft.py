@@ -17,7 +17,7 @@ WHERE (state in ('LOCKED', 'WAITING', 'RESULT')) AND itemstate='LOCKED'
 AND id NOT IN (SELECT match FROM item_drafts);
 """
 
-@task
+@task()
 def create_item_drafts():
     with Cursor() as c:
         for match in c.execute(FIND_MATCH_DRAFT_QUERY).fetchall():
@@ -42,7 +42,7 @@ WHERE z.id=draft.id
 RETURNING z.id, z.match, z.team
 """
 
-@task
+@task()
 def run_item_drafts():
     with Cursor() as c:
         draft = c.execute(FIND_AND_LOCK_ITEM_DRAFT).fetchone()

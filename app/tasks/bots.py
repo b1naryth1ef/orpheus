@@ -1,4 +1,4 @@
-import json, logging
+import json, logging, socket, time
 
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
@@ -8,7 +8,87 @@ from tasks import task
 
 log = logging.getLogger(__name__)
 
-@task
+STEAM_SERVERS = {}
+
+STEAM_SERVERS['SEATLE'] = [
+    "72.165.61.174:27017",
+    "72.165.61.174:27018",
+    "72.165.61.175:27017",
+    "72.165.61.175:27018",
+    "72.165.61.176:27017",
+    "72.165.61.176:27018",
+    "72.165.61.185:27017",
+    "72.165.61.185:27018",
+    "72.165.61.187:27017",
+    "72.165.61.187:27018",
+    "72.165.61.188:27017",
+    "72.165.61.188:27018",
+    '208.64.200.201:27017',
+    '208.64.200.201:27018',
+    '208.64.200.201:27019',
+    '208.64.200.201:27020',
+    '208.64.200.202:27017',
+    '208.64.200.202:27018',
+    '208.64.200.202:27019',
+    '208.64.200.203:27017',
+    '208.64.200.203:27018',
+    '208.64.200.203:27019',
+    '208.64.200.204:27017',
+    '208.64.200.204:27018',
+    '208.64.200.204:27019',
+    '208.64.200.205:27017',
+    '208.64.200.205:27018',
+    '208.64.200.205:27019',
+]
+
+STEAM_SERVERS['ARIZONA'] = [
+    "209.197.29.196:27017",
+    "209.197.29.197:27017",
+]
+
+STEAM_SERVERS['LUXENBOURG'] = [
+    "146.66.152.12:27017",
+    "146.66.152.12:27018",
+    "146.66.152.12:27019",
+    "146.66.152.13:27017",
+    "146.66.152.13:27018",
+    "146.66.152.13:27019",
+    "146.66.152.14:27017",
+    "146.66.152.14:27018",
+    "146.66.152.14:27019",
+    "146.66.152.15:27017",
+    "146.66.152.15:27018",
+    "146.66.152.15:27019",
+]
+
+STEAM_SERVERS['SINGAPORE'] = [
+    "103.28.54.10:27017",
+    "103.28.54.11:27017",
+]
+
+STEAM_SERVERS['WASHINGTON'] = [
+    '208.78.164.9:27017',
+    '208.78.164.9:27018',
+    '208.78.164.9:27019',
+    '208.78.164.10:27017',
+    '208.78.164.10:27018',
+    '208.78.164.10:27019',
+    '208.78.164.11:27017',
+    '208.78.164.11:27018',
+    '208.78.164.11:27019',
+    '208.78.164.12:27017',
+    '208.78.164.12:27018',
+    '208.78.164.12:27019',
+    '208.78.164.13:27017',
+    '208.78.164.13:27018',
+    '208.78.164.13:27019',
+    '208.78.164.14:27017',
+    '208.78.164.14:27018',
+    '208.78.164.14:27019'
+]
+
+
+@task()
 def check_single_queue(qid):
     entry = redis.lrange(qid, -1, -1)
     if not len(entry):
@@ -33,7 +113,25 @@ def check_single_queue(qid):
             redis.delete(qid)
             return
 
-@task
+@task()
 def run_find_stuck_trades():
     map(check_single_queue, redis.keys("bot:*:tradeq"))
+
+@task()
+def test_steam_server(host):
+    try:
+        ip, port = host.split(":")
+        socket.create_connection((ip, int(port)), 5).close()
+        log.info("Steam server '%s' is up and responding!", host)
+        redis.sadd("steamservers", host)
+    except socket.timeout:
+        log.warning("Steam server '%s' is down!", host)
+        redis.srem("steamservers", host)
+
+@task()
+def check_steam_servers():
+    for region, servers in STEAM_SERVERS.items():
+        for server in servers:
+            test_steam_server.queue(server)
+            time.sleep(2)
 

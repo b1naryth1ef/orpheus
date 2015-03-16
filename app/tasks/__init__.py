@@ -6,19 +6,23 @@ log = logging.getLogger(__name__)
 
 TASKS = {}
 
-def task(f):
-    task = Task(f.__name__, f)
+def task(*args, **kwargs):
+    def deco(f):
+        task = Task(f.__name__, f, *args, **kwargs)
 
-    if f.__name__ in TASKS:
-        raise Exception("Conflicting task name: %s" % f.__name__)
+        if f.__name__ in TASKS:
+            raise Exception("Conflicting task name: %s" % f.__name__)
 
-    TASKS[f.__name__] = task
-    return task
+        TASKS[f.__name__] = task
+        return task
+    return deco
 
 class Task(object):
-    def __init__(self, name, f):
+    def __init__(self, name, f, max_running=None, buffer_time=None):
         self.name = name
         self.f = f
+        self.max_running = max_running
+        self.buffer_time = buffer_time
 
     def __call__(self, *args, **kwargs):
         return self.f(*args, **kwargs)
@@ -36,22 +40,30 @@ class TaskRunner(object):
     def __init__(self, name, task):
         self.name = name
         self.f = task
+        self.running = 0
 
     def process(self, job):
+        self.running += 1
         log.info('[%s] Running job %s...', job['id'], self.name)
         redis.set("task:%s" % job['id'], 1)
         start = time.time()
 
         try:
             self.f(*job['args'], **job['kwargs'])
+            if self.f.buffer_time:
+                time.sleep(self.f.buffer_time)
         except:
             log.exception("[%s] Failed in %ss", job['id'], time.time() - start)
         finally:
             redis.delete("task:%s" % job['id'])
+            self.running -= 1
         log.info('[%s] Completed in %ss', job['id'], time.time() - start)
 
     def run(self, job):
-        # TODO: threadpool eventually?
+        if self.f.max_running:
+            while self.f.max_running <= self.running:
+                time.sleep(.5)
+
         thread.start_new_thread(self.process, (job, ))
 
 class TaskManager(object):

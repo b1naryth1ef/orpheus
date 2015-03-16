@@ -103,6 +103,7 @@ CREATE TABLE bots (
     token          varchar(32),
     sentry         bytea,
     status         bot_status,
+    arbiter        integer,
     inventory      numeric[],
     last_activity  timestamp,
     active         boolean
@@ -256,13 +257,13 @@ CREATE TYPE trade_type AS ENUM ('BET', 'RETURNS', 'INTERNAL');
 CREATE TABLE trades (
   id          SERIAL PRIMARY KEY,
   offerid     integer,
-  token       varchar(32),
-  state       trade_state,
-  ttype       trade_type,
+  token       varchar(32) NOT NULL,
+  state       trade_state NOT NULL,
+  ttype       trade_type NOT NULL,
   to_id       numeric NOT NULL,
-  message     text,
-  items_in    numeric[],
-  items_out   numeric[],
+  message     text NOT NULL,
+  items_in    numeric[] NOT NULL,
+  items_out   numeric[] NOT NULL,
   created_at  timestamp,
 
   /* Optional References */

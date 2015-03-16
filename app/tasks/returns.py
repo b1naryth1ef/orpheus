@@ -13,11 +13,11 @@ WHERE m.state='RESULT' AND m.itemstate='LOCKED' AND dr.state='COMPLETED'
 LIMIT 1
 """
 
-@task
+@task()
 def distribute_returns():
     pass
 
-@task
+@task()
 def apply_draft_items():
     dc = Cursor("fort_draft")
 

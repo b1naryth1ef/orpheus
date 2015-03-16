@@ -103,7 +103,7 @@ class RedisDBCheck(Check):
 
 CHECKS = [TaskQueueSizeCheck(), TradeQueueSizeCheck(), PostgresDBCheck(), RedisDBCheck()]
 
-@task
+@task()
 def run_alert_checks():
     for check in CHECKS:
         try:

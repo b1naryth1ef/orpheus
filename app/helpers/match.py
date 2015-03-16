@@ -50,10 +50,9 @@ def create_match(user, game, teams, meta, lock_date, match_date, public_date,
 
 # This query gets all items pertaining to a match (e.g. winnings or items placed)
 MATCH_GET_ITEMS_QUERY = """
-SELECT i.id, i.type_id, i.price, i.meta, it.name as name FROM
+SELECT id, image, price, meta, name FROM
     (SELECT unnest(array_cat(b.items, b.winnings)) AS item_id FROM bets b WHERE b.id=%s) b
-JOIN items i ON i.id=item_id
-JOIN itemtypes it ON it.id=i.type_id;
+JOIN items ON id=item_id
 """
 
 # Select some information about bets for this match

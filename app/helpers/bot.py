@@ -2,7 +2,7 @@ from datetime import datetime
 from database import Cursor
 
 from util import create_enum
-from helpers.trade import queue_trade
+from tasks.trades import push_trade
 
 BotStatus = create_enum('NEW', 'COOLDOWN', 'AVAIL', 'USED', 'INVALID')
 
@@ -39,6 +39,6 @@ def create_return_trade(bot_id, user_id, items):
             "user_ref": user_id
         })
 
-        queue_trade(bot_id, tid)
+        push_trade(tid)
         return tid
 

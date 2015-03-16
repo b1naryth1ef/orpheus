@@ -1,4 +1,5 @@
 import re, xmltodict, time, logging, json, requests
+from datetime import datetime
 from pyquery import PyQuery
 
 log = logging.getLogger(__name__)
@@ -85,6 +86,28 @@ class SteamAPI(object):
         if not resp:
             raise SteamAPIError("Failed to request url `%s`" % url)
         return resp.json()
+
+    def getTradeOffer(self, id):
+        r = retry_request(lambda f: f.get("http://api.steampowered.com/IEconService/GetTradeOffer/v1/", params={
+            "key": self.key,
+            "tradeofferid": id
+        }, timeout=10))
+
+        if not r:
+            raise SteamAPIError("Failed to getTradeOffer for offerid `%s`" % id)
+
+        return r.json()["response"]["offer"]
+
+    def cancelTradeOffer(self, id):
+        r = retry_request(lambda f: f.post("http://api.steampowered.com/IEconService/CancelTradeOffer/v1/", params={
+            "key": self.key,
+            "tradeofferid": id,
+        }, timeout=10))
+
+        if not r:
+            raise SteamAPIError("Failed to cancelTradeOffer for offerid `%s`" % id)
+
+        return True
 
     def getFriendList(self, id):
         r = retry_request(lambda f: f.get("http://api.steampowered.com/ISteamUser/GetFriendList/v0001/", params={
@@ -413,6 +436,24 @@ class SteamMarketAPI(object):
             raise Exception("Invalid response from steam for historical price data")
         data = json.loads(r.content.split("var line1=", 1)[-1].split(";", 1)[0])
         return data
+
+    def get_item_price_history(self, item_name):
+        url = ITEM_PAGE_QUERY.format(
+            name=item_name,
+            appid=self.appid)
+
+        r = retry_request(lambda f: f.get(url))
+        if not r:
+            raise SteamAPIError("Failed to get_item_price_history for item `%s`" % item_name)
+
+        if 'var line1' not in r.content:
+            raise SteamAPIError("Invalid response for get_item_price_history of `%s`" % item_name)
+
+        raw = json.loads(re.findall("var line1=(.+);", r.content)[0])
+
+        keys = map(lambda i: datetime.strptime(i[0].split(":")[0], "%b %d %Y %M"), raw)
+        values = map(lambda i: i[1], raw)
+        return dict(zip(keys, values))
 
     def get_item_price(self, item_name):
         url = ITEM_PRICE_QUERY.format(

@@ -3,9 +3,11 @@ from datetime import datetime
 
 from database import Cursor, redis
 
+from tasks.trades import push_trade
+
 from util import create_enum
 from util.errors import FortException
-from helpers.trade import queue_trade, TradeType, TradeState
+from helpers.trade import TradeType, TradeState
 
 BetState = create_enum('NEW', 'OFFERED', 'CONFIRMED', 'WON', 'LOST', 'CANCELLED')
 
@@ -59,9 +61,7 @@ LOCK_ITEM_SQL = "UPDATE items SET price=%s WHERE id=%s"
 def create_bet(user, match, team, items):
     with Cursor() as c:
         items_q = c.execute("""
-            SELECT items.id as id, itemtypes.price as price, items.type_id FROM items
-            JOIN itemtypes ON itemtypes.id=items.type_id
-            WHERE items.id IN %s
+            SELECT id, price FROM items WHERE items.id IN %s
         """, (tuple(items), )).fetchall(as_list=True)
 
         # We need all dem results doh
@@ -84,10 +84,10 @@ def create_bet(user, match, team, items):
         })
 
         # Find a bot that has inventory space
-        bot = find_avail_bot(len(items))
+        # bot = find_avail_bot(len(items))
 
-        if not bot:
-            raise FortException("Bot's are full, please try again later!")
+        #if not bot:
+        #    raise FortException("Bot's are full, please try again later!")
 
         # Get the user's steamid and token for the trade
         user = c.execute("SELECT id, steamid, trade_token FROM users WHERE id=%s",
@@ -105,10 +105,9 @@ def create_bet(user, match, team, items):
             'created_at': datetime.utcnow(),
             'user_ref': user.id,
             'bet_ref': bet,
-            'bot_ref': bot,
         })
 
-        queue_trade(bot, tid)
+        push_trade.queue(tid)
 
     return bet
 

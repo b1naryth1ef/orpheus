@@ -10,6 +10,7 @@ TradeState = create_enum('NEW', 'IN-PROGRESS', 'OFFERED', 'ACCEPTED', 'REJECTED'
 TradeType = create_enum('BET', 'RETURNS', 'INTERNAL')
 
 def queue_trade(bot_id, trade_id):
+    raise Exception("Deprecated. Use tasks.trade.push_trade")
     queue_key = "bot:%s:tradeq" % bot_id
 
     if redis.llen(queue_key) > 32:
