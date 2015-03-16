@@ -1,4 +1,5 @@
 import os, sys, uuid
+from slimit import minify
 
 from flask import Flask, render_template
 from flask.ext.openid import OpenID
@@ -58,7 +59,7 @@ def build_js_templates():
         p.close()
 
     with open("static/js/templates.js", "w") as f:
-        f.write(TEMPLATES)
+        f.write(minify(TEMPLATES, mangle=True))
 
 # These must be loaded first
 SOURCE_ORDER = {"static/js/app.js", "static/js/util.js"}
@@ -72,7 +73,7 @@ def build_js_source():
             SOURCE += f.read()
 
     with open("static/js/compiled.js", "w") as f:
-        f.write(SOURCE)
+        f.write(minify(SOURCE, mangle=True))
 
 def setup():
     load_all_views()

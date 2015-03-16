@@ -66,7 +66,7 @@ def app_context_processor():
 
 @app.template_filter("jsonify")
 def jsonify_filter(x):
-    return json.dumps(x)
+    return json.dumps(x, separators=(',', ':'))
 
 @app.before_request
 def app_before_request():
