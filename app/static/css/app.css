@@ -5193,7 +5193,7 @@ body, html {
 }
 .topnavbar .navbar-header .brand-logo {
     display: block;
-    padding: 5px 5px;
+    padding: 10px 10px;
 }
 .topnavbar .navbar-header .brand-logo-collapsed {
     display: none;
@@ -5239,6 +5239,7 @@ body, html {
     background-color: transparent;
 }
 .nav-wrapper .nav.navbar-nav {
+    margin-left: 20px;
     float: left;
 }
 .nav-wrapper .nav.navbar-nav.navbar-right {
