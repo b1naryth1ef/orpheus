@@ -14,7 +14,7 @@ BetState = create_enum('NEW', 'OFFERED', 'CONFIRMED', 'WON', 'LOST', 'CANCELLED'
 FIND_AVAIL_BOT_SQL = """
 SELECT b.id FROM bots b
 LEFT OUTER JOIN trades t ON t.bot_ref=b.id
-WHERE b.status='USED' AND (
+WHERE (
   (
     (t.state='NEW' OR t.state='IN-PROGRESS' OR t.state='OFFERED')
     AND array_length(t.items_in, 1) > 0
@@ -84,10 +84,10 @@ def create_bet(user, match, team, items):
         })
 
         # Find a bot that has inventory space
-        # bot = find_avail_bot(len(items))
+        bot = find_avail_bot(len(items))
 
-        #if not bot:
-        #    raise FortException("Bot's are full, please try again later!")
+        if not bot:
+            raise FortException("Bot's are full, please try again later!")
 
         # Get the user's steamid and token for the trade
         user = c.execute("SELECT id, steamid, trade_token FROM users WHERE id=%s",
@@ -105,6 +105,7 @@ def create_bet(user, match, team, items):
             'created_at': datetime.utcnow(),
             'user_ref': user.id,
             'bet_ref': bet,
+            'bot_ref': bot,
         })
 
         push_trade.queue(tid)

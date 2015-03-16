@@ -42,9 +42,8 @@ def push_trade(tid):
             redis.publish("tradeq:bot:%s" % trade.bid, json.dumps(payload))
             time.sleep(3)
 
-            # Let's see if someone grabbed it
-            trade = c.select("trades", "state", id=trade.tid).fetchone()
-            if trade.state != "NEW":
+            # Let's see if someone managed to grab it
+            if not redis.exists("trade:%s"):
                 return
 
         # Otherwise, let the hoard take it

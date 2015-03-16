@@ -5193,7 +5193,7 @@ body, html {
 }
 .topnavbar .navbar-header .brand-logo {
     display: block;
-    padding: 10px 15px;
+    padding: 5px 5px;
 }
 .topnavbar .navbar-header .brand-logo-collapsed {
     display: none;
