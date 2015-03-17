@@ -73,7 +73,10 @@ def build_js_source():
             SOURCE += f.read()
 
     with open("static/js/compiled.js", "w") as f:
-        f.write(minify(SOURCE, mangle=True))
+        if app.config.get("ENV") == "PROD":
+            f.write(minify(SOURCE, mangle=True))
+        else:
+            f.write(SOURCE)
 
 def setup():
     load_all_views()

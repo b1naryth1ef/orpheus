@@ -381,13 +381,47 @@ admin.route("/admin/matches", function () {
     }).bind(this));
 })
 
+admin.uploadTeamLogo = (function () {
+    var data = new FormData();
+    $.each(this.files, function (key, value) {
+        data.append(key, value);
+    });
+
+    return $.ajax({
+        url: "/admin/api/image/upload",
+        type: "POST",
+        data: data,
+        cache: false,
+        dataType: 'json',
+        processData: false,
+        contentType: false,
+        success: function (data) {
+            console.log(data)
+        }
+    });
+}).bind(admin)
+
 admin.saveTeam = (function (ev) {
+    if (this.files) {
+        this.uploadTeamLogo().done((function (data) {
+            this.reallySaveTeam(ev, data);
+        }).bind(this));
+    } else {
+        this.reallySaveTeam(ev);
+    }
+}).bind(admin);
+
+admin.reallySaveTeam = (function (ev, formData) {
     var id = $($(ev.target).parents()[2]).attr("data-id");
     var data = _.reduce(_.map($(".team-field"), function (el) {
         var val = {};
         val[$(el).attr("data-name")] = getDataFromField(el);
         return val
     }), function (a, b) { return _.extend(a, b) });
+
+    if (formData) {
+        data.logo = formData.name
+    }
 
     if (id) {
         var url = "/admin/api/teams/" + id + "/edit";
@@ -472,6 +506,10 @@ admin.route("/admin/teams", function () {
     $("#team-modal-location").delegate("#team-save", "click", (function (ev) {
         ev.stopImmediatePropagation();
         this.saveTeam(ev);
+    }).bind(this));
+
+    $("#team-modal-location").delegate("#logo-field", "change", (function (ev) {
+        this.files = event.target.files;
     }).bind(this));
 })
 

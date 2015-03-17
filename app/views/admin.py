@@ -1,7 +1,8 @@
-import base64
+import base64, uuid, os
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from flask import Blueprint, g, render_template, request
+from fort import app
 
 from database import Cursor, redis
 
@@ -74,6 +75,24 @@ def admin_events():
 @admin.route("/news")
 def admin_news():
     return render_template("admin/news.html")
+
+IMAGE_PATH = "/var/data/img" if app.config.get("ENV") == "PROD" else "static/img/usr"
+EXTS = {"png", "jpg", "gif"}
+
+@admin.route("/api/image/upload", methods=['POST'])
+def admin_upload_image():
+    f = request.files['0']
+
+    if '.' not in f.filename or f.filename.rsplit(".", 1)[1] not in EXTS:
+        raise APIError("Invalid File Format")
+
+    name = str(uuid.uuid4()) + '.' + f.filename.rsplit(".", 1)[1]
+    f.save(os.path.join(IMAGE_PATH, name))
+
+    return APIResponse({
+        "name": name,
+    })
+
 
 USERS_LIST_QUERY = """
 SELECT id, steamid, email, active, last_login, ugroup
@@ -252,9 +271,8 @@ def parse_match_payload(obj):
         if not len(teams_ok) == 2 and len(set(map(lambda i: i.id, teams_ok))) == len(teams_ok):
             raise APIError("Invalid Team ID's")
 
-        bet_state = request.json["bet_state"]
-
-        bet_itemstate = request.json["bet_itemstate"]
+        bet_state = request.json.get("bet_state")
+        bet_itemstate = request.json.get("bet_itemstate")
 
         return match_date, public_date, maps, game_ok.id, event_ok.id, map(lambda i: i.id, teams_ok), obj.get("active", False), bet_state, bet_itemstate
 

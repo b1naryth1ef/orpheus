@@ -33,13 +33,12 @@ def generate_games(t, db):
         t.execute("INSERT INTO games (name, appid, active) VALUES (%(name)s, %(appid)s, %(active)s)", game)
 
 TEAMS = [
-    ("c9", "Cloud9", "/static/img/teams/cloud9.png"),
-    ("fnatic", "Fnatic", "/static/img/teams/fnatic.png"),
-    ("HellRaisers", "HellRaisers", "/static/img/teams/hellraisers.png"),
-    ("dignitas", "Team Dignitas", "/static/img/teams/dignitas.png"),
-    ("nip", "Ninjas In Pajamas", "/static/img/teams/nip.png"),
-    ("virtus.pro", "Virtus Pro", "/static/img/teams/virtuspro.png"),
-    ("CLG", "Counter Logic Gaming", "http://clgaming.net/interface/img/ogImage.jpg")
+    ("c9", "Cloud9", "cloud9.png"),
+    ("fnatic", "Fnatic", "fnatic.png"),
+    ("HellRaisers", "HellRaisers", "hellraisers.png"),
+    ("dignitas", "Team Dignitas", "dignitas.png"),
+    ("nip", "Ninjas In Pajamas", "nip.png"),
+    ("virtus.pro", "Virtus Pro", "virtuspro.png"),
 ]
 
 def generate_teams(t, db):

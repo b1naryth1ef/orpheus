@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, g
+from flask import Blueprint, render_template, g, send_from_directory
 from markdown import Markdown
 
+from fort import app
 from helpers.user import authed
 
 public = Blueprint("public", __name__)
@@ -42,4 +43,9 @@ def route_humans():
 @public.route("/rules")
 def route_faq():
     return render_template("prose.html", content=rules_content)
+
+if app.config.get("ENV") != "PROD":
+    @public.route("/img/<name>")
+    def serve_image(name):
+        return send_from_directory("static/img/usr/", name)
 
