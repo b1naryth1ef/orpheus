@@ -103,6 +103,116 @@ admin.route("/admin/users", function () {
     }).bind(this));
 });
 
+admin.route("/admin/bans", function () {
+	this.loadBans();
+	$("#bans-page-last").click((function() {
+        if (this.page > 1) {
+            this.page--;
+            this.loadBans();
+        }
+	}).bind(this));
+	
+	
+	$("#bans-page-next").click((function() {
+        if (this.page < this.max_pages) {
+            this.page++;
+            this.loadBans();
+        }
+	}).bind(this));
+    
+	$("#bans-content").delegate(".ban-edit", "click", (function (eve) {
+        var id =  $($(eve.target).parents()[1]).attr("data-id");
+		$("#ban-modal-location").html(this.app.render("admin_ban_modal", {
+            create: false,
+            ban: this.bansCache[id],
+        }));
+    	setupDateFields();
+        $("#ban-modal").modal("show");
+    }).bind(this));
+
+	
+	$("#ban-add-button").click((function() { 	
+		$("#ban-modal-location").html(this.app.render("admin_ban_modal", {
+            create: true,
+			ban: null
+        }));
+		setupDateFields();
+		$("#ban-modal").modal("show");
+	}).bind(this));
+	
+	$("#btn-search").click((function() { 
+	}).bind(this));
+
+	$("#ban-modal-location").delegate("#ban-save", "click", (function (ev) { 
+		var form = $(ev.target).parents()[2];
+		
+		data = {};
+
+		$(".ban-field").each((function (index, item) {
+			if(item.type == "checkbox"){
+				data[$(item).attr("data-name")] = $(item).prop("checked");
+			} else if($(item).hasClass("date-field")){
+				data[$(item).attr("data-name")] = $(item).data("date");
+			} else {
+				data[$(item).attr("data-name")] = $(item).val();
+			}
+		}).bind(this)).bind(this);
+		
+		if($(form).attr("data-id") == "create"){
+			$.ajax("/admin/api/ban/create", {
+				data: data,
+				type: "POST",
+				success: (function(eve){
+					if(eve.success){
+						$("#ban-modal").modal("hide");
+						$.notify("Ban saved", "success");
+						this.loadBans();
+					} else {
+						$.notify("Error saving ban: " + eve.message, "danger");
+					}
+				}).bind(this)
+			});
+		} else {
+			$.ajax("/admin/api/ban/edit", {
+				data: data,
+				type: "POST",
+				success: (function(eve){
+					this.loadBans();
+				}).bind(this)
+			});
+
+		$("#ban-modal").modal("hide");	
+		}
+
+
+	}).bind(this));
+
+});
+
+admin.loadBans = function() {
+    this.page = this.page || 1;
+    this.max_pages = 0;
+    this.bansCache = {};
+
+    $("#bans-page-current").text(this.page);
+    $.ajax("/admin/api/ban/list", {
+		data: {
+			page: this.page,
+		},
+		success: (function (data) {
+            $("#bans-content").empty();
+            _.each(data.bans, (function (v) {
+                this.bansCache[v.id] = v;
+                $("#bans-content").append(this.app.render("admin_ban_row", {
+                    ban: v,
+                    hidden: true,
+                }));
+   				this.max_pages = data.pages; 
+                $(".ban-row:hidden").fadeIn();
+            }).bind(this));
+        }).bind(this)
+    });
+}
 
 admin.loadGames = function () {
     this.page = this.page || 1;

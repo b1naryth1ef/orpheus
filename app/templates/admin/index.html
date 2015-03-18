@@ -1,198 +1,221 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="row row-fluid">
-  <div class="col-lg-3 col-md-6">
-    <div class="panel panel-pink">
-      <div class="panel-heading">
-        <div class="row">
-          <div class="col-xs-3">
-            <em class="fa icon-speedometer fa-5x"></em>
-          </div>
-          <div class="col-xs-9 text-right">
-            <div class="text-lg">{{ rush_conn }}</div>
-            <h2 class="unmargin">Open Rush Connections</h2>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col-lg-3 col-md-6">
-    <div class="panel panel-success">
-      <div class="panel-heading">
-        <div class="row">
-          <div class="col-xs-3">
-            <em class="fa icon-compass fa-5x"></em>
-          </div>
-          <div class="col-xs-9 text-right">
-            <div class="text-lg">{{ bots_online }}</div>
-            <h2 class="unmargin">Bots Online</h2>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col-lg-3 col-md-6">
-    <div class="panel panel-info">
-      <div class="panel-heading">
-        <div class="row">
-          <div class="col-xs-3">
-            <em class="fa fa-fighter-jet fa-5x"></em>
-          </div>
-          <div class="col-xs-9 text-right">
-            <div class="text-lg">{{ events_count }}</div>
-            <h2 class="m0">Events</h2>
-          </div>
-        </div>
-      </div>
-      <a href="/admin/events" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
-        <span class="pull-left">View Details</span>
-        <span class="pull-right">
-          <em class="fa fa-chevron-circle-right"></em>
-        </span>
-      </a>
-    </div>
-  </div>
-  <div class="col-lg-3 col-md-6">
-    <div class="panel panel-warning">
-      <div class="panel-heading">
-        <div class="row">
-          <div class="col-xs-3">
-            <em class="fa fa-crosshairs fa-5x"></em>
-          </div>
-          <div class="col-xs-9 text-right">
-            <div class="text-lg">{{ teams_count }}</div>
-            <h2 class="m0">Teams</h2>
-          </div>
-        </div>
-      </div>
-      <a href="/admin/teams" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
-        <span class="pull-left">View Details</span>
-        <span class="pull-right">
-          <em class="fa fa-chevron-circle-right"></em>
-        </span>
-      </a>
-    </div>
-  </div>
-  <div class="col-lg-3 col-md-6">
-    <div class="panel panel-primary">
-      <div class="panel-heading">
-        <div class="row">
-          <div class="col-xs-3">
-            <em class="fa fa-users fa-5x"></em>
-          </div>
-          <div class="col-xs-9 text-right">
-            <div class="text-lg">{{ users_count }}</div>
-            <h2 class="unmargin">Users</h2>
-          </div>
-        </div>
-      </div>
-      <a href="/admin/users" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
-        <span class="pull-left">View Details</span>
-        <span class="pull-right">
-          <em class="fa fa-chevron-circle-right"></em>
-        </span>
-      </a>
-    </div>
-  </div>
-  <div class="col-lg-3 col-md-6">
-    <div class="panel panel-green">
-      <div class="panel-heading">
-        <div class="row">
-          <div class="col-xs-3">
-            <em class="fa fa-gamepad fa-5x"></em>
-          </div>
-          <div class="col-xs-9 text-right">
-            <div class="text-lg">{{ games_count }}</div>
-            <h2 class="unmargin">Games</h2>
-          </div>
-        </div>
-      </div>
-      <a href="/admin/games" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
-        <span class="pull-left">View Details</span>
-        <span class="pull-right">
-          <em class="fa fa-chevron-circle-right"></em>
-        </span>
-      </a>
-    </div>
-  </div>
-  <div class="col-lg-3 col-md-6">
-    <div class="panel panel-warning">
-      <div class="panel-heading">
-        <div class="row">
-          <div class="col-xs-3">
-            <em class="fa fa-shopping-cart fa-5x"></em>
-          </div>
-          <div class="col-xs-9 text-right">
-            <div class="text-lg">{{ matches_count }}</div>
-            <h2 class="m0">Matches</h2>
-          </div>
-        </div>
-      </div>
-      <a href="/admin/matches" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
-        <span class="pull-left">View Details</span>
-        <span class="pull-right">
-          <em class="fa fa-chevron-circle-right"></em>
-        </span>
-      </a>
-    </div>
-  </div>
-  <div class="col-lg-3 col-md-6">
-    <div class="panel panel-danger">
-      <div class="panel-heading">
-        <div class="row">
-          <div class="col-xs-3">
-            <em class="fa fa-support fa-5x"></em>
-          </div>
-          <div class="col-xs-9 text-right">
-            <div class="text-lg">{{ bets_count }}</div>
-            <h2 class="m0">Bets</h2>
-          </div>
-        </div>
-      </div>
-      <a href="/admin/bets" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
-        <span class="pull-left">View Details</span>
-        <span class="pull-right">
-          <em class="fa fa-chevron-circle-right"></em>
-        </span>
-      </a>
-    </div>
-  </div>
-  <div class="col-lg-3 col-md-6">
-    <div class="panel panel-danger">
-      <div class="panel-heading">
-        <div class="row">
-          <div class="col-xs-3">
-            <em class="fa fa-newspaper-o fa-5x"></em>
-          </div>
-          <div class="col-xs-9 text-right">
-            <div class="text-lg">{{ newsposts_count }}</div>
-            <h2 class="m0">News Posts</h2>
-          </div>
-        </div>
-      </div>
-      <a href="/admin/news" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
-        <span class="pull-left">View Details</span>
-        <span class="pull-right">
-          <em class="fa fa-chevron-circle-right"></em>
-        </span>
-      </a>
-    </div>
-  </div>
+	<div class="col-lg-3 col-md-6">
+		<div class="panel panel-pink">
+			<div class="panel-heading">
+				<div class="row">
+					<div class="col-xs-3">
+						<em class="fa icon-speedometer fa-5x"></em>
+					</div>
+					<div class="col-xs-9 text-right">
+						<div class="text-lg">{{ rush_conn }}</div>
+						<h2 class="unmargin">Open Rush Connections</h2>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-lg-3 col-md-6">
+		<div class="panel panel-success">
+			<div class="panel-heading">
+				<div class="row">
+					<div class="col-xs-3">
+						<em class="fa icon-compass fa-5x"></em>
+					</div>
+					<div class="col-xs-9 text-right">
+						<div class="text-lg">{{ bots_online }}</div>
+						<h2 class="unmargin">Bots Online</h2>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-lg-3 col-md-6">
+		<div class="panel panel-info">
+			<div class="panel-heading">
+				<div class="row">
+					<div class="col-xs-3">
+						<em class="fa fa-fighter-jet fa-5x"></em>
+					</div>
+					<div class="col-xs-9 text-right">
+						<div class="text-lg">{{ events_count }}</div>
+						<h2 class="m0">Events</h2>
+					</div>
+				</div>
+			</div>
+			<a href="/admin/events" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
+				<span class="pull-left">View Details</span>
+				<span class="pull-right">
+					<em class="fa fa-chevron-circle-right"></em>
+				</span>
+			</a>
+		</div>
+	</div>
+	<div class="col-lg-3 col-md-6">
+		<div class="panel panel-warning">
+			<div class="panel-heading">
+				<div class="row">
+					<div class="col-xs-3">
+						<em class="fa fa-crosshairs fa-5x"></em>
+					</div>
+					<div class="col-xs-9 text-right">
+						<div class="text-lg">{{ teams_count }}</div>
+						<h2 class="m0">Teams</h2>
+					</div>
+				</div>
+			</div>
+			<a href="/admin/teams" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
+				<span class="pull-left">View Details</span>
+				<span class="pull-right">
+					<em class="fa fa-chevron-circle-right"></em>
+				</span>
+			</a>
+		</div>
+	</div>
+	<div class="col-lg-3 col-md-6">
+		<div class="panel panel-primary">
+			<div class="panel-heading">
+				<div class="row">
+					<div class="col-xs-3">
+						<em class="fa fa-users fa-5x"></em>
+					</div>
+					<div class="col-xs-9 text-right">
+						<div class="text-lg">{{ users_count }}</div>
+						<h2 class="unmargin">Users</h2>
+					</div>
+				</div>
+			</div>
+			<a href="/admin/users" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
+				<span class="pull-left">View Details</span>
+				<span class="pull-right">
+					<em class="fa fa-chevron-circle-right"></em>
+				</span>
+			</a>
+		</div>
+	</div>
+	<div class="col-lg-3 col-md-6">
+		<div class="panel panel-green">
+			<div class="panel-heading">
+				<div class="row">
+					<div class="col-xs-3">
+						<em class="fa fa-gamepad fa-5x"></em>
+					</div>
+					<div class="col-xs-9 text-right">
+						<div class="text-lg">{{ games_count }}</div>
+						<h2 class="unmargin">Games</h2>
+					</div>
+				</div>
+			</div>
+			<a href="/admin/games" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
+				<span class="pull-left">View Details</span>
+				<span class="pull-right">
+					<em class="fa fa-chevron-circle-right"></em>
+				</span>
+			</a>
+		</div>
+	</div>
+	<div class="col-lg-3 col-md-6">
+		<div class="panel panel-warning">
+			<div class="panel-heading">
+				<div class="row">
+					<div class="col-xs-3">
+						<em class="fa fa-shopping-cart fa-5x"></em>
+					</div>
+					<div class="col-xs-9 text-right">
+						<div class="text-lg">{{ matches_count }}</div>
+						<h2 class="m0">Matches</h2>
+					</div>
+				</div>
+			</div>
+			<a href="/admin/matches" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
+				<span class="pull-left">View Details</span>
+				<span class="pull-right">
+					<em class="fa fa-chevron-circle-right"></em>
+				</span>
+			</a>
+		</div>
+	</div>
+	<div class="col-lg-3 col-md-6">
+		<div class="panel panel-danger">
+			<div class="panel-heading">
+				<div class="row">
+					<div class="col-xs-3">
+						<em class="fa fa-support fa-5x"></em>
+					</div>
+					<div class="col-xs-9 text-right">
+						<div class="text-lg">{{ bets_count }}</div>
+						<h2 class="m0">Bets</h2>
+					</div>
+				</div>
+			</div>
+			<a href="/admin/bets" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
+				<span class="pull-left">View Details</span>
+				<span class="pull-right">
+					<em class="fa fa-chevron-circle-right"></em>
+				</span>
+			</a>
+		</div>
+	</div>
+	<div class="col-lg-3 col-md-6">
+		<div class="panel panel-danger">
+			<div class="panel-heading">
+				<div class="row">
+					<div class="col-xs-3">
+						<em class="fa fa-newspaper-o fa-5x"></em>
+					</div>
+					<div class="col-xs-9 text-right">
+						<div class="text-lg">{{ newsposts_count }}</div>
+						<h2 class="m0">News Posts</h2>
+					</div>
+				</div>
+			</div>
+			<a href="/admin/news" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
+				<span class="pull-left">View Details</span>
+				<span class="pull-right">
+					<em class="fa fa-chevron-circle-right"></em>
+				</span>
+			</a>
+		</div>
+	</div>
+	<div class="col-lg-3 col-md-6">
+		<!-- START panel-->
+		<div class="panel panel-danger">
+			<div class="panel-heading">
+				<div class="row">
+					<div class="col-xs-3">
+						<em class="fa fa-gavel fa-5x"></em>
+					</div>
+					<div class="col-xs-9 text-right">
+						<div class="text-lg">{{ bans_count }}</div>
+						<h2 class="m0">Bans</h2>
+					</div>
+				</div>
+			</div>
+			<a href="/admin/bans" class="panel-footer bg-gray-dark bt0 clearfix btn-block">
+				<span class="pull-left">View Details</span>
+				<span class="pull-right">
+					<em class="fa fa-chevron-circle-right"></em>
+				</span>
+			</a>
+		</div>
+	</div>
+
 </div>
 
 <div class="row">
-  <div class="panel panel-default">
-    <div class="panel-heading">Bot Capacity
-      <div class="btn-group pull-right"></div>
-    </div>
-    <div class="panel-body">
-      <div class="progress">
-        <div role="progressbar" style="width: {{ b_cap }}%" class="progress-bar progress-bar-success">
-        </div>
-      </div>
-      <h3>{{ b_used }} out of {{ b_total }} used</h3>
-    </div>
-  </div>
+	<div class="panel panel-default">
+		<div class="panel-heading">Bot Capacity
+			<div class="btn-group pull-right"></div>
+		</div>
+		<div class="panel-body">
+			<div class="progress">
+				<div role="progressbar" style="width: {{ b_cap }}%" class="progress-bar progress-bar-success">
+				</div>
+			</div>
+			<h3>{{ b_used }} out of {{ b_total }} used</h3>
+		</div>
+	</div>
 </div>
 
 {% endblock %}
@@ -200,8 +223,8 @@
 {% block post_scripts %}
 <style>
 .topnavbar {
-  background-color: #f05050;
-  background-image: linear-gradient(to right, #f05050 0, #f05050 100%);
+	background-color: #f05050;
+	background-image: linear-gradient(to right, #f05050 0, #f05050 100%);
 }
 </style>
 {% endblock %}
