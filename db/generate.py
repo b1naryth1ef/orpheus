@@ -168,6 +168,70 @@ def generate_items(t, db):
             "price": random.randint(100, 4000) / 100.0
         })
 
+BAN_QUERY = """
+INSERT INTO bans (steamid, active, created_at, start_date, end_date, created_by, reason, description) VALUES
+(%(steamid)s, %(active)s, %(created_at)s, %(start_date)s, %(end_date)s, %(created_by)s, %(reason)s, %(description)s);
+"""
+
+ban_reasons = [
+        "Annoying individual",
+        "Scammer",
+        "Cheater",
+        "Throws games for profit",
+        "Unsavory individual",
+        "Alt account",
+        "I felt like banning this guy",
+        "Really bad at CS",
+        "Plays League of Legends",
+        "All-around asshole and bad guy",
+        "Gambling addict",
+        "Do Not Unban",
+        "Generic reason",
+        "Another generic reason",
+        "One more for good measure"
+]
+
+ban_descriptions = [
+        "Attempted to scam me out of my knife",
+        "Operates an underground network of game throwers",
+        "Steel's alt account",
+        "Cheated in a matchmaking game",
+        "Some generic ban description",
+        "Another generic ban description",
+        "Some variety here",
+        "Runs with scissors habitually",
+        "Stole my bike"
+]
+
+def generate_bans(t, db):
+    print "GENERATING BANS"
+    num = 1000
+    users = "SELECT * FROM users WHERE id >= 1 AND id <= " + str(num) + ";"
+    t.execute(users)
+    bans = [] 
+
+    for record in t:
+    
+        banned = { 
+                 "steamid": record[1],
+                 "created_at": pg_utcnow(),
+                 "start_date": pg_utcnow(),
+                 "end_date": pg_utcnow(),  
+                 "created_by": 30000, 
+                 "active": bool(random.getrandbits(1)),
+                 "reason": random.choice(ban_reasons), 
+                 "description": random.choice(ban_descriptions)
+        }
+
+        bans.append(banned)
+
+    for banned in bans:
+        t.execute(BAN_QUERY, banned)
+
+def pg_utcnow(): 
+    import psycopg2
+    return datetime.utcnow().replace(tzinfo=psycopg2.tz.FixedOffsetTimezone(offset=0, name=None))
+
 
 DATA_GENERATORS = [
     generate_bots,
@@ -177,6 +241,7 @@ DATA_GENERATORS = [
     generate_events,
     generate_matches,
     generate_items,
-    generate_bets
+    generate_bets,
+    generate_bans
 ]
 

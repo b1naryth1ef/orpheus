@@ -44,11 +44,17 @@ def admin_dashboard():
         teams_count=g.cursor.count("teams"),
         bets_count=g.cursor.count("bets"),
         newsposts_count=g.cursor.count("newsposts"),
+        bans_count=g.cursor.count("bans"),
         b_used=bot_used,
         b_total=bot_total,
         b_cap=b_cap,
         rush_conn=rush_conn,
         bots_online=bots_online)
+
+@admin.route("/bans")
+@authed(UserGroup.ADMIN)
+def admin_bans():
+    return render_template("admin/bans.html")
 
 @admin.route("/users")
 @authed(UserGroup.ADMIN)
@@ -556,6 +562,8 @@ def admin_event_edit(id):
         c.update("events", id, data)
 
     return APIResponse()
+   
+
 
 @admin.route("/api/news/create", methods=['POST'])
 def admin_api_create_news_post():
@@ -581,3 +589,73 @@ def admin_api_edit_news_post(newspost_id):
 
     return APIResponse()
 
+BANS_LIST_QUERY = """
+SELECT * FROM bans ORDER BY id ASC LIMIT %s OFFSET %s
+"""
+
+@admin.route("/api/ban/list")
+@authed(UserGroup.ADMIN, api=True)
+def admin_list_bans():
+    page = int(request.values.get("page", 1 ))
+
+    g.cursor.execute("SELECT count(*) as c FROM bans")
+
+    pages = (g.cursor.fetchone().c / 50) + 1
+
+    g.cursor.execute(BANS_LIST_QUERY, paginate(page, per_page=50))
+    bans = [];
+
+    for entry in g.cursor.fetchall():
+        bans.append({
+            "id": entry.id,
+            "steamid": entry.steamid,
+            "active": entry.active,
+            "created_at": int(entry.created_at.strftime("%s")),
+            "start_date": int(entry.start_date.strftime("%s")),
+            "end_date": int(entry.end_date.strftime("%s")),
+            "reason": entry.reason,
+            "description": entry.description, 
+            "created_by": entry.created_by
+        })
+
+    return APIResponse({"bans": bans, "pages":pages})
+
+@admin.route("/api/ban/create", methods=["POST"])
+@authed(UserGroup.ADMIN, api=True)
+def admin_create_ban():
+    with Cursor() as c:
+        c.insert("bans", {
+            "steamid": request.values['steamid'],
+            "active": True,
+            "created_at": request.values['created_at'],
+            "created_by": g.user,
+            "start_date": request.values['start_date'],
+            "end_date": request.values['end_date'],
+            "reason": request.values['reason'],
+            "description": request.values['description']
+        })
+
+    return APIResponse()
+
+BAN_EDITABLE_FIELDS = [
+    "start_date", "end_date", "reason", "description", "active"
+]
+
+@admin.route("/api/ban/edit", methods=["POST"])
+@authed(UserGroup.ADMIN, api=True)
+def admin_edit_ban():
+
+    ban = request.values.get("id")
+
+    print request.values
+    query = {k: v for (k, v) in request.values.iteritems() if k in BAN_EDITABLE_FIELDS}
+    if not len(query):
+        raise APIError("Nothing to change!")
+
+    sql = "UPDATE bans SET {} WHERE id=%(id)s".format(Cursor.map_values(query))
+    print "SQL:"
+    print sql
+    query['id'] = ban
+    g.cursor.execute(sql, query)
+
+    return APIResponse();
