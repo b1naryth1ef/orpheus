@@ -132,7 +132,7 @@
                 <% for (iteam in match.teams) { %>
                 <% var team = match.teams[iteam] %>
                 <div class="col-md-6">
-                  <img src="/img/<%- team.logo %>" style="max-height: 256px" class="img-rounded <%=(match.results && match.results.winner == team.id) ? 'team-won' : ''%>"/>
+                  <img src="<%- team.logo %>" style="max-height: 256px" class="img-rounded <%=(match.results && match.results.winner == team.id) ? 'team-won' : ''%>"/>
                   <h1><%= team.name %></h1>
                   <h3><%= team.odds * 100 %>%</h3>
                   <h3 class="close-header">Bets: <%= team.stats.players %></h3>

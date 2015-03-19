@@ -1,0 +1,111 @@
+<div id="ban-modal" class="modal fade in" style="display: block; padding-right: 17px;">
+	<div class="modal-backdrop fade in" style="height: 560px;"></div>
+	<div class="modal-dialog modal-lg" data-id="<%- create ? 'create' : ban.id %>">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" data-dismiss="modal" class="close">×</button>
+				<h4 class="modal-title">
+					<h4><%= create? 'New ban' : 'Edit ban'  %></h4>
+				</div>
+				<div class="modal-body">
+					<div id="match-modal-error" class="alert alert-danger" style="display: none;"></div>
+					<%= create? "" : "<input type=\'hidden\' data-name=\'id\' value=\'" + ban.id + "\' class=\'ban-field\'>" %> 
+					<fieldset>
+						<div class="form-group">
+							<label class="col-sm-2 control-label">Steam ID</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control ban-field" data-name="steamid" value="<%= create ? '' : ban.steamid %>" <%= create? '' : 'disabled' %> >
+							</div>
+						</div>
+					</fieldset>
+					
+					<fieldset>
+						<div class="form-group">
+							<label class="col-sm-2 control-label">Banned by (UID)</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control ban-field" data-name="banned_by" value="<%= create? 'placeholder' : ban.created_by %>" disabled>
+							</div>
+						</div>
+					</fieldset>
+					<fieldset>
+						<div class="form-group mb">
+							<label class="col-sm-2 control-label mb">Banned on</label>
+							<div class="col-sm-10">
+								<div data-name="created_at" class="input-group date ban-field date-field" data-default="<%= create? new Date().getTime()/1000 : ban.created_at %>" <%= create? '' : 'disabled' %>>
+									<input type="text" class="form-control" disabled>
+									<span class="input-group-addon">
+										<span class="fa fa-calendar"></span>
+									</span>
+								</div>
+								<span class="help-block m-b-none">Date user was banned on</span>
+							</div>
+						</div>
+					</fieldset>
+					<fieldset>
+						<div class="form-group mb">
+							<label class="col-sm-2 control-label mb">Banned from</label>
+							<div class="col-sm-10">
+								<div data-name="start_date" class="input-group date ban-field date-field" data-default="<%= create? new Date().getTime() / 1000: ban.start_date %>">
+									<input type="text" class="form-control">
+									<span class="input-group-addon">
+										<span class="fa fa-calendar"></span>
+									</span>
+								</div>
+								<span class="help-block m-b-none">Date that the user's ban starts on</span>
+							</div>
+						</div>
+					</fieldset>
+					<fieldset>
+						<div class="form-group mb">
+							<label class="col-sm-2 control-label mb">Banned until</label>
+							<div class="col-sm-10">
+								<div data-name="end_date" class="input-group date ban-field date-field" data-default="<%= create? new Date().getTime() / 1000 + 604800 * 4 : ban.end_date %>">
+									<input type="text" class="form-control">
+									<span class="input-group-addon">
+										<span class="fa fa-calendar"></span>
+									</span>
+								</div>
+								<span class="help-block m-b-none">Date that the user is banned until</span>
+							</div>
+						</div>
+					</fieldset>
+					<fieldset>
+						<div class="form-group">
+							<label class="col-sm-2 control-label">Ban Active</label>
+							<div class="col-sm-10">
+								<label class="switch switch-lg">
+									<input id="ban-edit-active" data-name="active" type="checkbox" class="form-control ban-field" <%= create? 'checked disabled': (ban.active? 'checked' : '')%> >
+									
+									<span></span>
+								
+								</label>
+							</div>
+						</div>
+					</fieldset>
+					<fieldset>
+							<div class="form-group">
+								<label class="col-sm-2 control-label">Reason</label>
+								<div class="col-sm-10">
+									<input type="text" class="form-control ban-field" data-name="reason" value="<%= create? '' : ban.reason %>">
+								</div>
+							</div>
+					</fieldset>
+					<fieldset>
+							<div class="form-group">
+								<label class="col-sm-2 control-label">Description</label>
+								<div class="col-sm-10">
+									<textarea class="form-control ban-field" data-name="description"><%= create ? '' : ban.description %></textarea>
+								</div>
+							</div>
+					</fieldset>
+				</div>
+			<div class="modal-footer">
+				<button type="button" data-dismiss="modal" class="btn btn-danger">Close</button>
+				<button type="button" class="btn btn-success" id="ban-save">
+					Apply Ban
+				</button>
+			</div>
+			</div>
+		</div>
+	</div>
+</div>

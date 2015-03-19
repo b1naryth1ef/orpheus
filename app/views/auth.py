@@ -1,4 +1,4 @@
-import re, logging
+import re, logging, psycopg2
 
 from flask import Blueprint, g, redirect, flash
 from datetime import datetime
@@ -23,6 +23,13 @@ def create_or_login(resp):
 
     g.cursor.execute("SELECT id, active, ugroup FROM users WHERE steamid=%s", (id, ))
     user = g.cursor.fetchone()
+
+    g.cursor.execute("SELECT * FROM bans WHERE (bans.steamid='%s' AND bans.start_date < now() AND bans.end_date > now() AND bans.active=true)" % (id) )
+
+    banned = g.cursor.fetchone()
+    utcnow = datetime.utcnow().replace(tzinfo=psycopg2.tz.FixedOffsetTimezone(offset=0, name=None))
+    if banned:
+        raise UserError("Banned:\n" + banned.reason);
 
     if user:
         if user.active:
