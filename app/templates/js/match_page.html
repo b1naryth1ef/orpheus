@@ -32,7 +32,7 @@
           <em class="fa fa-dollar fa-3x"></em>
         </div>
         <div class="col-xs-8 pv-lg">
-          <div class="h2 mt0"><%- match.stats.value %></div>
+          <div class="h2 mt0"><%- new Number(match.stats.value).toFixed(2) %></div>
           <div class="text-uppercase">Value Placed</div>
         </div>
       </div>
@@ -75,7 +75,7 @@
                   <b>PIN:</b> <%- match.me.pin %>
                 </div>
               <% } %>
-              <h3 style='text-align: center'>$<%- match.me.value %> for $<%- match.me.return %> return</h3>
+              <h3 style='text-align: center'>$<%- new Number(match.me.value).toFixed(2) %> for $<%- new Number(match.me.return).toFixed(2) %> return</h3>
               <div class="row row-centered">
                 <% for (index in _.range(4)) { %>
                 <% var item = match.me.items[index] %>
@@ -86,7 +86,7 @@
                 <% } else { %>
                   <div class="col-sm-2 col-centered bet-slot" data-toggle="tooltip" title="<h4><%= item.name %></h4>" data-placement="right">
                     <img src="https://steamcommunity-a.akamaihd.net/economy/image/<%= item.image %>" style="max-height: 125px; max-width: 125px;"/>
-                    <p><%= item.price %></p>
+                    <p>$<%= new Number(item.price).toFixed(2) %></p>
                   </div>
                 <% } %>
               <% } %>
@@ -137,7 +137,7 @@
                   <h3><%= team.odds * 100 %>%</h3>
                   <h3 class="close-header">Bets: <%= team.stats.players %></h3>
                   <h3 class="close-header">Skins: <%= team.stats.skins %></h3>
-                  <h3 class="close-header">Value: $<%= team.stats.value %></h3>
+                  <h3 class="close-header">Value: $<%= new Number(team.stats.value).toFixed(2) %></h3>
                 </div>
                 <% } %>
               </div>
