@@ -25,9 +25,8 @@ def create_or_login(resp):
     user = g.cursor.fetchone()
 
     g.cursor.execute("SELECT * FROM bans WHERE (bans.steamid='%s' AND bans.start_date < now() AND bans.end_date > now() AND bans.active=true)" % (id) )
-
     banned = g.cursor.fetchone()
-    utcnow = datetime.utcnow().replace(tzinfo=psycopg2.tz.FixedOffsetTimezone(offset=0, name=None))
+
     if banned:
         raise UserError("Banned:\n" + banned.reason);
 

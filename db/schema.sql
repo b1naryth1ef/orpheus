@@ -320,9 +320,9 @@ CREATE TABLE bans (
 	  id           serial PRIMARY KEY,
 	  steamid      varchar(255),
 	  active       boolean,
-	  created_at   timestamp with time zone,
-	  start_date   timestamp with time zone,
-	  end_date     timestamp with time zone,
+	  created_at   timestamp,
+	  start_date   timestamp,
+	  end_date     timestamp,
 	  reason       varchar(255),
 	  description  text,
 	  created_by   integer REFERENCES users(id)
