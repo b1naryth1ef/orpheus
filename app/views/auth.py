@@ -30,10 +30,11 @@ def create_or_login(resp):
     id = steam_id_re.findall(resp.identity_url)[0]
 
     user = g.cursor.execute(LOGIN_QUERY, {"id": id}).fetchone()
-    if user.reason:
-        raise UserError("Banned:\n" + user.reason)
 
     if user:
+        if user.reason:
+            raise UserError("Banned:\n" + user.reason)
+
         if user.active:
             g.user = user.id
             g.group = user.ugroup
