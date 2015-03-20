@@ -23,7 +23,7 @@
               <div class="form-group">
                 <label class="col-sm-2 control-label">Banned by (UID)</label>
                 <div class="col-sm-10">
-                  <input type="text" class="form-control ban-field" data-name="banned_by" disabled>
+					<input type="text" class="form-control ban-field" data-name="banned_by" <%= create? '' : "value=\'" + ban.created_by +"\'" %>  disabled>
                 </div>
               </div>
             </fieldset>
