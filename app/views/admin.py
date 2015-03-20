@@ -11,13 +11,12 @@ from helpers.game import create_game
 from helpers.match import create_match, match_to_json
 from helpers.bot import get_bot_space
 from helpers.common import get_enum_array
-
 from helpers.news import create_news_post, update_news_post
 
 from util import paginate
 from util.errors import UserError, APIError, FortException
 from util.responses import APIResponse
-
+from util.sessions import find_sessions_for_user
 
 admin = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -562,7 +561,7 @@ def admin_event_edit(id):
         c.update("events", id, data)
 
     return APIResponse()
-   
+
 
 
 @admin.route("/api/news/create", methods=['POST'])
@@ -614,26 +613,33 @@ def admin_list_bans():
             "start_date": int(entry.start_date.strftime("%s")),
             "end_date": int(entry.end_date.strftime("%s")),
             "reason": entry.reason,
-            "description": entry.description, 
+            "description": entry.description,
             "created_by": entry.created_by
         })
 
     return APIResponse({"bans": bans, "pages":pages})
 
-@admin.route("/api/ban/create", methods=["POST"])
+@admin.route("/api/ban/create", methods=["POST", "GET"])
 @authed(UserGroup.ADMIN, api=True)
 def admin_create_ban():
     with Cursor() as c:
         c.insert("bans", {
             "steamid": request.values['steamid'],
             "active": True,
-            "created_at": request.values['created_at'],
+            "created_at": datetime.utcnow(),
             "created_by": g.user,
             "start_date": request.values['start_date'],
             "end_date": request.values['end_date'],
             "reason": request.values['reason'],
             "description": request.values['description']
         })
+
+        # If we have a user with that steamid, invalidate all sessions for them
+        u = c.execute("SELECT id FROM users WHERE steamid=%s",
+            (request.values['steamid'], )).fetchone()
+
+        if u:
+            map(lambda i: i.end(), find_sessions_for_user(u.id))
 
     return APIResponse()
 
@@ -644,18 +650,16 @@ BAN_EDITABLE_FIELDS = [
 @admin.route("/api/ban/edit", methods=["POST"])
 @authed(UserGroup.ADMIN, api=True)
 def admin_edit_ban():
-
     ban = request.values.get("id")
 
-    print request.values
-    query = {k: v for (k, v) in request.values.iteritems() if k in BAN_EDITABLE_FIELDS}
-    if not len(query):
+    modified_fields = {k: v for (k, v) in request.values.iteritems() if k in BAN_EDITABLE_FIELDS}
+    if not len(modified_fields):
         raise APIError("Nothing to change!")
 
-    sql = "UPDATE bans SET {} WHERE id=%(id)s".format(Cursor.map_values(query))
-    print "SQL:"
-    print sql
-    query['id'] = ban
-    g.cursor.execute(sql, query)
+    with Cursor() as c:
+        c.update("bans", ban, modified_fields)
 
-    return APIResponse();
+    return APIResponse({
+        "fields": modified_fields.keys()
+    })
+

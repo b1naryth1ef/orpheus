@@ -8,6 +8,10 @@ VALUES (%s, %s, %s, %s, %s)
 """
 
 def create_exception(exception, meta):
+    """
+    Attempts to insert an exception into the database. Does not fail gracefully,
+    and will bubble exceptions to the caller.
+    """
     id = uuid.uuid4()
     exc_type, exc_obj, exc_tb = sys.exc_info()
 
@@ -20,7 +24,9 @@ def create_exception(exception, meta):
 
     return id
 
-def get_enum_array(enum_type):    
+def get_enum_array(enum_type):
     with Cursor() as c:
-        return c.execute("SELECT unnest(enum_range(NULL::{0}))".format(enum_type)).fetchall(as_list=True)
+        return c.execute(
+            "SELECT unnest(enum_range(NULL::{}))".format(enum_type)
+        ).fetchall(as_list=True)
 

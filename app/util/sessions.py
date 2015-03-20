@@ -10,11 +10,22 @@ log = logging.getLogger(__name__)
 # 5 days
 SESSION_TTL = 60 * 60 * 24 * 5
 
+def find_sessions_for_user(uid):
+    """
+    Attempts to find all sessions associated with a user.
+    """
+    for key in redis.keys("session:*"):
+        sess = Session(key.split(":")[1])
+        if sess['u'] == uid:
+            yield sess
+
 class Session(object):
     def __init__(self, id=None):
         self._id = id or request.cookies.get("s")
-        if self._id and redis.exists("session:%s" % self._id):
-            self._data = json.loads(redis.get("session:%s" % self._id))
+
+        data = redis.get("session:%s" % self._id)
+        if data:
+            self._data = json.loads(data)
         else:
             self._id = None
             self._data = {}

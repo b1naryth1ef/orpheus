@@ -317,15 +317,15 @@ CREATE INDEX ON newsposts (category);
 CREATE INDEX ON newsposts (title);
 
 CREATE TABLE bans (
-	  id           serial PRIMARY KEY,
-	  steamid      varchar(255),
-	  active       boolean,
-	  created_at   timestamp,
-	  start_date   timestamp,
-	  end_date     timestamp,
-	  reason       varchar(255),
-	  description  text,
-	  created_by   integer REFERENCES users(id)
+    id           serial PRIMARY KEY,
+    steamid      varchar(255),
+    active       boolean,
+    created_at   timestamp,
+    start_date   timestamp,
+    end_date     timestamp,
+    reason       varchar(255),
+    description  text,
+    created_by   integer REFERENCES users(id)
 );
 
 CREATE INDEX ON bans(start_date, end_date);

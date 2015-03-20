@@ -29,12 +29,19 @@ LIMIT 1;
 """
 
 def get_pin(id):
+    """
+    Computes a pin for a bet id. This simply computes a MD5 hash for the ID,
+    and returns the last 12 digits.
+    """
     m = hashlib.md5()
     m.update(str(id))
     return m.hexdigest()[:12]
 
-# TODO: move this back to straight sequellll
 def find_avail_bot(items_count):
+    """
+    Attempts to find a bot with `count` availible inventory slots. Will return
+    the bot's id if found, or 0 if no availbile bots exist.
+    """
     # Max size minus what we need to store
     size_expected = 999 - items_count
 
@@ -59,6 +66,11 @@ def find_avail_bot(items_count):
 LOCK_ITEM_SQL = "UPDATE items SET price=%s WHERE id=%s"
 
 def create_bet(user, match, team, items):
+    """
+    Creates and queues a bot based on a user, match, team and a set of items
+    the user wishes to place. Raises a `FortException` if the bet cannot be
+    placed.
+    """
     with Cursor() as c:
         items_q = c.execute("""
             SELECT id, price FROM items WHERE items.id IN %s

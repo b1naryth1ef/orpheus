@@ -24,6 +24,10 @@ def create_bot_item_transfer(from_bot, to_bot, items):
     pass
 
 def create_return_trade(bot_id, user_id, items):
+    """
+    Creates and queues a return trade based on a bot_id, user_id, and items
+    the bot owns which need to be returned to the user
+    """
     with Cursor() as c:
         u = c.execute("SELECT trade_token, steamid FROM users WHERE id=%s", (user_id, )).fetchone()
 

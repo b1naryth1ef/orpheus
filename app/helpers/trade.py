@@ -11,10 +11,4 @@ TradeType = create_enum('BET', 'RETURNS', 'INTERNAL')
 
 def queue_trade(bot_id, trade_id):
     raise Exception("Deprecated. Use tasks.trade.push_trade")
-    queue_key = "bot:%s:tradeq" % bot_id
-
-    if redis.llen(queue_key) > 32:
-        raise FortException("Bot #%s trade queue is full" % bot_id)
-
-    redis.rpush(queue_key, json.dumps({'type': 'trade', 'id': trade_id}))
 

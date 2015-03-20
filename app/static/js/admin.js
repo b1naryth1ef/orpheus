@@ -104,88 +104,88 @@ admin.route("/admin/users", function () {
 });
 
 admin.route("/admin/bans", function () {
-	this.loadBans();
-	$("#bans-page-last").click((function() {
+    this.loadBans();
+    $("#bans-page-last").click((function() {
         if (this.page > 1) {
             this.page--;
             this.loadBans();
         }
-	}).bind(this));
-	
-	
-	$("#bans-page-next").click((function() {
+    }).bind(this));
+
+
+    $("#bans-page-next").click((function() {
         if (this.page < this.max_pages) {
             this.page++;
             this.loadBans();
         }
-	}).bind(this));
-    
-	$("#bans-content").delegate(".ban-edit", "click", (function (eve) {
+    }).bind(this));
+
+    $("#bans-content").delegate(".ban-edit", "click", (function (eve) {
         var id =  $($(eve.target).parents()[1]).attr("data-id");
-		$("#ban-modal-location").html(this.app.render("admin_ban_modal", {
+        $("#ban-modal-location").html(this.app.render("admin_ban_modal", {
             create: false,
             ban: this.bansCache[id],
         }));
-    	setupDateFields();
+        setupDateFields();
         $("#ban-modal").modal("show");
     }).bind(this));
 
-	
-	$("#ban-add-button").click((function() { 	
-		$("#ban-modal-location").html(this.app.render("admin_ban_modal", {
+
+    $("#ban-add-button").click((function() {
+        $("#ban-modal-location").html(this.app.render("admin_ban_modal", {
             create: true,
-			ban: null
+            ban: null
         }));
-		setupDateFields();
-		$("#ban-modal").modal("show");
-	}).bind(this));
-	
-	$("#btn-search").click((function() { 
-	}).bind(this));
+        setupDateFields();
+        $("#ban-modal").modal("show");
+    }).bind(this));
 
-	$("#ban-modal-location").delegate("#ban-save", "click", (function (ev) { 
-		var form = $(ev.target).parents()[2];
-		
-		data = {};
+    $("#btn-search").click((function() {
+    }).bind(this));
 
-		$(".ban-field").each((function (index, item) {
-			if(item.type == "checkbox"){
-				data[$(item).attr("data-name")] = $(item).prop("checked");
-			} else if($(item).hasClass("date-field")){
-				data[$(item).attr("data-name")] = $(item).data("date");
-			} else {
-				data[$(item).attr("data-name")] = $(item).val();
-			}
-		}).bind(this)).bind(this);
-		
-		if($(form).attr("data-id") == "create"){
-			$.ajax("/admin/api/ban/create", {
-				data: data,
-				type: "POST",
-				success: (function(eve){
-					if(eve.success){
-						$("#ban-modal").modal("hide");
-						$.notify("Ban saved", "success");
-						this.loadBans();
-					} else {
-						$.notify("Error saving ban: " + eve.message, "danger");
-					}
-				}).bind(this)
-			});
-		} else {
-			$.ajax("/admin/api/ban/edit", {
-				data: data,
-				type: "POST",
-				success: (function(eve){
-					this.loadBans();
-				}).bind(this)
-			});
+    $("#ban-modal-location").delegate("#ban-save", "click", (function (ev) {
+        var form = $(ev.target).parents()[2];
 
-		$("#ban-modal").modal("hide");	
-		}
+        data = {};
+
+        $(".ban-field").each((function (index, item) {
+            if(item.type == "checkbox"){
+                data[$(item).attr("data-name")] = $(item).prop("checked");
+            } else if($(item).hasClass("date-field")){
+                data[$(item).attr("data-name")] = $(item).data("date");
+            } else {
+                data[$(item).attr("data-name")] = $(item).val();
+            }
+        }).bind(this)).bind(this);
+
+        if($(form).attr("data-id") == "create"){
+            $.ajax("/admin/api/ban/create", {
+                data: data,
+                type: "POST",
+                success: (function(eve){
+                    if(eve.success){
+                        $("#ban-modal").modal("hide");
+                        $.notify("Ban saved", "success");
+                        this.loadBans();
+                    } else {
+                        $.notify("Error saving ban: " + eve.message, "danger");
+                    }
+                }).bind(this)
+            });
+        } else {
+            $.ajax("/admin/api/ban/edit", {
+                data: data,
+                type: "POST",
+                success: (function(eve){
+                    this.loadBans();
+                }).bind(this)
+            });
+
+            $("#ban-modal").modal("hide");
+        }
 
 
-	}).bind(this));
+    }).bind(this));
 
 });
 
@@ -196,10 +196,10 @@ admin.loadBans = function() {
 
     $("#bans-page-current").text(this.page);
     $.ajax("/admin/api/ban/list", {
-		data: {
-			page: this.page,
-		},
-		success: (function (data) {
+        data: {
+            page: this.page,
+        },
+        success: (function (data) {
             $("#bans-content").empty();
             _.each(data.bans, (function (v) {
                 this.bansCache[v.id] = v;
@@ -207,7 +207,7 @@ admin.loadBans = function() {
                     ban: v,
                     hidden: true,
                 }));
-   				this.max_pages = data.pages; 
+                this.max_pages = data.pages;
                 $(".ban-row:hidden").fadeIn();
             }).bind(this));
         }).bind(this)
@@ -328,22 +328,22 @@ admin.loadMatches = (function () {
 
     // Get all the things
     $.when(
-        $.get("/admin/api/team/list", (function (data) {
-            this.teamCache = data.teams;
-        }).bind(this)),
+            $.get("/admin/api/team/list", (function (data) {
+                this.teamCache = data.teams;
+            }).bind(this)),
 
-        $.get("/admin/api/match/list", (function (data) {
-            this.matchCache = data.matches;
-        }).bind(this)),
+            $.get("/admin/api/match/list", (function (data) {
+                this.matchCache = data.matches;
+            }).bind(this)),
 
-        $.get("/admin/api/event/list", {active: true}, (function (data) {
-            this.eventCache = data.events;
-        }).bind(this)),
+            $.get("/admin/api/event/list", {active: true}, (function (data) {
+                this.eventCache = data.events;
+            }).bind(this)),
 
-        $.get("/admin/api/game/list", (function (data) {
-            this.gameCache = data.games;
-        }).bind(this))
-    ).then((function () {
+            $.get("/admin/api/game/list", (function (data) {
+                this.gameCache = data.games;
+            }).bind(this))
+          ).then((function () {
         this.renderMatches();
     }).bind(this));
 }).bind(admin);
@@ -404,7 +404,7 @@ admin.saveMatchDraft = (function () {
         }
 
         data.results.final[mapplayed][teamid] = $(item).val();
-	}).bind(this));
+    }).bind(this));
 
     $.ajax("/admin/api/match/results", {
         type: 'POST',
@@ -575,10 +575,10 @@ admin.loadTeams = (function () {
     this.teamCache = {};
 
     $.when(
-        $.get("/admin/api/team/list", (function (data) {
-            this.teamCache = data.teams;
-        }).bind(this))
-    ).then((function () {
+            $.get("/admin/api/team/list", (function (data) {
+                this.teamCache = data.teams;
+            }).bind(this))
+          ).then((function () {
         this.renderTeams();
     }).bind(this));
 }).bind(admin);
@@ -672,11 +672,11 @@ admin.loadEvents = (function () {
     this.eventTypes = {};
 
     $.when(
-        $.get("/admin/api/event/list", (function (data) {
-            this.eventCache = data.events;
-            this.eventTypes = data.eventtypes;
-        }).bind(this))
-    ).then((function () {
+            $.get("/admin/api/event/list", (function (data) {
+                this.eventCache = data.events;
+                this.eventTypes = data.eventtypes;
+            }).bind(this))
+          ).then((function () {
         this.renderEvents();
     }).bind(this));
 }).bind(admin);

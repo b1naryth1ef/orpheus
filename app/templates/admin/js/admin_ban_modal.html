@@ -9,7 +9,7 @@
 				</div>
 				<div class="modal-body">
 					<div id="match-modal-error" class="alert alert-danger" style="display: none;"></div>
-					<%= create? "" : "<input type=\'hidden\' data-name=\'id\' value=\'" + ban.id + "\' class=\'ban-field\'>" %> 
+					<%= create? "" : "<input type=\'hidden\' data-name=\'id\' value=\'" + ban.id + "\' class=\'ban-field\'>" %>
 					<fieldset>
 						<div class="form-group">
 							<label class="col-sm-2 control-label">Steam ID</label>
@@ -18,29 +18,30 @@
 							</div>
 						</div>
 					</fieldset>
-					
-					<fieldset>
-						<div class="form-group">
-							<label class="col-sm-2 control-label">Banned by (UID)</label>
-							<div class="col-sm-10">
-								<input type="text" class="form-control ban-field" data-name="banned_by" value="<%= create? 'placeholder' : ban.created_by %>" disabled>
-							</div>
-						</div>
-					</fieldset>
-					<fieldset>
-						<div class="form-group mb">
-							<label class="col-sm-2 control-label mb">Banned on</label>
-							<div class="col-sm-10">
-								<div data-name="created_at" class="input-group date ban-field date-field" data-default="<%= create? new Date().getTime()/1000 : ban.created_at %>" <%= create? '' : 'disabled' %>>
-									<input type="text" class="form-control" disabled>
-									<span class="input-group-addon">
-										<span class="fa fa-calendar"></span>
-									</span>
-								</div>
-								<span class="help-block m-b-none">Date user was banned on</span>
-							</div>
-						</div>
-					</fieldset>
+          <% if (!create) { %>
+            <fieldset>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Banned by (UID)</label>
+                <div class="col-sm-10">
+                  <input type="text" class="form-control ban-field" data-name="banned_by" disabled>
+                </div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <div class="form-group mb">
+                <label class="col-sm-2 control-label mb">Banned on</label>
+                <div class="col-sm-10">
+                  <div data-name="created_at" class="input-group date ban-field date-field" data-default="<%= ban.created_at %>" disabled>
+                    <input type="text" class="form-control" disabled>
+                    <span class="input-group-addon">
+                      <span class="fa fa-calendar"></span>
+                    </span>
+                  </div>
+                  <span class="help-block m-b-none">Date user was banned on</span>
+                </div>
+              </div>
+            </fieldset>
+          <% } %>
 					<fieldset>
 						<div class="form-group mb">
 							<label class="col-sm-2 control-label mb">Banned from</label>
@@ -69,19 +70,19 @@
 							</div>
 						</div>
 					</fieldset>
-					<fieldset>
-						<div class="form-group">
-							<label class="col-sm-2 control-label">Ban Active</label>
-							<div class="col-sm-10">
-								<label class="switch switch-lg">
-									<input id="ban-edit-active" data-name="active" type="checkbox" class="form-control ban-field" <%= create? 'checked disabled': (ban.active? 'checked' : '')%> >
-									
-									<span></span>
-								
-								</label>
-							</div>
-						</div>
-					</fieldset>
+          <% if (!create) { %>
+            <fieldset>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Ban Active</label>
+                <div class="col-sm-10">
+                  <label class="switch switch-lg">
+                    <input id="ban-edit-active" data-name="active" type="checkbox" class="form-control ban-field" <%= ban.active ? 'checked' : '' %> >
+                    <span></span>
+                  </label>
+                </div>
+              </div>
+            </fieldset>
+          <% } %>
 					<fieldset>
 							<div class="form-group">
 								<label class="col-sm-2 control-label">Reason</label>

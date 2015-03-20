@@ -1,10 +1,11 @@
-import logging, redis, psycopg2
+import logging, redis, psycopg2, sys
 from contextlib import contextmanager
 
 from flask import g
 from psycopg2.extras import NamedTupleCursor, Json
 
 from fort import app
+from util.errors import FortException
 
 log = logging.getLogger(__name__)
 
