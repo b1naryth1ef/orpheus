@@ -619,7 +619,7 @@ def admin_list_bans():
 
     return APIResponse({"bans": bans, "pages":pages})
 
-@admin.route("/api/ban/create", methods=["POST", "GET"])
+@admin.route("/api/ban/create", methods=["POST"])
 @authed(UserGroup.ADMIN, api=True)
 def admin_create_ban():
     with Cursor() as c:
