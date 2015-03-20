@@ -19,8 +19,10 @@ log = logging.getLogger(__name__)
 
 LOGIN_QUERY = """
 SELECT u.id, u.active, u.ugroup, b.reason FROM users u
-LEFT JOIN bans b ON b.steamid=%(id)s
-WHERE u.steamid=%(id)s AND b.start_date < now() AND b.end_date > now() AND b.active=true
+LEFT OUTER JOIN bans b ON (
+    b.steamid=%(id)s AND b.start_date < now() AND b.end_date > now() AND b.active=true
+)
+WHERE u.steamid=%(id)s
 """
 
 @oid.after_login
