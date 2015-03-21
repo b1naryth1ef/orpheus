@@ -266,9 +266,9 @@ def parse_match_payload(obj):
         if not event_ok:
             raise APIError("Invalid Event ID")
 
-        # Make sure the event is involved with the game
-        if not int(game_ok.id) in event_ok.games:
-            raise APIError("That game is not part of that event!")
+        # TODO: when we make this avail (Make sure the event is involved with the game)
+        #if not int(game_ok.id) in event_ok.games:
+        #    raise APIError("That game is not part of that event!")
 
         teams_ok = c.execute("SELECT id FROM teams WHERE id in %s",
             ((request.json['team1'], request.json['team2']),)).fetchall()
