@@ -13,18 +13,13 @@ BetState = create_enum('NEW', 'OFFERED', 'CONFIRMED', 'WON', 'LOST', 'CANCELLED'
 
 FIND_AVAIL_BOT_SQL = """
 SELECT b.id FROM bots b
-LEFT OUTER JOIN trades t ON t.bot_ref=b.id
-WHERE (
-  (
-    (t.state='NEW' OR t.state='IN-PROGRESS' OR t.state='OFFERED')
-    AND array_length(t.items_in, 1) > 0
-    AND (array_length(b.inventory, 1) + array_length(t.items_in, 1)) < %s
-    OR b.inventory='{}'
-  ) OR (
-    t IS NULL
-    AND (array_length(b.inventory, 1) < %s) OR b.inventory='{}'
-  )
+LEFT OUTER JOIN trades t ON (
+    t.bot_ref=b.id AND t.state IN ('NEW', 'IN-PROGRESS', 'OFFERED')
+    AND (array_length(b.inventory, 1) + array_length(t.items_in, 1)) < %(size)s
 )
+WHERE
+    b.status in ('USED', 'AVAIL')
+    AND array_length(b.inventory, 1) < %(size)s)
 LIMIT 1;
 """
 
