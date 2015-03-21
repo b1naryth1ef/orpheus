@@ -42,8 +42,9 @@ def find_avail_bot(items_count):
 
     with Cursor() as c:
         bots = c.execute("""
-            SELECT id, array_length(inventory, 1) as ilen FROM bots WHERE status='USED'
-            AND (array_length(inventory, 1) < %s) OR (inventory='{}')
+            SELECT id, array_length(inventory, 1) as ilen FROM bots
+            WHERE status IN ('USED', 'AVAIL')
+            AND ((array_length(inventory, 1) < %s) OR (inventory='{}'))
         """, (size_expected, )).fetchall(as_list=True)
 
         # N + FUCKIN 1 BAAABY!!!!
