@@ -24,7 +24,7 @@ def validate_match_team_data(obj):
 
     return True
 
-def create_match(user, game, teams, meta, lock_date, match_date, public_date,
+def create_match(user, game, teams, meta, match_date, public_date,
         view_perm=UserGroup.NORMAL):
 
     # Make sure the teams are valid
@@ -40,7 +40,6 @@ def create_match(user, game, teams, meta, lock_date, match_date, public_date,
             "teams": teams,
             "meta": meta,
             "results": Cursor.json({}),
-            "lock_date": lock_date,
             "match_date": match_date,
             "public_date": public_date,
             "view_perm": view_perm,

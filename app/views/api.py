@@ -71,7 +71,7 @@ def route_match_info(id):
         raise APIError("Invalid match ID")
 
 MATCH_SWITCH_BET_FIELDS = [
-    "id", "teams", "lock_date", "match_date", "public_date", "active"
+    "id", "teams", "match_date", "public_date", "active"
 ]
 
 @api.route("/match/<int:match_id>/switchteam", methods=["POST"])
@@ -84,7 +84,6 @@ def route_switch_team(match_id):
     apiassert(match, "Invalid Match ID")
     apiassert(match.active, "Invalid Match ID")
     apiassert(match.public_date.replace(tzinfo=None) < datetime.utcnow(), "Invalid Match ID")
-    apiassert(match.lock_date.replace(tzinfo=None) > datetime.utcnow(), "Match is Locked")
 
     # Find the bet
     g.cursor.execute("""
@@ -110,7 +109,7 @@ def route_switch_team(match_id):
     return APIResponse()
 
 MATCH_CONFIRM_BET_FIELDS = [
-    "id", "state", "itemstate", "teams", "lock_date", "match_date", "public_date", "active",
+    "id", "state", "itemstate", "teams", "match_date", "public_date", "active",
     "max_value_item", "max_value_total"
 ]
 

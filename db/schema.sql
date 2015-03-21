@@ -188,7 +188,6 @@ CREATE TABLE teams (
     teams: a list of NON-FOREIGN references to teams
     players: a list of NON-FOREIGN references to users
     meta: metadata (e.g. media, streams)
-    lock_date: when this match will lock bets
     match_date: when this match is actually being played
     public_date: when this match goes public
     view_perm: what user group can view this
@@ -211,7 +210,6 @@ CREATE TABLE matches (
     results          jsonb,
     max_value_item   decimal,
     max_value_total  decimal,
-    lock_date        timestamp,
     match_date       timestamp,
     public_date      timestamp,
     items_date       timestamp,

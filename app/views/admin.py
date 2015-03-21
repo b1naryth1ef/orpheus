@@ -294,7 +294,6 @@ def admin_match_create():
                 "maps": maps
             }),
             "max_value_item": 60,
-            "lock_date": match_date - relativedelta(minutes=5),
             "match_date": match_date,
             "public_date": public_date,
             "active": active,
