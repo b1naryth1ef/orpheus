@@ -11,7 +11,7 @@ from util import create_enum
 
 log = logging.getLogger(__name__)
 
-ETradeOfferState = create_enum("INVALID", "ACTIVE", "ACCEPTED", "COUNTERED", "EXPIRED",
+ETradeOfferState = create_enum("NULL", "INVALID", "ACTIVE", "ACCEPTED", "COUNTERED", "EXPIRED",
     "CANCELED", "DECLINED", "INVALID", "EMAIL_CANCELLED")
 
 @task()
@@ -69,6 +69,7 @@ def update_trades():
                 continue
 
             state = offer['trade_offer_state']
+            log.info('Trade #%s state: %s', trade.id, state)
             if state == ETradeOfferState.INVALID or state > ETradeOfferState.ACCEPTED:
                 log.info("Canceling trade %s, state", trade.id)
                 steam.cancelTradeOffer(trade.offerid)
