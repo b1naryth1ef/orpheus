@@ -271,9 +271,9 @@ admin.route("/admin/games", function () {
                 data: data,
                 type: "POST",
                 success: (function (ev) {
+                    $("#game-modal").modal("hide");
                     if (ev.success) {
                         this.loadGames();
-                        $("#game-modal").modal("hide");
                         $.notify("Game created!", "success");
                     } else {
                         $.notify("Error creating game: " + ev.message, "danger");
@@ -286,9 +286,9 @@ admin.route("/admin/games", function () {
                 data: data,
                 type: "POST",
                 success: (function (ev) {
+                    $("#game-modal").modal("hide");
                     if (ev.success) {
                         this.loadGames();
-                        $("#game-modal").modal("hide");
                         $.notify("Game saved!", "success");
                     } else {
                         $.notify("Error saving game: " + ev.message, "danger");
@@ -491,30 +491,10 @@ admin.route("/admin/matches", function () {
     }).bind(this));
 })
 
-admin.uploadTeamLogo = (function () {
-    var data = new FormData();
-    $.each(this.files, function (key, value) {
-        data.append(key, value);
-    });
-
-    return $.ajax({
-        url: "/admin/api/image/upload",
-        type: "POST",
-        data: data,
-        cache: false,
-        dataType: 'json',
-        processData: false,
-        contentType: false,
-        success: function (data) {
-            console.log(data)
-        }
-    });
-}).bind(admin)
-
 admin.saveTeam = (function (ev) {
     if (this.files) {
-        this.uploadTeamLogo().done((function (data) {
-            this.reallySaveTeam(ev, data);
+        this.uploadImage(this.files).done((function (data) {
+            this.reallySaveTeam(ev, data)
         }).bind(this));
     } else {
         this.reallySaveTeam(ev);
@@ -530,7 +510,7 @@ admin.reallySaveTeam = (function (ev, formData) {
     }), function (a, b) { return _.extend(a, b) });
 
     if (formData) {
-        data.logo = formData.name
+        data.logo = formData.images[0]
     }
 
     if (id) {
@@ -623,13 +603,36 @@ admin.route("/admin/teams", function () {
     }).bind(this));
 })
 
-admin.saveEvent = (function (ev) {
+admin.uploadImage = (function (files) {
+    var data = new FormData()
+    $.each(files, function (key, value) {
+        data.append(key, value);
+    });
+
+    return $.ajax({
+        url: "/admin/api/image/upload",
+        type: "POST",
+        data: data,
+        cache: false,
+        dataType: 'json',
+        processData: false,
+        contentType: false,
+    });
+})
+
+admin.saveEvent = (function (ev, formData) {
     var id = $($(ev.target).parents()[2]).attr("data-id");
     var data = _.reduce(_.map($(".event-field"), function (el) {
         var val = {};
         val[$(el).attr("data-name")] = getDataFromField(el);
         return val
     }), function (a, b) { return _.extend(a, b) });
+
+    if (formData) {
+        _.each(formData.images, function (k, v) {
+            data[v] = k;
+        })
+    }
 
     if (id) {
         var url = "/admin/api/events/" + id + "/edit";
@@ -684,7 +687,7 @@ admin.loadEvents = (function () {
 admin.renderSingleEventEntry = (function (ev) {
     $("#event-modal").modal("hide");
     $("#event-modal-location").empty().html(this.app.render("admin_event_entry", {
-        ev: ev,
+        event: ev,
         eventtypes: this.eventTypes,
         create: false,
     }));
@@ -715,7 +718,20 @@ admin.route("/admin/events", function () {
 
     $("#event-modal-location").delegate("#event-save", "click", (function (ev) {
         ev.stopImmediatePropagation();
-        this.saveEvent(ev);
+        if (this.files) {
+            this.uploadImage(this.files).done((function (data) {
+                console.log(data);
+                this.saveEvent(ev, data);
+            }).bind(this));
+        } else {
+            this.saveEvent(ev);
+        }
+    }).bind(this));
+
+    $("#event-modal-location").delegate(".image-field", "change", (function (ev) {
+        this.files = this.files || {}
+        this.files[$(ev.target).attr("data-name")] = ev.target.files[0];
+        console.log(this.files);
     }).bind(this));
 })
 

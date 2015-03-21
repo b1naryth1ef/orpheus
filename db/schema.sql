@@ -142,7 +142,7 @@ CREATE TABLE games (
     id          SERIAL PRIMARY KEY,
     name        varchar(255) NOT NULL,
     meta        jsonb,
-    appid       integer,
+    appid       integer UNIQUE NOT NULL,
     view_perm   user_group,
     active      boolean,
     created_by  integer REFERENCES users(id),

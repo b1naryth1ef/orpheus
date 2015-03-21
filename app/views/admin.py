@@ -86,16 +86,18 @@ EXTS = {"png", "jpg", "gif"}
 
 @admin.route("/api/image/upload", methods=['POST'])
 def admin_upload_image():
-    f = request.files['0']
+    results = {}
+    for k, f in request.files.items():
 
-    if '.' not in f.filename or f.filename.rsplit(".", 1)[1] not in EXTS:
-        raise APIError("Invalid File Format")
+        if '.' not in f.filename or f.filename.rsplit(".", 1)[1] not in EXTS:
+            raise APIError("Invalid File Format")
 
-    name = str(uuid.uuid4()) + '.' + f.filename.rsplit(".", 1)[1]
-    f.save(os.path.join(IMAGE_PATH, name))
+        name = str(uuid.uuid4()) + '.' + f.filename.rsplit(".", 1)[1]
+        f.save(os.path.join(IMAGE_PATH, name))
+        results[k] = name
 
     return APIResponse({
-        "name": name,
+        "images": results,
     })
 
 
@@ -184,10 +186,7 @@ def admin_game_list():
 @admin.route("/api/game/create", methods=["POST"])
 @authed(UserGroup.ADMIN, api=True)
 def admin_game_create():
-    try:
-        id = create_game(g.user, request.values["name"], int(request.values["appid"]))
-    except Exception, e:
-        raise APIError("Invalid Data: %s" % e)
+    id = create_game(g.user, request.values["name"], int(request.values["appid"]))
 
     return APIResponse({
         "game": id
@@ -471,19 +470,8 @@ def admin_team_edit(id):
 
     return APIResponse()
 
-# TODO: Move all of the event stuff into it's own helper file.
-# Also, add games and streams, just need to learn more js/html.
-
-EVENT_FIELDS = { "name", "website", "league", "logo", "splash", "etype", "start_date", "end_date" }
+EVENT_FIELDS = { "name", "website", "league", "logo", "splash", "etype", "start_date", "end_date" , "active"}
 EVENT_LIST_QUERY = "SELECT * FROM events {} ORDER BY id LIMIT %s OFFSET %s;"
-
-def parse_event_payload(payload):
-    empty_fields = [i for i in EVENT_FIELDS if not payload.get(i)]
-
-    if len(empty_fields):
-        raise APIError("Missing Fields: %s" % ', '.join(empty_fields))
-
-    return payload['name'], payload['website'], payload['league'], payload['logo'], payload['splash'], payload['etype'], payload['start_date'], payload['end_date'], payload.get("active", False)
 
 @admin.route("/api/event/list")
 def admin_event_list():
@@ -524,45 +512,40 @@ def admin_event_list():
 
 @admin.route("/api/events/create", methods=["POST"])
 def admin_event_create():
-    name, website, league, logo, splash, etype, start_date, end_date, active = parse_event_payload(request.json)
+    missing = EVENT_FIELDS - set(request.json.keys())
+    if len(missing):
+        raise APIError("Missing Fields: %s" % ', '.join(missing))
 
     with Cursor() as c:
         c.insert("events", {
-            "name": name,
-            "website": website,
-            "league": league,
-            "logo": logo,
-            "splash": splash,
-            "etype": etype,
-            "start_date": datetime.fromtimestamp(int(start_date)),
-            "end_date": datetime.fromtimestamp(int(end_date)),
-            "active": active
+            "name": request.json.get("name"),
+            "website": request.json.get("website"),
+            "league": request.json.get("league"),
+            "logo": request.json.get("logo"),
+            "splash": request.json.get("splash"),
+            "etype": request.json.get("etype"),
+            "start_date": datetime.fromtimestamp(int(request.json.get("start_date"))),
+            "end_date": datetime.fromtimestamp(int(request.json.get("end_date"))),
+            "active": request.json.get("active")
         })
 
     return APIResponse()
 
 @admin.route("/api/events/<id>/edit", methods=["POST"])
 def admin_event_edit(id):
-    name, website, league, logo, splash, etype, start_date, end_date, active = parse_event_payload(request.json)
+    updated = EVENT_FIELDS & set(request.json.keys())
+    data = {}
 
-    data = {
-            "name": name,
-            "website": website,
-            "league": league,
-            "logo": logo,
-            "splash": splash,
-            "etype": etype,
-            "start_date": datetime.fromtimestamp(int(start_date)),
-            "end_date": datetime.fromtimestamp(int(end_date)),
-            "active": active
-        }
+    for entry in updated:
+        data[entry] = request.json.get(entry)
+
+        if entry.endswith("_date"):
+            data[entry] = datetime.fromtimestamp(int(data[entry]))
 
     with Cursor() as c:
         c.update("events", id, data)
 
     return APIResponse()
-
-
 
 @admin.route("/api/news/create", methods=['POST'])
 def admin_api_create_news_post():

@@ -208,18 +208,18 @@ def generate_bans(t, db):
     num = 1000
     users = "SELECT * FROM users WHERE id >= 1 AND id <= " + str(num) + ";"
     t.execute(users)
-    bans = [] 
+    bans = []
 
     for record in t:
-    
-        banned = { 
+
+        banned = {
                  "steamid": record[1],
                  "created_at": pg_utcnow(),
                  "start_date": pg_utcnow(),
-                 "end_date": pg_utcnow(),  
-                 "created_by": 30000, 
+                 "end_date": pg_utcnow(),
+                 "created_by": 30000,
                  "active": bool(random.getrandbits(1)),
-                 "reason": random.choice(ban_reasons), 
+                 "reason": random.choice(ban_reasons),
                  "description": random.choice(ban_descriptions)
         }
 
@@ -228,7 +228,7 @@ def generate_bans(t, db):
     for banned in bans:
         t.execute(BAN_QUERY, banned)
 
-def pg_utcnow(): 
+def pg_utcnow():
     import psycopg2
     return datetime.utcnow().replace(tzinfo=psycopg2.tz.FixedOffsetTimezone(offset=0, name=None))
 

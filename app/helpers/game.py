@@ -6,7 +6,7 @@ from util.errors import ValidationError
 from helpers.user import UserGroup
 
 def create_game(user, name, appid, meta=None, view_perm=UserGroup.NORMAL):
-    if not isinstance(meta, dict):
+    if meta and not isinstance(meta, dict):
         raise ValidationError("Game metadata must be dictionary")
 
     with Cursor() as c:
