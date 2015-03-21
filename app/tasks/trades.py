@@ -53,7 +53,7 @@ def push_trade(tid):
 def update_trades():
     with Cursor() as c:
         trades = c.execute("""
-            SELECT t.id, t.offerid, t.created_at, b.apikey FROM trades t
+            SELECT t.id, t.offerid, t.created_at, t.bet_ref, b.apikey FROM trades t
             JOIN bots b ON b.id=t.bot_ref
             WHERE state='OFFERED'
         """).fetchall(as_list=True)
@@ -74,7 +74,13 @@ def update_trades():
                 log.info("Canceling trade %s, state", trade.id)
                 steam.cancelTradeOffer(trade.offerid)
                 c.update("trades", trade.id, state='REJECTED')
+
+                if trade.bet_ref:
+                    c.update("bets", trade.bet_ref, state='CANCELLED')
             elif state == ETradeOfferState.ACCEPTED:
                 log.info("Updating state for trade %s, accepted", trade.id)
                 c.update("trades", trade.id, state='ACCEPTED')
+
+                if trade.bet_ref:
+                    c.update("bets", trade.bet_ref, state='CONFIRMED')
 
