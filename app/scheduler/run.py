@@ -19,4 +19,4 @@ sched.schedule(apply_draft_items, seconds=30, start_now=True)
 sched.schedule(check_steam_servers, minutes=25)
 
 # Trades
-sched.schedule(update_trades, minutes=3, start_now=True)
+sched.schedule(update_trades, seconds=45, start_now=True)
