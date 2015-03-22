@@ -40,12 +40,21 @@ def push_trade(tid):
 
         # First, give a chance to any arbiter that has our specified bot loaded up
         if trade.bid and trade.status == "USED":
+            if redis.llen("tradeq:bot:%s" % trade.bid) or 0 > 25:
+                raise Exception("Queue Full")
+
             redis.rpush("tradeq:bot:%s" % trade.bid, json.dumps(payload))
             time.sleep(5)
 
             if c.select("trades", "state", id=tid).fetchone().state != TradeState.NEW:
                 log.debug("A bot handled the trade from the individual queue...")
                 return
+
+            # This will bite me in the ass later
+            redis.delete("tradeq:bot:%s" % trade.bid)
+
+        if redis.llen("tradeq") or 0 > 50:
+            raise Exception("Queue Full")
 
         # Otherwise, let the hoard take it
         redis.rpush("tradeq", json.dumps(payload))

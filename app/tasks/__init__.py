@@ -1,6 +1,8 @@
-import json, uuid, logging, thread, time, os
+import json, uuid, logging, thread, time, os, sys, traceback
 
 from database import redis
+
+from util.slack import SlackMessage
 
 log = logging.getLogger(__name__)
 
@@ -54,6 +56,20 @@ class TaskRunner(object):
                 time.sleep(self.f.buffer_time)
         except:
             log.exception("[%s] Failed in %ss", job['id'], time.time() - start)
+
+            # Send slack stack trace
+            try:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+
+                content = ''.join(traceback.format_exception(exc_type, exc_obj, exc_tb))
+                msg = SlackMessage("Task Exception (%s)" % str(exc_obj), color='danger')
+                msg.add_custom_field("Task Name", self.name)
+                msg.add_custom_field("Task ID", job['id'])
+                msg.add_custom_field("Duration", "%ss" % (time.time() - start))
+                msg.add_custom_field("Exception", content)
+                msg.send_async()
+            except Exception:
+                log.exception("Failed to send slack exception trace: ")
         finally:
             redis.delete("task:%s" % job['id'])
             self.running -= 1

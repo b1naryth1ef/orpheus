@@ -68,8 +68,8 @@ class TradeQueueSizeCheck(Check):
     THRESHOLD_CRITICAL = 500
 
     def run(self):
-        size = 0
-        for queue in redis.keys("bot:*:tradeq"):
+        size = redis.llen("tradeq") or 0
+        for queue in redis.keys("tradeq:bot:*"):
             size += int(redis.llen(queue) or 0)
 
         if size >= self.THRESHOLD_WARNING:
