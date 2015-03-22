@@ -75,7 +75,7 @@ def match_to_json(m, user=None):
     c = Cursor()
 
     if not isinstance(m, tuple):
-        c.execute("SELECT {} FROM matches WHERE id=%s".format(
+        c.execute("SELECT {} FROM matches WHERE id=%s AND active=true".format(
             ', '.join(match_to_json.required_fields)), (m, ))
         m = c.fetchone()
 
