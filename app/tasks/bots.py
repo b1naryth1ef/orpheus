@@ -140,7 +140,7 @@ def check_steam_servers():
             test_steam_server.queue(server)
             time.sleep(2)
 
-@task(max_running=4, buffer_time=3)
+@task(max_running=2, buffer_time=10)
 def refresh_bot_inventory(id, steamid):
     log.info("Refreshing inventory for bot #%s", id)
     with Cursor() as c:

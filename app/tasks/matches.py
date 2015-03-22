@@ -7,7 +7,7 @@ log = logging.getLogger(__name__)
 
 NEED_ITEM_LOCK = """
 SELECT id FROM matches
-WHERE state='OPEN' AND (match_date - interval '5 minutes') > now()
+WHERE state='OPEN' AND (match_date - interval '5 minutes') < now()
 """
 
 @task()
