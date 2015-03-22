@@ -9,7 +9,7 @@ from tasks import task
 from tasks.bots import refresh_bot_inventory
 
 from util import create_enum
-from helpers.trade import get_trade_pin
+from helpers.trade import get_trade_notify_content
 from util.push import WebPush
 from util.steam import SteamAPI
 
@@ -59,9 +59,11 @@ def push_trade(tid):
 def update_trades():
     with Cursor() as c:
         trades = c.execute("""
-            SELECT t.id, t.offerid, t.created_at, t.bet_ref, t.bot_ref, b.steamid, b.apikey
+            SELECT
+                t.id, t.offerid, t.created_at, t.bet_ref, t.bot_ref b.steamid, b.apikey, u.steamid
             FROM trades t
             JOIN bots b ON b.id=t.bot_ref
+            JOIN users u ON u.id=t.user_ref
             WHERE t.state IN ('OFFERED', 'NEW')
         """).fetchall(as_list=True)
 
@@ -75,6 +77,7 @@ def update_trades():
 
                 if trade.bet_ref:
                     c.update("bets", trade.bet_ref, state='CANCELLED')
+                    WebPush(trade.steamid).clear_hover()
 
                 if trade.offerid:
                     steam.cancelTradeOffer(trade.offerid)
@@ -93,6 +96,7 @@ def update_trades():
 
                 if trade.bet_ref:
                     c.update("bets", trade.bet_ref, state='CANCELLED')
+                    WebPush(trade.steamid).clear_hover()
             elif state == ETradeOfferState.ACCEPTED:
                 log.info("Updating state for trade %s, accepted", trade.id)
                 c.update("trades", trade.id, state='ACCEPTED')
@@ -100,32 +104,12 @@ def update_trades():
                 refresh_bot_inventory.queue(trade.bot_ref, trade.steamid)
                 if trade.bet_ref:
                     c.update("bets", trade.bet_ref, state='CONFIRMED')
-
-NOTIFY_MSG = """
-<p>You have a pending trade <a href="https://steamcommunity.com/tradeoffer/{trade.offerid}" target="_blank">click here</a>
-to view it.</p>
-<p>Bot Name: {trade.profilename}<br />
-Trade PIN: {pin}<br />
-</p>
-<p><i>
-If you are having issues, please email our support team (contact at csgofort.com)!
-</i></p>
-"""
+                    WebPush(trade.steamid).clear_hover()
 
 @task()
 def trade_notify(tid):
-    with Cursor() as c:
-        trade = c.execute("""
-            SELECT t.id, t.bot_ref, t.user_ref, t.offerid, b.profilename FROM trades t
-            JOIN bots b ON b.id=t.bot_ref
-            WHERE t.id=%s
-        """, (tid, )).fetchone()
-
-        if not trade:
-            raise Exception("Failed to find trade for trade_notify, %s" % tid)
-
-        WebPush(trade.user_ref).clear_hover()
-        time.sleep(1)
-        WebPush(trade.user_ref).create_hover("Pending Trade Offer", NOTIFY_MSG.format(
-            trade=trade, pin=get_trade_pin(trade.id)))
+    uid, content = get_trade_notify_content(tid)
+    WebPush(uid).clear_hover()
+    time.sleep(1)
+    WebPush(uid).create_hover("Pending Trade Offer", content)
 

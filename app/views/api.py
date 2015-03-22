@@ -14,6 +14,7 @@ from helpers.user import (UserGroup, gache_user_info, user_save_settings,
 
 from helpers.common import get_enum_array
 from helpers.news import newspost_to_json
+from helpers.trade import get_trade_notify_content
 
 from tasks.inventory import push_steam_inventory
 
@@ -460,4 +461,18 @@ def api_get_news_posts():
     return APIResponse({
         "posts": map(newspost_to_json, g.cursor.fetchall())
     })
+
+@api.route("/trade/pending", methods=["GET"])
+@authed()
+def api_get_trade_list():
+    trade = g.cursor.execute("""
+        SELECT id FROM trades
+        WHERE user_ref=%s AND state='OFFERED'
+        LIMIT 1
+    """, (g.user, )).fetchone()
+
+    if not trade:
+        return APIResponse({"trade": None})
+
+    return APIResponse({"trade": get_trade_notify_content(trade.id)[1]})
 

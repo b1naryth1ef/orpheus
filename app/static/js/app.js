@@ -185,5 +185,14 @@ app.setup = function (userData) {
 
         $("[fort-user=false]").show();
     }
+
+    if (this.user) {
+        $.get("/api/trade/pending", (function (data) {
+            console.log(data.trade);
+            if (data.trade) {
+                this.hover("Pending Trade Offer", data.trade);
+            }
+        }).bind(this));
+    }
 };
 
