@@ -65,7 +65,7 @@ def update_trades():
             FROM trades t
             JOIN bots b ON b.id=t.bot_ref
             JOIN users u ON u.id=t.user_ref
-            WHERE t.state IN ('OFFERED', 'NEW')
+            WHERE t.state='OFFERED'
         """).fetchall(as_list=True)
 
         for trade in trades:
@@ -80,12 +80,7 @@ def update_trades():
                     c.update("bets", trade.bet_ref, state='CANCELLED')
                     WebPush(trade.uid).clear_hover()
 
-                if trade.offerid:
-                    steam.cancelTradeOffer(trade.offerid)
-                continue
-
-            # If we don't have an offer yet, we cannot continue
-            if not trade.offerid:
+                steam.cancelTradeOffer(trade.offerid)
                 continue
 
             state = offer['trade_offer_state']
