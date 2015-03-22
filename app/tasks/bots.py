@@ -11,6 +11,7 @@ from util.steam import InvalidInventoryException
 from tasks.inventory import update_item
 
 log = logging.getLogger(__name__)
+market = steam.market(730)
 
 STEAM_SERVERS = {}
 
@@ -140,25 +141,29 @@ def check_steam_servers():
             time.sleep(2)
 
 @task()
-def refresh_bot_inventory():
-    market = steam.market(730)
+def refresh_bot_inventory(id, steamid):
+    log.info("Refreshing inventory for bot #%s", id)
+    with Cursor() as c:
+        try:
+            inv = market.get_inventory(steamid)
+        except InvalidInventoryException:
+            log.error("Invalid Inventory for bot #%s", id)
+            c.update("bots", id, inventory=[])
+            return
+
+        items = set()
+        for item_id, item in inv['rgInventory'].iteritems():
+            ikey = "%s_%s" % (item['classid'], item['instanceid'])
+            items.add(int(update_item(steamid, item_id, data=inv['rgDescriptions'][ikey])))
+
+        c.update("bots", id, inventory=list(items))
+
+@task()
+def refresh_all_inventories():
     with Cursor() as c:
         bots = c.execute("SELECT id, steamid FROM bots WHERE status IN ('AVAIL', 'USED')"
             ).fetchall(as_list=True)
 
     for bot in bots:
-        log.info("Refreshing inventory for bot #%s", bot.id)
-        with Cursor() as c:
-            try:
-                inv = market.get_inventory(bot.steamid)
-            except InvalidInventoryException:
-                log.error("Invalid Inventory for bot #%s", bot.id)
-                continue
-
-            items = set()
-            for item_id, item in inv['rgInventory'].iteritems():
-                ikey = "%s_%s" % (item['classid'], item['instanceid'])
-                items.add(int(update_item(bot.steamid, item_id, data=inv['rgDescriptions'][ikey])))
-
-            c.update("bots", bot.id, inventory=list(items))
+        refresh_bot_inventory(bot.id, bot.steamid)
 

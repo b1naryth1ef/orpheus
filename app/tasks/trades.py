@@ -6,6 +6,8 @@ from dateutil import relativedelta
 from database import Cursor, redis
 from tasks import task
 
+from tasks.bots import refresh_bot_inventory
+
 from util.steam import SteamAPI
 from util import create_enum
 
@@ -53,8 +55,8 @@ def push_trade(tid):
 def update_trades():
     with Cursor() as c:
         trades = c.execute("""
-            SELECT t.id, t.offerid, t.created_at, t.bet_ref, b.apikey FROM trades t
-            JOIN bots b ON b.id=t.bot_ref
+            SELECT t.id, t.offerid, t.created_at, t.bet_ref, t.bot_ref, b.steamid, b.apikey
+            FROM trades t JOIN bots b ON b.id=t.bot_ref
             WHERE state='OFFERED'
         """).fetchall(as_list=True)
 
@@ -81,6 +83,7 @@ def update_trades():
                 log.info("Updating state for trade %s, accepted", trade.id)
                 c.update("trades", trade.id, state='ACCEPTED')
 
+                refresh_bot_inventory.queue(trade.bot_ref, trade.steamid)
                 if trade.bet_ref:
                     c.update("bets", trade.bet_ref, state='CONFIRMED')
 
