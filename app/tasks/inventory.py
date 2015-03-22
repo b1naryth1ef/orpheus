@@ -18,7 +18,8 @@ log = logging.getLogger(__name__)
 market = steam.market(730)
 
 @task()
-def update_item(owner_id, item_id, class_id=None, instance_id=None, data=None):
+def update_item(owner_id, item_id, class_id=None, instance_id=None, data=None,
+        state=ItemState.EXTERNAL):
     with Cursor() as c:
         data = data or market.get_asset_class_info(class_id, instance_id)
 
@@ -41,7 +42,7 @@ def update_item(owner_id, item_id, class_id=None, instance_id=None, data=None):
             "name": data['market_hash_name'],
             "class_id": data['classid'],
             "instance_id": data['instanceid'],
-            "state": ItemState.EXTERNAL,
+            "state": state,
             "image": data.get("icon_url_large", data.get("icon_url")),
             "price": item_price.price if item_price else None,
             "meta": c.json({

@@ -8,8 +8,8 @@ COUNT_ITEMS_QUERY = u"http://steamcommunity.com/market/search/render/?query={que
 LIST_ITEMS_QUERY = u"http://steamcommunity.com/market/search/render/?query={query}&start={start}&count={count}&search_descriptions=0&sort_column={sort}&sort_dir={order}&appid={appid}"
 ITEM_PRICE_QUERY = u"http://steamcommunity.com/market/priceoverview/?country=US&currency=1&appid={appid}&market_hash_name={name}"
 ITEM_PAGE_QUERY = u"http://steamcommunity.com/market/listings/{appid}/{name}"
+INVENTORY_QUERY = u"http://steamcommunity.com/profiles/76561198142815401/inventory/json/730/2"
 BULK_ITEM_PRICE_QUERY = u"http://steamcommunity.com/market/itemordershistogram?country=US&language=english&currency=1&item_nameid={nameid}"
-INVENTORY_QUERY = u"{url}/inventory/json/{appid}/2"
 API_FMT = "http://api.steampowered.com/{iface}/{cmd}/v001/"
 
 steam_id_re = re.compile('steamcommunity.com/openid/id/(.*?)$')
@@ -67,6 +67,13 @@ class SteamAPIError(Exception):
     """
     This Exception is raised when the Steam API
     either times out, or returns invalid data to us
+    """
+
+class InvalidInventoryException(SteamAPIError):
+    """
+    This exception is raised when an inventory is empty or invalid. Generally
+    this will be raised if the user does not own the game, or has never owned
+    an item from the game. May also occur from invalid appid/contextid
     """
 
 class SteamAPI(object):
@@ -255,56 +262,18 @@ class SteamMarketAPI(object):
         r = retry_request(lambda f: f.get(url, params=data, timeout=10))
         return r.json()["result"][ikey]
 
-    def get_inventory(self, id):
-        data = self.steam.getUserInfo(id)["profileurl"]
-        url = INVENTORY_QUERY.format(url=data, appid=self.appid)
+    def get_inventory(self, steamid, context=2):
+        url = INVENTORY_QUERY.format(id=steamid, app=self.appid, ctx=context)
 
         r = retry_request(lambda f: f.get(url, timeout=10))
         if not r:
             raise SteamAPIError("Failed to get inventory for steamid %s" % id)
 
-        return r.json()
+        data = r.json()
+        if not data.get("success"):
+            raise InvalidInventoryException("Invalid Inventory")
 
-
-    def get_parsed_inventory(self, steamid):
-        """
-        TODO: deprecate this fucking shit
-
-        from maz.mazdb import MarketItem
-
-        result = self.get_inventory(steamid)
-
-        item_data = []
-        for key, value in result["rgInventory"].items():
-            asset_id = "%s_%s" % (value["classid"], value["instanceid"])
-            desc = result['rgDescriptions'][asset_id]
-
-            try:
-                item = MarketItem.select(MarketItem.id).where(
-                   MarketItem.name == desc["market_hash_name"]
-                ).get().id
-            except Exception:
-                item = -1
-
-            idata = {
-                "c": int(value["classid"]),
-                "s": asset_id,
-                "i": item,
-                "t": desc["tradable"],
-                "m": desc["marketable"]
-            }
-
-            if item == -1:
-                idata['name'] = desc["market_hash_name"]
-
-            if 'fraudwarnings' in desc:
-                idata['fraud'] = desc["fraudwarnings"]
-
-            item_data.append(idata)
-        return item_data
-        """
-
-        raise Exception("DEPRECATED!")
+        return data
 
     def parse_item_name(self, name):
         # Strip out unicode
