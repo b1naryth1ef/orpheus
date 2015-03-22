@@ -129,7 +129,7 @@ def test_steam_server(host):
         socket.create_connection((ip, int(port)), 5).close()
         log.info("Steam server '%s' is up and responding!", host)
         redis.sadd("steamservers", host)
-    except socket.timeout:
+    except socket.timeout, socket.error:
         log.warning("Steam server '%s' is down!", host)
         redis.srem("steamservers", host)
 
