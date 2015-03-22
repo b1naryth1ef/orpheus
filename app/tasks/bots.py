@@ -7,7 +7,7 @@ from fort import steam
 from database import redis, Cursor
 from tasks import task
 
-from util.steam import InvalidInventoryException
+from util.steam import InvalidInventoryException, SteamAPIError
 from tasks.inventory import update_item
 
 log = logging.getLogger(__name__)
@@ -140,7 +140,7 @@ def check_steam_servers():
             test_steam_server.queue(server)
             time.sleep(2)
 
-@task()
+@task(max_running=4, buffer_time=3)
 def refresh_bot_inventory(id, steamid):
     log.info("Refreshing inventory for bot #%s", id)
     with Cursor() as c:
@@ -149,6 +149,9 @@ def refresh_bot_inventory(id, steamid):
         except InvalidInventoryException:
             log.error("Invalid Inventory for bot #%s", id)
             c.update("bots", id, inventory=[])
+            return
+        except SteamAPIError:
+            log.error("Failed to get inventory for bot #%s", id)
             return
 
         items = set()

@@ -17,12 +17,12 @@ FIVE_MINUTES = 60 * 5
 log = logging.getLogger(__name__)
 market = steam.market(730)
 
-@task()
+@task(max_running=6, buffer_time=1)
 def update_item(owner_id, item_id, class_id=None, instance_id=None, data=None,
         state=ItemState.EXTERNAL):
-    with Cursor() as c:
-        data = data or market.get_asset_class_info(class_id, instance_id)
+    data = data or market.get_asset_class_info(class_id, instance_id)
 
+    with Cursor() as c:
         item = c.execute("SELECT id FROM items WHERE id=%s", (item_id, )).fetchone()
         item_price = c.execute("SELECT price FROM itemprices WHERE name=%s",
             (data['market_hash_name'], )).fetchone()
@@ -58,10 +58,10 @@ def update_item(owner_id, item_id, class_id=None, instance_id=None, data=None,
             payload['id'] = item_id
             c.insert("items", payload)
 
-        # We queue a new job because this needs to be seperatly rate-limited
-        if not item_price:
-            update_item_price.queue(item_id)
-        return item_id
+    # We queue a new job because this needs to be seperatly rate-limited
+    if not item_price:
+        update_item_price.queue(item_id)
+    return item_id
 
 @task(max_running=2, buffer_time=1)
 def update_item_price(item_id):
