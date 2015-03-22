@@ -351,8 +351,9 @@ def request_returns(req):
             JOIN bets bt ON (
                 bt.items @> ARRAY[i.id]
                 OR bt.winnings @> ARRAY[i.id])
+            JOIN matches m ON m.id=bt.match
             WHERE i.state='INTERNAL' AND bt.state='WON' AND bt.better=%s
-            AND i.state='INTERNAL' AND i.id IN %s;
+            AND i.state='INTERNAL' AND i.id IN %s AND m.itemstate!='LOCKED';
         """, (g.user, tuple(req), ))
         items = c.fetchall(as_list=True)
 
