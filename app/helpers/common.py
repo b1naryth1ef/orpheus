@@ -26,7 +26,7 @@ def create_exception(exception, meta):
 
 def get_enum_array(enum_type):
     with Cursor() as c:
-        return c.execute(
+        return map(lambda i: i[0], c.execute(
             "SELECT unnest(enum_range(NULL::{}))".format(enum_type)
-        ).fetchall(as_list=True)
+        ).fetchall(as_list=True))
 

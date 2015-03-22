@@ -132,6 +132,11 @@ def route_match_bet(match_id):
     # Make sure this seems mildly valid
     apiassert(0 < len(items) <= 4, "Invalid Items")
 
+    # Make sure the user doesn't have any other pending trades
+    g.cursor.execute("SELECT id FROM trades WHERE user_ref=%s AND state < 'ACCEPTED'", (g.user, ))
+    if g.cursor.fetchone():
+        raise APIError("You already have a bet with a pending trade offer! Please accept that before creating more bets.")
+
     # Grab some info for the match
     match = g.cursor.select("matches", *MATCH_CONFIRM_BET_FIELDS, id=match_id).fetchone()
 

@@ -108,6 +108,18 @@ app.openWebSocket = function () {
                 }
             }).bind(this));
         }
+
+        if (data.type == "notification") {
+            $.notify.apply(this, data.args);
+        }
+
+        if (data.type == "hover") {
+            if (data.action == "create") {
+                this.hover(data.title, data.content);
+            } else if (data.action == "clear") {
+                this.hoverClear();
+            }
+        }
     }).bind(this);
 
     this.ws.onclose = (function (eve) {
@@ -122,6 +134,19 @@ app.openWebSocket = function () {
         }
     }).bind(this);
 }
+
+app.hover = (function (title, content) {
+    var options = options || {};
+
+    $(document.body).append(this.render("hover", {
+        title: title,
+        content: content
+    }));
+}).bind(app);
+
+app.hoverClear = (function () {
+    $(".hover-alert").fadeOut();
+}).bind(app);
 
 app.teardown = (function () {
     this.ws.close();

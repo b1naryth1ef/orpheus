@@ -6,7 +6,8 @@ from flask import g
 from database import Cursor
 from util.errors import InvalidRequestError, ValidationError, FortException
 from helpers.user import UserGroup
-from helpers.bet import BetState, get_pin
+from helpers.bet import BetState
+from helpers.trade import get_trade_pin
 from helpers.common import get_enum_array
 
 def validate_match_team_data(obj):
@@ -99,8 +100,9 @@ def match_to_json(m, user=None):
     match['bet_state'] = m.state
     match['bet_itemstate'] = m.itemstate
 
-    match['states'] = get_enum_array('match_state')
-    match['itemstates'] = get_enum_array('match_item_state')
+    if g.user and g.group > UserGroup.MODERATOR:
+        match['states'] = get_enum_array('match_state')
+        match['itemstates'] = get_enum_array('match_item_state')
 
     match['event'] = {
         "id": event.id,
@@ -160,15 +162,16 @@ def match_to_json(m, user=None):
 
         # Get any bets I placed
         mybet = c.execute("""
-            SELECT id, items, winnings, team, state, value FROM bets
-            WHERE match=%s AND better=%s AND state != 'CANCELLED'
+            SELECT b.id, b.items, b.winnings, b.team, b.state, b.value, t.id as tid FROM bets b
+            LEFT OUTER JOIN trades t ON t.bet_ref=b.id
+            WHERE b.match=%s AND b.better=%s AND b.state != 'CANCELLED'
         """, (m.id, user)).fetchone()
 
         if mybet:
             items = c.execute(MATCH_GET_ITEMS_QUERY, (mybet.id, )).fetchall()
 
             match['me']['id'] = mybet.id
-            match['me']['pin'] = get_pin(mybet.id)
+            match['me']['pin'] = get_trade_pin(mybet.tid)
             match['me']['team'] = mybet.team
             match['me']['state'] = mybet.state
             match['me']['value'] = mybet.value

@@ -82,7 +82,6 @@ MATCHES = [
             "streams": ["http://twitch.tv/test1", "http://twitch.tv/test2"],
             "maps": ["de_nuke"]
         },
-        "lock_date": ONE_WEEK_FUTURE,
         "match_date": ONE_WEEK_FUTURE,
         "public_date": datetime.utcnow()
     },
@@ -97,7 +96,6 @@ MATCHES = [
             "streams": ["http://mlg.tv/swag", "http://twitch.tv/esea"],
             "maps": ["de_nuke", "de_mirage", "de_dust2"]
         },
-        "lock_date": ONE_WEEK_FUTURE,
         "match_date": ONE_WEEK_FUTURE,
         "public_date": datetime.utcnow()
     },
@@ -111,15 +109,14 @@ MATCHES = [
             "streams": ["http://mlg.tv/swag", "http://twitch.tv/esea"],
             "maps": ["de_facade", "de_mirage", "de_dust2"]
         },
-        "lock_date": ONE_WEEK_PAST,
         "match_date": ONE_WEEK_PAST,
         "public_date": ONE_WEEK_PAST,
     }
 ]
 
 MATCH_QUERY = """
-INSERT INTO matches (event, state, itemstate, game, teams, meta, lock_date, match_date, public_date, active) VALUES
-(%(event)s, %(state)s, %(itemstate)s, %(game)s, %(teams)s, %(meta)s, %(lock_date)s, %(match_date)s, %(public_date)s, true);
+INSERT INTO matches (event, state, itemstate, game, teams, meta, match_date, public_date, active) VALUES
+(%(event)s, %(state)s, %(itemstate)s, %(game)s, %(teams)s, %(meta)s, %(match_date)s, %(public_date)s, true);
 """
 
 def generate_matches(t, db):

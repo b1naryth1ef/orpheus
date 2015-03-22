@@ -8,3 +8,9 @@ class WebPush(object):
     def send(self, content):
         redis.publish(self.key, json.dumps(content))
 
+    def create_hover(self, title, content):
+        self.send({"type": "hover", "content": content, "title": title, "action": "create"})
+
+    def clear_hover(self):
+        self.send({"type": "hover", "action": "clear"})
+

@@ -61,7 +61,7 @@
             </ul>
             <div fort-user="true">
               <ul class="nav navbar-nav navbar-right">
-                <li class="dropdown dropdown-list" data-toggle="tooltip" data-placement="bottom" title="Admin">
+                <li class="dropdown dropdown-list">
                   <a href="#" data-toggle="dropdown" aria-expanded="false">
                     <em class="fa fa-gears fa-2x"></em>
                     <div class="label label-danger"></div>
@@ -81,24 +81,6 @@
                         </a>
                       </div>
                     </li>
-                    {% if user and user['authed'] %}
-                      {% if user['user']['group'] == "MODERATOR" or user['user']['group'] == "ADMIN" or user['user']['group'] == "SUPER" %}
-                        <li>
-                          <div class="list-group">
-                            <a href="/admin" class="list-group-item">
-                              <div class="media-box">
-                                <div class="pull-left">
-                                  <em class="fa icon-speedometer fa-2x text-info"></em>
-                                </div>
-                                <div class="media-box-body clearfix">
-                                  <p class="m0">Admin Page</p>
-                                </div>
-                              </div>
-                            </a>
-                          </div>
-                        </li>
-                      {% endif %}
-                    {% endif %}
                     <li>
                       <div class="list-group">
                         <a href="/auth/logout" class="list-group-item">
@@ -117,6 +99,148 @@
                 </li>
               </ul>
             </div>
+            {% if user and user['authed'] %}
+              {% if user['user']['group'] == "MODERATOR" or user['user']['group'] == "ADMIN" or user['user']['group'] == "SUPER" %}
+                <div fort-user="true">
+                  <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown dropdown-list" data-toggle="tooltip" data-placement="bottom" title="Admin">
+                      <a href="#" data-toggle="dropdown" aria-expanded="false">
+                        <em class="fa icon-speedometer fa-2x"></em>
+                        <div class="label label-danger"></div>
+                      </a>
+                      <ul class="dropdown-menu animated fadeIn">
+                        <li>
+                          <div class="list-group">
+                            <a href="/admin" class="list-group-item">
+                              <div class="media-box">
+                                <div class="pull-left">
+                                  <em class="fa fa-home fa-2x text-info"></em>
+                                </div>
+                                <div class="media-box-body clearfix">
+                                  <p class="m0">Home</p>
+                                </div>
+                              </div>
+                            </a>
+                          </div>
+                        </li>
+                        <li>
+                          <div class="list-group">
+                            <a href="/admin/matches" class="list-group-item">
+                              <div class="media-box">
+                                <div class="pull-left">
+                                  <em class="fa fa-cubes fa-2x text-info"></em>
+                                </div>
+                                <div class="media-box-body clearfix">
+                                  <p class="m0">Matches</p>
+                                </div>
+                              </div>
+                            </a>
+                          </div>
+                        </li>
+                        <li>
+                          <div class="list-group">
+                            <a href="/admin/teams" class="list-group-item">
+                              <div class="media-box">
+                                <div class="pull-left">
+                                  <em class="fa fa-group fa-2x text-info"></em>
+                                </div>
+                                <div class="media-box-body clearfix">
+                                  <p class="m0">Teams</p>
+                                </div>
+                              </div>
+                            </a>
+                          </div>
+                        </li>
+                        <li>
+                          <div class="list-group">
+                            <a href="/admin/events" class="list-group-item">
+                              <div class="media-box">
+                                <div class="pull-left">
+                                  <em class="fa fa-trophy fa-2x text-info"></em>
+                                </div>
+                                <div class="media-box-body clearfix">
+                                  <p class="m0">Events</p>
+                                </div>
+                              </div>
+                            </a>
+                          </div>
+                        </li>
+                        <li>
+                          <div class="list-group">
+                            <a href="/admin/bets" class="list-group-item">
+                              <div class="media-box">
+                                <div class="pull-left">
+                                  <em class="fa fa-money fa-2x text-info"></em>
+                                </div>
+                                <div class="media-box-body clearfix">
+                                  <p class="m0">Bets</p>
+                                </div>
+                              </div>
+                            </a>
+                          </div>
+                        </li>
+                        <li>
+                          <div class="list-group">
+                            <a href="/admin/games" class="list-group-item">
+                              <div class="media-box">
+                                <div class="pull-left">
+                                  <em class="fa fa-gamepad fa-2x text-info"></em>
+                                </div>
+                                <div class="media-box-body clearfix">
+                                  <p class="m0">Games</p>
+                                </div>
+                              </div>
+                            </a>
+                          </div>
+                        </li>
+                        <li>
+                          <div class="list-group">
+                            <a href="/admin/news" class="list-group-item">
+                              <div class="media-box">
+                                <div class="pull-left">
+                                  <em class="fa fa-newspaper-o fa-2x text-info"></em>
+                                </div>
+                                <div class="media-box-body clearfix">
+                                  <p class="m0">News Posts</p>
+                                </div>
+                              </div>
+                            </a>
+                          </div>
+                        </li>
+                        <li>
+                          <div class="list-group">
+                            <a href="/admin/bans" class="list-group-item">
+                              <div class="media-box">
+                                <div class="pull-left">
+                                  <em class="fa fa-gavel fa-2x text-info"></em>
+                                </div>
+                                <div class="media-box-body clearfix">
+                                  <p class="m0">Bans</p>
+                                </div>
+                              </div>
+                            </a>
+                          </div>
+                        </li>
+                        <li>
+                          <div class="list-group">
+                            <a href="/admin/users" class="list-group-item">
+                              <div class="media-box">
+                                <div class="pull-left">
+                                  <em class="fa fa-user fa-2x text-info"></em>
+                                </div>
+                                <div class="media-box-body clearfix">
+                                  <p class="m0">Users</p>
+                                </div>
+                              </div>
+                            </a>
+                          </div>
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+                </div>
+              {% endif %}
+            {% endif %}
           </div>
           <form role="search" action="search.html" class="navbar-form">
             <div class="form-group has-feedback">

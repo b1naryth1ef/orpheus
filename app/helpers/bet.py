@@ -1,4 +1,4 @@
-import time, json, hashlib
+import time, json
 from datetime import datetime
 
 from database import Cursor, redis
@@ -7,7 +7,7 @@ from tasks.trades import push_trade
 
 from util import create_enum
 from util.errors import FortException
-from helpers.trade import TradeType, TradeState
+from helpers.trade import TradeType, TradeState, get_trade_pin
 
 BetState = create_enum('NEW', 'OFFERED', 'CONFIRMED', 'WON', 'LOST', 'CANCELLED')
 
@@ -22,15 +22,6 @@ WHERE
     AND array_length(b.inventory, 1) < %(size)s)
 LIMIT 1;
 """
-
-def get_pin(id):
-    """
-    Computes a pin for a bet id. This simply computes a MD5 hash for the ID,
-    and returns the last 12 digits.
-    """
-    m = hashlib.md5()
-    m.update(str(id))
-    return m.hexdigest()[:12]
 
 def find_avail_bot(items_count):
     """
@@ -107,7 +98,6 @@ def create_bet(user, match, team, items):
             'ttype': TradeType.BET,
             'to_id': user.steamid,
             'token': user.trade_token,
-            'message': 'CSGO Fort Bet. Match #%s. Pin: %s' % (match, get_pin(bet)),
             'items_in': items,
             'items_out': [],
             'created_at': datetime.utcnow(),
@@ -115,6 +105,9 @@ def create_bet(user, match, team, items):
             'bet_ref': bet,
             'bot_ref': bot,
         })
+
+        # BLERG. This could possibly be done in pure sql up ^ there
+        c.update("trades", tid, message='CSGO Fort Bet. Match #%s. Pin: %s' % (match, get_trade_pin(bet)))
 
         push_trade.queue(tid)
 

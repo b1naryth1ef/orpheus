@@ -8,8 +8,10 @@ from tasks import task
 
 from tasks.bots import refresh_bot_inventory
 
-from util.steam import SteamAPI
 from util import create_enum
+from helpers.trade import get_trade_pin
+from util.push import WebPush
+from util.steam import SteamAPI
 
 log = logging.getLogger(__name__)
 
@@ -45,10 +47,12 @@ def push_trade(tid):
             time.sleep(3)
 
             # Let's see if someone managed to grab it
-            if not redis.exists("trade:%s"):
+            if not redis.exists("trade:%s" % trade.tid):
+                log.info("Someone grabbed the trade lock")
                 return
 
         # Otherwise, let the hoard take it
+        log.info("GO GO GADGET")
         redis.publish("tradeq", json.dumps(payload))
 
 @task()
@@ -56,18 +60,28 @@ def update_trades():
     with Cursor() as c:
         trades = c.execute("""
             SELECT t.id, t.offerid, t.created_at, t.bet_ref, t.bot_ref, b.steamid, b.apikey
-            FROM trades t JOIN bots b ON b.id=t.bot_ref
-            WHERE state='OFFERED'
+            FROM trades t
+            JOIN bots b ON b.id=t.bot_ref
+            WHERE t.state IN ('OFFERED', 'NEW')
         """).fetchall(as_list=True)
 
         for trade in trades:
             steam = SteamAPI(trade.apikey)
             offer = steam.getTradeOffer(trade.offerid)
 
-            if trade.created_at > datetime.now() - relativedelta.relativedelta(minutes=5):
+            if trade.created_at > datetime.utcnow() - relativedelta.relativedelta(minutes=5):
                 log.info("Canceling trade %s, expired", trade.id)
-                steam.cancelTradeOffer(trade.offerid)
                 c.update("trades", trade.id, state='REJECTED')
+
+                if trade.bet_ref:
+                    c.update("bets", trade.bet_ref, state='CANCELLED')
+
+                if trade.offerid:
+                    steam.cancelTradeOffer(trade.offerid)
+                continue
+
+            # If we don't have an offer yet, we cannot continue
+            if not trade.offerid:
                 continue
 
             state = offer['trade_offer_state']
@@ -86,4 +100,32 @@ def update_trades():
                 refresh_bot_inventory.queue(trade.bot_ref, trade.steamid)
                 if trade.bet_ref:
                     c.update("bets", trade.bet_ref, state='CONFIRMED')
+
+NOTIFY_MSG = """
+<p>You have a pending trade <a href="https://steamcommunity.com/tradeoffer/{trade.offerid}" target="_blank">click here</a>
+to view it.</p>
+<p>Bot Name: {trade.profilename}<br />
+Trade PIN: {pin}<br />
+</p>
+<p><i>
+If you are having issues, please email our support team (contact at csgofort.com)!
+</i></p>
+"""
+
+@task()
+def trade_notify(tid):
+    with Cursor() as c:
+        trade = c.execute("""
+            SELECT t.id, t.bot_ref, t.user_ref, t.offerid, b.profilename FROM trades t
+            JOIN bots b ON b.id=t.bot_ref
+            WHERE t.id=%s
+        """, (tid, )).fetchone()
+
+        if not trade:
+            raise Exception("Failed to find trade for trade_notify, %s" % tid)
+
+        WebPush(trade.user_ref).clear_hover()
+        time.sleep(1)
+        WebPush(trade.user_ref).create_hover("Pending Trade Offer", NOTIFY_MSG.format(
+            trade=trade, pin=get_trade_pin(trade.id)))
 
