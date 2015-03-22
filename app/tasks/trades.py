@@ -9,7 +9,7 @@ from tasks import task
 from tasks.bots import refresh_bot_inventory
 
 from util import create_enum
-from helpers.trade import get_trade_notify_content
+from helpers.trade import TradeState, get_trade_notify_content
 from util.push import WebPush
 from util.steam import SteamAPI
 
@@ -38,22 +38,17 @@ def push_trade(tid):
             "bot": trade.bid or 0
         }
 
-        # Set a key to make this transactional
-        redis.set("trade:%s" % trade.tid, 1)
-
         # First, give a chance to any arbiter that has our specified bot loaded up
         if trade.bid and trade.status == "USED":
-            redis.publish("tradeq:bot:%s" % trade.bid, json.dumps(payload))
-            time.sleep(3)
+            redis.rpush("tradeq:bot:%s" % trade.bid, json.dumps(payload))
+            time.sleep(5)
 
-            # Let's see if someone managed to grab it
-            if not redis.exists("trade:%s" % trade.tid):
-                log.info("Someone grabbed the trade lock")
+            if c.select("trades", "state", id=tid).fetchone().state != TradeState.NEW:
+                log.debug("A bot handled the trade from the individual queue...")
                 return
 
         # Otherwise, let the hoard take it
-        log.info("GO GO GADGET")
-        redis.publish("tradeq", json.dumps(payload))
+        redis.rpush("tradeq", json.dumps(payload))
 
 @task()
 def update_trades():
@@ -61,10 +56,12 @@ def update_trades():
         trades = c.execute("""
             SELECT
                 t.id, t.offerid, t.created_at, t.bet_ref, t.bot_ref, b.steamid, b.apikey,
-                u.id as uid
+                u.id as uid, m.id as mid
             FROM trades t
             JOIN bots b ON b.id=t.bot_ref
             JOIN users u ON u.id=t.user_ref
+            LEFT OUTER JOIN bets bt ON bt.id=t.bet_ref
+            LEFT OUTER JOIN matches m ON m.id=bt.match
             WHERE t.state='OFFERED'
         """).fetchall(as_list=True)
 
@@ -78,7 +75,7 @@ def update_trades():
 
                 if trade.bet_ref:
                     c.update("bets", trade.bet_ref, state='CANCELLED')
-                    WebPush(trade.uid).clear_hover()
+                    WebPush(trade.uid).clear_hover().send({"type": "refresh-match", "id": trade.mid})
 
                 steam.cancelTradeOffer(trade.offerid)
                 continue
@@ -92,7 +89,7 @@ def update_trades():
 
                 if trade.bet_ref:
                     c.update("bets", trade.bet_ref, state='CANCELLED')
-                    WebPush(trade.uid).clear_hover()
+                    WebPush(trade.uid).clear_hover().send({"type": "refresh-match", "id": trade.mid})
             elif state == ETradeOfferState.ACCEPTED:
                 log.info("Updating state for trade %s, accepted", trade.id)
                 c.update("trades", trade.id, state='ACCEPTED')
@@ -100,7 +97,7 @@ def update_trades():
                 refresh_bot_inventory.queue(trade.bot_ref, trade.steamid)
                 if trade.bet_ref:
                     c.update("bets", trade.bet_ref, state='CONFIRMED')
-                    WebPush(trade.uid).clear_hover()
+                    WebPush(trade.uid).clear_hover().send({"type": "refresh-match", "id": trade.mid})
 
 @task()
 def trade_notify(tid):

@@ -71,11 +71,11 @@ match.addItemToSlot = function ($item) {
     $item.addClass("bet-slot").addClass("col-centered");
 }
 
-match.refreshFromSocket = function (data) {
+match.refreshFromSocket = (function (data) {
     if (data.id == this.cachedMatch.id) {
-        this.renderSingleMatch(id);
+        this.renderSingleMatch(this.cachedMatch.id);
     }
-}
+}).bind(match);
 
 match.routeRegex(/^\/match\/(\d+)$/, function (route, id) {
     app.waitForEvent("refresh-match", this.refreshFromSocket);

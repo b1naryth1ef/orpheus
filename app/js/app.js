@@ -7,6 +7,7 @@ var App = function () {
     this.views = {};
     this.setup = null;
     this.socketEventHandlers = {};
+    this.currentView = null;
 }
 
 App.prototype.waitForEvent = function (name, f) {
@@ -43,9 +44,11 @@ App.prototype.run = function () {
                 var regMatch = url.match(regEx);
                 if (regMatch) {
                     regMatch.shift();
+                    this.currentView = this.views[k];
                     return this.views[k].call(match, regMatch);
                 }
             } else if (match == url) {
+                this.currentView = this.views[k];
                 return this.views[k].call(match);
             }
         }
