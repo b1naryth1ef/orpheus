@@ -22,7 +22,7 @@ exec 1>&2
 
 # Run pylint
 pushd ./app/
-exec find . -path ./tests -prune -o -name '*.py' -exec pylint --ignored-classes=_T -E '{}' + || exit 1
+exec find . -path ./tests -prune -o -name '*.py' -exec pylint --ignored-classes=_T --generated-members=astimezone -E '{}' + || exit 1
 popd
 
 # Cross platform projects tend to avoid non-ASCII filenames; prevent
