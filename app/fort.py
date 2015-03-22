@@ -32,20 +32,11 @@ def get_js_templates():
             if "/js" in curdir and fname.endswith(".html"):
                 yield os.path.join(curdir, fname)
 
-SKIP_JS = ["templates.js", "compiled.js"]
 def get_js_source():
-    for (curdir, dirs, files) in os.walk("static/"):
+    for (curdir, dirs, files) in os.walk("js/"):
         for fname in files:
-            if not fname.endswith(".js"):
-                continue
-
-            if fname in SKIP_JS:
-                continue
-
-            if 'vendor' in curdir:
-                continue
-
-            yield os.path.join(curdir, fname)
+            if fname.endswith(".js"):
+                yield os.path.join(curdir, fname)
 
 def build_js_templates():
     TEMPLATES = "var T = {};"
@@ -62,7 +53,7 @@ def build_js_templates():
         f.write(minify(TEMPLATES, mangle=True))
 
 # These must be loaded first
-SOURCE_ORDER = {"static/js/app.js", "static/js/util.js"}
+SOURCE_ORDER = {"js/app.js", "js/util.js"}
 
 def build_js_source():
     SOURCE = ""
