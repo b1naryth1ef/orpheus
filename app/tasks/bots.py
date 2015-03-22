@@ -154,11 +154,24 @@ def refresh_bot_inventory(id, steamid):
             log.error("Failed to get inventory for bot #%s", id)
             return
 
+        # Blank the inventory out
+        if not len(inv['rgInventory']):
+            items = c.select("bots", "inventory", id=id).fetchone().inventory
+
+            if len(items):
+                c.execute("UPDATE items SET owner=NULL, state='EXTERNAL' WHERE id IN %s",
+                    (tuple(items), ))
+
+            c.update("bots", id, inventory=[])
+            return
+
         items = set()
         for item_id, item in inv['rgInventory'].iteritems():
             ikey = "%s_%s" % (item['classid'], item['instanceid'])
             items.add(int(update_item(steamid, item_id, data=inv['rgDescriptions'][ikey])))
 
+        c.execute("UPDATE items SET owner=%s, state='INTERNAL' WHERE id IN %s",
+            (steamid, tuple(items)))
         c.update("bots", id, inventory=list(items))
 
 @task()

@@ -38,11 +38,12 @@ def create_return_trade(bot_id, user_id, items):
             "to_id": u.steamid,
             "message": "CSGO Fort Bet Returns",
             "items_out": items,
+            "items_in": [],
             "created_at": datetime.utcnow(),
             "bot_ref": bot_id,
             "user_ref": user_id
         })
 
-        push_trade(tid)
-        return tid
+    push_trade(tid)
+    return tid
 

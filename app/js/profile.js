@@ -6,6 +6,18 @@ profile.route("/profile", function () {
         window.location = '/';
     }
 
+    $(".profile-container").delegate(".match-returns", "click", (function (ev) {
+        ev.stopImmediatePropagation();
+
+        $.post("/api/returns/match/" + $(ev.target).attr("data-id") + "/request", (function (data) {
+            if (data.success) {
+                $.notify("Returns Request", "success");
+            } else {
+                $.notify("Error Requesting Returns", "danger");
+            }
+        }).bind(this));
+    }).bind(this));
+
     this.renderProfile(this.app.user.id);
 });
 
@@ -22,7 +34,7 @@ profile.renderProfile = (function (id) {
 
                 if (data.id == this.app.user.id) {
                     this.renderBetHistory(data.bets.detail);
-                    this.renderReturns();
+                    // this.renderReturns();
                 }
             }
         }).bind(this)
@@ -36,15 +48,15 @@ profile.renderBackgroundImage = (function (data) {
     $(".bg-cover").css("background-image", 'url(' + pattern.dataUri + ')');
 }).bind(profile);
 
-profile.renderReturns = (function () {
-    $.get("/api/returns/list", (function (data) {
-        if (data.returns.length) {
-            $("[fort-place=returns]").html(this.app.render("profile_returns", {
-                returns: data.returns
-            }));
-        }
-    }).bind(this));
-}).bind(profile);
+//profile.renderReturns = (function () {
+//    $.get("/api/returns/list", (function (data) {
+//        if (data.returns.length) {
+//            $("[fort-place=returns]").html(this.app.render("profile_returns", {
+//                returns: data.returns
+//            }));
+//        }
+//    }).bind(this));
+//}).bind(profile);
 
 profile.renderBetHistory = (function (data) {
     _.each(data, (function (item) {

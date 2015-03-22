@@ -339,14 +339,12 @@ def route_returns_list():
             "returns": returns
         })
 
-@api.route("/returns/request", methods=['POST'])
-def route_returns_request():
-    req = request.json['returns']
-
-    if len(req) > 25:
-        raise APIError("Too many returns requested at once")
-
+def request_returns(req):
     with Cursor() as c:
+        c.execute("SELECT id FROM trades WHERE user_ref=%s AND state < 'ACCEPTED'", (g.user, ))
+        if c.fetchone():
+            raise APIError("You already have a bet with a pending trade offer! Please accept that before creating more bets.")
+
         c.execute("""
             SELECT i.id as iid, b.id as bid FROM items i
             JOIN bots b ON b.steamid=i.owner
@@ -374,6 +372,24 @@ def route_returns_request():
         return APIResponse({
             "offers": offers
         })
+
+@api.route("/returns/request", methods=['POST'])
+def route_returns_request():
+    req = request.json['returns']
+
+    if len(req) > 25:
+        raise APIError("Too many returns requested at once")
+
+    return request_returns(req)
+
+@api.route("/returns/match/<id>/request", methods=['POST'])
+def route_returns_match_request(id):
+    with Cursor() as c:
+        bet = c.execute("""
+            SELECT winnings FROM bets WHERE better=%s AND match=%s AND state='WON'""",
+        (g.user, id)).fetchone()
+
+    return request_returns(map(int, bet.winnings))
 
 # TODO: This is also in admin.py, it really really needs to go into a helper file.
 # Once all base functionality is complete I'll go throught and refactor as much as I can.
