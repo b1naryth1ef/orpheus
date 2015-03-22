@@ -54,7 +54,6 @@ InventoryView.prototype.gotoPage = function (page) {
 
 InventoryView.prototype.renderBase = function () {
     $(this.el).html(this.app.render("inventory_base", {}));
-    console.log($(this.el))
 
     $(this.el).delegate(".inv-paginate", "click", (function (ev) {
         if ($(ev.target).hasClass("back")) {

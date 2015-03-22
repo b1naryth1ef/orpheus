@@ -720,7 +720,6 @@ admin.route("/admin/events", function () {
         ev.stopImmediatePropagation();
         if (this.files) {
             this.uploadImage(this.files).done((function (data) {
-                console.log(data);
                 this.saveEvent(ev, data);
             }).bind(this));
         } else {
@@ -731,7 +730,6 @@ admin.route("/admin/events", function () {
     $("#event-modal-location").delegate(".image-field", "change", (function (ev) {
         this.files = this.files || {}
         this.files[$(ev.target).attr("data-name")] = ev.target.files[0];
-        console.log(this.files);
     }).bind(this));
 })
 

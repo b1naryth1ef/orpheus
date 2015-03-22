@@ -93,13 +93,10 @@ app.openWebSocket = function () {
     this.ws = new WebSocket(prefix + window.location.hostname + ":7080");
 
     this.ws.onopen = (function (eve) {
-        console.log("WS was opened");
         this.ws.send("auth " + getCookie("s"));
     }).bind(this);
 
     this.ws.onmessage = (function (eve) {
-        console.log(eve);
-
         var data = JSON.parse(eve.data);
         if (this.socketEventHandlers[data.type]) {
             this.socketEventHandlers[data.type] = this.socketEventHandlers[data.type].map((function (item) {
@@ -188,7 +185,6 @@ app.setup = function (userData) {
 
     if (this.user) {
         $.get("/api/trade/pending", (function (data) {
-            console.log(data.trade);
             if (data.trade) {
                 this.hover("Pending Trade Offer", data.trade);
             }
