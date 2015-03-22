@@ -13,9 +13,18 @@ class Task(object):
         self.delta = delta
         self.last = (datetime.utcnow() - relativedelta(years=5)) if now else datetime.utcnow()
         self.last_id = None
+        self.last_check = time.time()
 
     def is_running(self):
-        return bool(redis.exists("task:%s" % self.last_id))
+        if self.last_id:
+            if (time.time() - self.last_check) < 5:
+                return True
+
+            self.last_check = time.time()
+            res = bool(redis.exists("task:%s" % self.last_id))
+            if not res:
+                self.last_id = None
+            return res
 
     def is_active(self):
         return True

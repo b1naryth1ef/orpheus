@@ -21,7 +21,7 @@ sched.schedule(check_steam_servers, minutes=27)
 sched.schedule(refresh_all_inventories, minutes=13)
 
 # Trades
-sched.schedule(update_trades, seconds=45, start_now=True)
+sched.schedule(update_trades, seconds=20, start_now=True)
 
 # Matches
 sched.schedule(lock_match_items, minutes=1, start_now=True)

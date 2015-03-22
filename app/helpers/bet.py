@@ -109,7 +109,7 @@ def create_bet(user, match, team, items):
         # BLERG. This could possibly be done in pure sql up ^ there
         c.update("trades", tid, message='CSGO Fort Bet. Match #%s. Pin: %s' % (match, get_trade_pin(tid)))
 
-        push_trade.queue(tid)
+    push_trade.queue(tid)
 
     return bet
 
