@@ -60,7 +60,8 @@ def update_trades():
     with Cursor() as c:
         trades = c.execute("""
             SELECT
-                t.id, t.offerid, t.created_at, t.bet_ref, t.bot_ref b.steamid, b.apikey, u.steamid
+                t.id, t.offerid, t.created_at, t.bet_ref, t.bot_ref, b.steamid, b.apikey,
+                u.id as uid
             FROM trades t
             JOIN bots b ON b.id=t.bot_ref
             JOIN users u ON u.id=t.user_ref
@@ -71,13 +72,13 @@ def update_trades():
             steam = SteamAPI(trade.apikey)
             offer = steam.getTradeOffer(trade.offerid)
 
-            if trade.created_at > datetime.utcnow() - relativedelta.relativedelta(minutes=5):
+            if trade.created_at < datetime.utcnow() - relativedelta.relativedelta(minutes=5):
                 log.info("Canceling trade %s, expired", trade.id)
                 c.update("trades", trade.id, state='REJECTED')
 
                 if trade.bet_ref:
                     c.update("bets", trade.bet_ref, state='CANCELLED')
-                    WebPush(trade.steamid).clear_hover()
+                    WebPush(trade.uid).clear_hover()
 
                 if trade.offerid:
                     steam.cancelTradeOffer(trade.offerid)
@@ -96,7 +97,7 @@ def update_trades():
 
                 if trade.bet_ref:
                     c.update("bets", trade.bet_ref, state='CANCELLED')
-                    WebPush(trade.steamid).clear_hover()
+                    WebPush(trade.uid).clear_hover()
             elif state == ETradeOfferState.ACCEPTED:
                 log.info("Updating state for trade %s, accepted", trade.id)
                 c.update("trades", trade.id, state='ACCEPTED')
@@ -104,7 +105,7 @@ def update_trades():
                 refresh_bot_inventory.queue(trade.bot_ref, trade.steamid)
                 if trade.bet_ref:
                     c.update("bets", trade.bet_ref, state='CONFIRMED')
-                    WebPush(trade.steamid).clear_hover()
+                    WebPush(trade.uid).clear_hover()
 
 @task()
 def trade_notify(tid):
