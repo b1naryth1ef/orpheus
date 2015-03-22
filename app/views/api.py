@@ -18,7 +18,9 @@ from helpers.news import newspost_to_json
 from tasks.inventory import push_steam_inventory
 
 from util import paginate
-from util.errors import UserError, APIError, InvalidRequestError, InvalidTradeUrl, apiassert
+from util.errors import (
+    FortException, UserError, APIError, InvalidRequestError, InvalidTradeUrl,
+    apiassert)
 from util.responses import APIResponse
 
 api = Blueprint("api", __name__, url_prefix="/api")
@@ -67,7 +69,7 @@ def route_match_info(id):
         return APIResponse({
             "match": match
         })
-    except InvalidRequestError:
+    except FortException:
         raise APIError("Invalid match ID")
 
 MATCH_SWITCH_BET_FIELDS = [
@@ -401,8 +403,8 @@ def api_event_list():
             "splash": entry.splash,
             "streams": entry.streams,
             "games": entry.games,
-            "start_date": int(entry.start_date.strftime("%s")) if entry.start_date else "",
-            "end_date": int(entry.end_date.strftime("%s")) if entry.end_date else "",
+            "start_date": entry.start_date.isoformat() if entry.start_date else "",
+            "end_date": entry.end_date.isoformat() if entry.end_date else "",
             "active": entry.active,
         }
 

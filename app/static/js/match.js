@@ -43,7 +43,7 @@ match.renderSingleMatch = function (id) {
 
             $(".matches-container").html(this.app.render("match_page", {
                 match: data.match,
-                time: moment.unix(data.match.when),
+                time: moment.utc(data.match.when).local(),
             })).removeClass("whirl");
 
             $('[data-toggle="tooltip"]').tooltip({

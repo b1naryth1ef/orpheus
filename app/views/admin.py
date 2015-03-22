@@ -13,7 +13,7 @@ from helpers.bot import get_bot_space
 from helpers.common import get_enum_array
 from helpers.news import create_news_post, update_news_post
 
-from util import paginate
+from util import paginate, from_js_datetime
 from util.errors import UserError, APIError, FortException
 from util.responses import APIResponse
 from util.sessions import find_sessions_for_user
@@ -127,7 +127,7 @@ def admin_users_list():
             "id": entry.id,
             "steamid": entry.steamid,
             "username": None,
-            "last_login": entry.last_login.strftime("%s") if entry.last_login else 0,
+            "last_login": entry.last_login.isoformat() if entry.last_login else "",
             "ugroup": entry.ugroup,
             "active": entry.active
         })
@@ -248,10 +248,10 @@ def parse_match_payload(obj):
     if not obj['match_date']:
         raise APIError("Need a match date")
 
-    match_date = datetime.fromtimestamp(int(obj['match_date']))
+    match_date = from_js_datetime(obj['match_date'])
 
     if obj['public_date']:
-        public_date = datetime.fromtimestamp(int(obj['public_date']))
+        public_date = from_js_datetime(obj['public_date'])
     else:
         public_date = match_date - relativedelta(days=2)
 
@@ -500,8 +500,8 @@ def admin_event_list():
             "splash": entry.splash,
             "streams": entry.streams,
             "games": entry.games,
-            "start_date": int(entry.start_date.strftime("%s")) if entry.start_date else "",
-            "end_date": int(entry.end_date.strftime("%s")) if entry.end_date else "",
+            "start_date": entry.start_date.isoformat() if entry.start_date else "",
+            "end_date": entry.end_date.isoformat() if entry.end_date else "",
             "active": entry.active,
         }
 
@@ -523,8 +523,8 @@ def admin_event_create():
             "logo": request.json.get("logo"),
             "splash": request.json.get("splash"),
             "etype": request.json.get("etype"),
-            "start_date": datetime.fromtimestamp(int(request.json.get("start_date"))),
-            "end_date": datetime.fromtimestamp(int(request.json.get("end_date"))),
+            "start_date": from_js_datetime(request.json.get("start_date")),
+            "end_date": from_js_datetime(request.json.get("end_date")),
             "active": request.json.get("active")
         })
 
@@ -539,7 +539,7 @@ def admin_event_edit(id):
         data[entry] = request.json.get(entry)
 
         if entry.endswith("_date"):
-            data[entry] = datetime.fromtimestamp(int(data[entry]))
+            data[entry] = from_js_datetime(data[entry])
 
     with Cursor() as c:
         c.update("events", id, data)
@@ -591,9 +591,9 @@ def admin_list_bans():
             "id": entry.id,
             "steamid": entry.steamid,
             "active": entry.active,
-            "created_at": int(entry.created_at.strftime("%s")),
-            "start_date": int(entry.start_date.strftime("%s")),
-            "end_date": int(entry.end_date.strftime("%s")),
+            "created_at": entry.created_at.isoformat(),
+            "start_date": entry.start_date.isoformat(),
+            "end_date": entry.end_date.isoformat(),
             "reason": entry.reason,
             "description": entry.description,
             "created_by": entry.created_by

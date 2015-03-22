@@ -23,7 +23,7 @@ def newspost_to_json(entry):
             "category": entry.category,
             "content": entry.content,
             "is_public": entry.is_public,
-            "created_at": int(entry.created_at.strftime("%s")) if entry.created_at else "Unknown",
+            "created_at": entry.created_at.isoformat() if entry.created_at else "Unknown",
             "created_by": user_info.get("personaname") or "Anonymous"
     }
 

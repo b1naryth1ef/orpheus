@@ -156,7 +156,8 @@ function getDataFromField(field) {
             return field.val();
         case "DIV":
             if (field.hasClass("date-field")) {
-                return field.data('date') ? moment(field.data('date')).format('X') : null;
+                return (field.data('DateTimePicker').date() ?
+                        field.data('DateTimePicker').date().format() : undefined);
             }
             break;
         default:
@@ -169,7 +170,7 @@ function setupDateFields() {
         var defDate = undefined;
 
         if ($(el).attr("data-default")) {
-            defDate = moment(parseInt($(el).attr("data-default")) * 1000);
+            defDate = moment.utc($(el).attr("data-default")).local();
         }
 
         $(el).datetimepicker({

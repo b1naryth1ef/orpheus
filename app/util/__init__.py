@@ -1,6 +1,10 @@
 import decimal, random
 from flask import flash, redirect
 from psycopg2.extensions import adapt, register_adapter, AsIs
+from dateutil import parser, tz
+
+def from_js_datetime(obj):
+    return parser.parse(obj).astimezone(tz.gettz("UTC"))
 
 class BaseEnum(object):
     pass
