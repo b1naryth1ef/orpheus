@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, g, send_from_directory
+from flask import Blueprint, render_template, g, send_from_directory, Response
 from markdown import Markdown
 
 from fort import app
@@ -12,7 +12,7 @@ humans_content = open("static/humans.txt").read()
 @public.route("/")
 def route_index():
     return render_template("index.html")
-    
+
 @public.route("/events")
 @public.route("/event/<int:eventid>")
 def route_events_page(eventid=None):
@@ -38,7 +38,7 @@ def route_news_page():
 
 @public.route("/humans.txt")
 def route_humans():
-    return humans_content
+    return Response(humans_content, mimetype='text/plain')
 
 @public.route("/rules")
 def route_faq():
