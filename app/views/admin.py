@@ -479,7 +479,7 @@ def admin_event_list():
     q = ""
 
     if request.values.get("active"):
-        q = "WHERE active=true AND start_date < now() AND (end_date > now() OR end_date IS NULL)"
+        q = "WHERE start_date < now() AND (end_date > now() OR end_date IS NULL)"
 
     g.cursor.execute("SELECT count(*) as c FROM events {}".format(q))
 
