@@ -6,7 +6,7 @@
   <div class="row inventory-row">
     <% for (item in rows[row]) { %>
     <% var item = rows[row][item] %>
-    <div class="col-lg-2 inventory-item" data-page="<%- page %>" data-id="<%- item.id %>" data-toggle="tooltip" title="<%- item.name %>">
+    <div class="col-lg-2 inventory-item" data-page="<%- page %>" data-id="<%- item.id %>" data-toggle="tooltip" title="<%- item.name %>" style="border-color: #<%= item.meta.color %>; width: 16.2%; margin: 2px;">
       <img src="https://steamcommunity-a.akamaihd.net/economy/image/<%= item.image %>" style="max-height: 125px; max-width: 125px;"/>
       <p>$<%= Number(item.price).monetary() %></p>
     </div>
