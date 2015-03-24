@@ -628,8 +628,6 @@ admin.saveEvent = (function (ev, formData) {
         return val
     }), function (a, b) { return _.extend(a, b) });
 
-    console.log(formData);
-    
     if (formData) {
         _.each(formData.images, function (k, v) {
             data[v] = k;
