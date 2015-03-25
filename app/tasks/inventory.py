@@ -143,7 +143,7 @@ def load_steam_inventory(user_id, push=False, force=False):
     diff = False
 
     # We do this to avoid spamming steam API's but keeping things as up-to-date as possible
-    if force or not data[1] or last_update > 300:
+    if force or not data[0] or last_update > 300:
         with Cursor() as c:
             temp_key = "u:%s:inv" % str(uuid.uuid4())
             user = c.execute("SELECT steamid FROM users WHERE id=%s", (user_id, )).fetchone()
