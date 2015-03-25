@@ -3,6 +3,6 @@
   <td><%- user.steamid %></td>
   <td><%- user.bets_placed || 0 %></td>
   <td><%- user.items_in_holding || 0 %></td>
-  <td><%- moment.utc(user.last_login).local().format('MMMM Do YYYY, h:mm:ss a') %></td>
+  <td><%- (user.last_login == "")? "" :moment.utc(user.last_login).local().format('MMMM Do YYYY, h:mm:ss a') %></td>
   <td><a href="#" class="btn btn-info btn-sm user-edit">Edit</a></td>
 </tr>

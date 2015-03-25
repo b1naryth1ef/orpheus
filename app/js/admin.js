@@ -57,7 +57,8 @@ admin.route("/admin/users", function () {
 
     $("#btn-search").click((function (ev) {
         this.query = $("#search-box").val();
-        this.loadUsers();
+        this.page = 1;
+		this.loadUsers();
     }).bind(this));
 
     $("#refresh-users").click(this.loadUsers);

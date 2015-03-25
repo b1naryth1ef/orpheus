@@ -2,8 +2,8 @@
   <td><%- ban.active? "Yes":"No" %></td>
   <td><%- ban.steamid %></td>
   <td><%- ban.created_by %></td>
-  <td><%- new Date(ban.start_date * 1000).toString() %></td>
-  <td><%- new Date(ban.end_date * 1000).toString() %></td>
+  <td><%- moment.utc(ban.start_date).local().format('MMMM Do YYYY, h:mm:ss a') %></td>
+  <td><%- moment.utc(ban.end_date).local().format('MMMM Do YYYY, h:mm:ss a') %></td>
   <td><%- ban.reason %></td>
   <td><a href="#" class="btn btn-info btn-sm ban-edit">Edit</a></td>
 </tr>
