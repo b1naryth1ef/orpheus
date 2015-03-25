@@ -60,24 +60,25 @@ def update_item(owner_id, item_id, class_id=None, instance_id=None, data=None,
 
     # We queue a new job because this needs to be seperatly rate-limited
     if not item_price:
-        update_item_price.queue(item_id)
+        update_item_price.queue(payload['name'], item_id)
     return item_id
 
 @task(max_running=2, buffer_time=1)
-def update_item_price(item_id):
+def update_item_price(name, item_id=None):
     week_ago = datetime.utcnow() - relativedelta(days=7)
     value = 0
 
+    log.info("Updating item price for item %s", name)
+
     with Cursor() as c:
-        item = c.execute("""
-            SELECT i.name, ip.id as pid FROM items i
-            LEFT JOIN itemprices ip ON ip.name=i.name
-            WHERE i.id=%s
-        """, (item_id, )).fetchone()
+        itemprice = c.execute("SELECT id FROM itemprices WHERE name=%s", (name, )).fetchone()
 
         try:
-            data = market.get_item_price_history(item.name.decode('utf-8'))
+            data = market.get_item_price_history(name)
             values = [v for k, v in data.iteritems() if k > week_ago]
+
+            if not len(values):
+                return
 
             value = (sum(values) / len(values))
 
@@ -87,20 +88,29 @@ def update_item_price(item_id):
             # Devalue by two cents to give us a buffer
             value -= .02
 
-            if item.pid:
-                c.update("itemprices", item.pid, price=value, updated=datetime.utcnow())
+            if itemprice:
+                c.update("itemprices", itemprice.id, price=value, updated=datetime.utcnow())
             else:
-                c.insert("itemprices", name=item.name, price=value, updated=datetime.utcnow())
+                c.insert("itemprices", name=name, price=value, updated=datetime.utcnow())
 
-            c.update("items", item_id, price=value)
+            if item_id:
+                c.update("items", item_id, price=value)
         except SteamAPIError:
-            log.exception("Failed to get price for item '%s'", item_id)
+            log.exception("Failed to get price for item '%s'", name)
 
     return value
 
 @task()
-def update_prices():
-    pass
+def update_all_item_prices():
+    pages = int(market.get_item_count() / 100.0) + 2
+
+    for page in range(pages):
+        log.info("Reading market page %s/%s", page, pages)
+
+        items = market.list_items(sort="name", start=page * 100, count=100)
+
+        for item in items:
+            update_item_price(item)
 
 @task()
 def push_steam_inventory(user_id, changed=False):

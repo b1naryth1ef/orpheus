@@ -8,6 +8,14 @@ log = logging.getLogger(__name__)
 
 TASKS = {}
 
+def run_once(task_name, *args, **kwargs):
+    import tasks.alerts, tasks.bots, tasks.inventory, tasks.matches, tasks.returns
+    import tasks.slack, tasks.trades
+
+    if task_name in TASKS:
+        return TASKS[task_name](*args, **kwargs)
+    print "Invalid task name. Tasks: %s" % ', '.join(TASKS.keys())
+
 def task(*args, **kwargs):
     def deco(f):
         task = Task(f.__name__, f, *args, **kwargs)

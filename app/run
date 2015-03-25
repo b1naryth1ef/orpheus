@@ -46,14 +46,13 @@ def main():
 
     if sys.argv[1] == "once":
         setup_logging("sched-once")
-        import scheduler.run
+        from tasks import run_once
 
         if len(sys.argv) < 3:
             print "Usage: ./run.py once <task>"
             sys.exit(1)
 
-        if sys.argv[2] in dir(scheduler.run):
-            getattr(locals()["scheduler"].run, sys.argv[2])()
+        run_once(sys.argv[2])
         sys.exit(0)
 
     print USAGE
