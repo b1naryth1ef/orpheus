@@ -1,4 +1,4 @@
-import logging, redis, psycopg2
+import logging, redis, psycopg2, random, string
 from contextlib import contextmanager
 
 from flask import g
@@ -15,6 +15,8 @@ redis = redis.Redis(
 
 psycopg2.extras.register_uuid()
 
+DATABASES = {}
+
 # The base connection string
 PG_CONN_STRING = "host={host} port={port} user={user} password={pw} connect_timeout=5".format(
     host=app.config.get("PG_HOST"),
@@ -22,16 +24,22 @@ PG_CONN_STRING = "host={host} port={port} user={user} password={pw} connect_time
     user=app.config.get("PG_USERNAME"),
     pw=app.config.get("PG_PASSWORD"))
 
+
 def get_connection(database='fort'):
     """
     Returns a psycopg2 postgres connection. In production this will
     hit PGBouncer, and be pooled. `database` can be a valid database name.
     """
-    dbc = psycopg2.connect(PG_CONN_STRING + " dbname={}".format(database),
-        cursor_factory=NamedTupleCursor)
+    if database not in DATABASES or DATABASES[database].closed:
+        dbc = psycopg2.connect(PG_CONN_STRING + " dbname={}".format(database),
+            cursor_factory=NamedTupleCursor)
 
-    dbc.autocommit = True
-    return dbc
+        dbc.autocommit = True
+        DATABASES[database] = dbc
+    return DATABASES[database]
+
+def random_savepoint_id():
+    return ''.join([random.choice(string.letters) for _ in range(32)])
 
 class ResultSetIterable(object):
     """
@@ -67,6 +75,7 @@ class Cursor(object):
     def __init__(self, database='fort'):
         self.db = get_connection(database)
         self.cursor = self.db.cursor()
+        self.savepoint = None
 
     @staticmethod
     def json(obj):
@@ -99,15 +108,25 @@ class Cursor(object):
         self.db.commit()
 
     def __enter__(self):
-        self.db.set_session(autocommit=False)
+        if self.db.status == psycopg2.extensions.STATUS_IN_TRANSACTION:
+            self.savepoint = random_savepoint_id()
+            self.cursor.execute("SAVEPOINT %s" % self.savepoint)
+        else:
+            self.db.set_session(autocommit=False)
         return self
 
     def __exit__(self, typ, value, tb):
         if value != None:
-            self.db.rollback()
+            if self.savepoint:
+                self.cursor.execute("ROLLBACK TO SAVEPOINT %s" % self.savepoint)
+            else:
+                self.db.rollback()
             return False
 
-        self.db.commit()
+        if self.savepoint:
+            self.cursor.execute("RELEASE SAVEPOINT %s" % self.savepoint)
+        else:
+            self.db.commit()
 
         self.cursor.close()
 
