@@ -123,9 +123,7 @@ class Cursor(object):
                 self.db.rollback()
             return False
 
-        if self.savepoint:
-            self.cursor.execute("RELEASE SAVEPOINT %s" % self.savepoint)
-        else:
+        if not self.savepoint:
             self.db.commit()
 
         self.cursor.close()
