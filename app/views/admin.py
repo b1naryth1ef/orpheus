@@ -645,3 +645,30 @@ def admin_edit_ban():
         "fields": modified_fields.keys()
     })
 
+@admin.route("/bets")
+def admin_bets():
+    return render_template("admin/bets.html")
+
+@admin.route("/api/bets/list", methods=['GET', 'POST'])
+def admin_list_bets():
+    page = int(request.values.get("page", 1))
+    
+    bets = g.cursor.count("bets")
+    
+    pages = (bets / 50) + 1
+    
+    g.cursor.execute("SELECT id, better, match, team, value, created_at FROM bets", paginate(page, per_page=50))
+    
+    bets = [];
+    
+    for entry in g.cursor.fetchall():
+        bets.append([
+            entry.id,
+            entry.better,
+            entry.match,
+            entry.team,
+            entry.value,
+            entry.created_at.isoformat(),
+        ])
+    
+    return APIResponse({"bets": bets, "pages":pages})

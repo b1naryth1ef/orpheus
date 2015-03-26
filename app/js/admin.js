@@ -834,3 +834,16 @@ admin.saveNewsPost = (function (ev) {
     });
 }).bind(admin);
 
+admin.route("/admin/bets", (function () {
+    $.ajax("/admin/api/bets/list", {
+        success: (function (response) {
+            $(document).ready(function() {
+                $('#bets').dataTable( {
+                    "data": response.bets,
+                    "lengthMenu": [15, 25, 50, 75, 100]
+                } );
+            } );
+        }).bind(this)
+    });
+}).bind(admin))
+
