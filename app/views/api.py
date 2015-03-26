@@ -141,14 +141,21 @@ def route_match_bet(match_id):
     # Grab some info for the match
     match = g.cursor.select("matches", *MATCH_CONFIRM_BET_FIELDS, id=match_id).fetchone()
 
-    # TODO: update
-    # Make sure we haven't bet too much shit
-    #if match.max_value_item:
-    #    for item in items:
-    #        apiassert(item.price < match.max_value_item, "Price of item %s is too high!" % item.name)
-    #
-    #if match.max_value_total:
-    #    apiassert(sum(map(lambda i: i.price, itemvs)) < match.max_value_total, "Total value placed is too high!")
+    # Grab prices for the items placed
+    dbitems = g.cursor.execute("SELECT name, price FROM items WHERE id IN %s",
+        (tuple(items), )).fetchall(as_list=True)
+
+    if len(dbitems) != len(items):
+        raise APIError("Invalid Items")
+
+    # Make sure the price is right
+    max_value = match.max_value_item or 73
+    for item in dbitems:
+        apiassert(item.price < max_value, "Price of item %s is too high" % item.name)
+
+    bet_total = sum(map(lambda i: i.price, dbitems))
+    apiassert(bet_total > .50, "Total value placed is too low!")
+    apiassert(bet_total < (match.max_value_total or 300), "Total value placed is too high!")
 
     # Make sure we have a valid match
     apiassert(match, "Invalid match ID")
