@@ -121,10 +121,12 @@ class Cursor(object):
                 self.cursor.execute("ROLLBACK TO SAVEPOINT %s" % self.savepoint)
             else:
                 self.db.rollback()
+                self.db.set_session(autocommit=True)
             return False
 
         if not self.savepoint:
             self.db.commit()
+            self.db.set_session(autocommit=True)
 
         self.cursor.close()
 
