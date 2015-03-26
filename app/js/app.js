@@ -154,7 +154,14 @@ app.teardown = (function () {
 
 app.setup = function (userData) {
     this.wsDelay = 10;
-    this.openWebSocket();
+
+    if (typeof(WebSocket) == "function") {
+        this.openWebSocket();
+    } else {
+        $.notify(
+            "Your browser does not support HTML5 websockets and will <b>not</b> work on this site. " +
+            "Please consider upgrading to a modern version of Chrome or Firefox.", "danger");
+    }
 
     // Tool tips oooh yeahhh
     $('[data-toggle="tooltip"]').tooltip()
@@ -193,5 +200,6 @@ app.setup = function (userData) {
             }
         }).bind(this));
     }
+
 };
 
