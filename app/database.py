@@ -1,4 +1,4 @@
-import logging, redis, psycopg2, random, string
+import logging, redis, psycopg2
 from contextlib import contextmanager
 
 from flask import g
@@ -38,9 +38,6 @@ def get_connection(database='fort'):
         DATABASES[database] = dbc
     return DATABASES[database]
 
-def random_savepoint_id():
-    return ''.join([random.choice(string.letters) for _ in range(32)])
-
 class ResultSetIterable(object):
     """
     Represents a set of results from a postgres query. Generator
@@ -75,7 +72,7 @@ class Cursor(object):
     def __init__(self, database='fort'):
         self.db = get_connection(database)
         self.cursor = self.db.cursor()
-        self.savepoint = None
+        self.parent = False
 
     @staticmethod
     def json(obj):
@@ -108,27 +105,24 @@ class Cursor(object):
         self.db.commit()
 
     def __enter__(self):
-        if self.db.status == psycopg2.extensions.STATUS_IN_TRANSACTION:
-            self.savepoint = random_savepoint_id()
-            self.cursor.execute("SAVEPOINT %s" % self.savepoint)
-        else:
+        if self.db.status != psycopg2.extensions.STATUS_IN_TRANSACTION:
+            self.parent = True
             self.db.set_session(autocommit=False)
         return self
 
     def __exit__(self, typ, value, tb):
+        self.cursor.close()
+
         if value != None:
-            if self.savepoint:
-                self.cursor.execute("ROLLBACK TO SAVEPOINT %s" % self.savepoint)
-            else:
+            if self.parent:
                 self.db.rollback()
                 self.db.set_session(autocommit=True)
             return False
 
-        if not self.savepoint:
+        if self.parent:
             self.db.commit()
             self.db.set_session(autocommit=True)
 
-        self.cursor.close()
 
     def count(self, obj, where=None, *args):
         Q = "SELECT count(*) as c FROM %s" % obj
