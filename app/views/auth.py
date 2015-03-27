@@ -40,28 +40,25 @@ def create_or_login(resp):
             g.group = user.ugroup
             g.cursor.execute("UPDATE users SET last_login=%s WHERE id=%s", (datetime.utcnow(), user.id))
         else:
-            raise UserError("Account Disabled. Please contact support for more information")
+            raise UserError("Account Disabled. Please contact support for more information.")
         next_url = redirect(oid.get_next_url())
         flash("Welcome Back!", "success")
     else:
-        allowed = steam.getGroupMembers("csgofort")
-        if int(id) not in allowed:
-            log.warning("User %s is not allowed in beta (%s)" % (id, allowed))
-            raise UserError("Sorry, your not part of the beta! :(")
+        # allowed = steam.getGroupMembers("csgofort")
+        # if int(id) not in allowed:
+        #     log.warning("User %s is not allowed in beta (%s)" % (id, allowed))
+        #     raise UserError("Sorry, your not part of the beta! :(")
 
-        if id in auto_admin_steamids:
-            group = 'SUPER'
-        else:
-            group = 'NORMAL'
-        g.user = create_user(id, group)
-        g.group = group
+        # Create a new user
+        g.user = create_user(id, 'NORMAL')
+        g.group = 'NORMAL'
 
         # Alright, lets try to onboard the user
         next_url = redirect("/?onboard=1")
         flash("Welcome to CSGO Fort!", "success")
 
-    # Load the inventory to warm up the cache
-    load_steam_inventory.queue(g.user)
+        # Load the inventory to warm up the cache
+        load_steam_inventory.queue(g.user)
 
     g.session["u"] = g.user
     return next_url
