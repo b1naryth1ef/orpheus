@@ -53,8 +53,8 @@ def push_trade(tid):
             # This will bite me in the ass later
             redis.delete("tradeq:bot:%s" % trade.bid)
 
-        if redis.llen("tradeq") or 0 > 50:
-            raise Exception("Queue Full")
+#        if redis.llen("tradeq") or 0 > 50:
+#            raise Exception("Queue Full")
 
         # Otherwise, let the hoard take it
         redis.rpush("tradeq", json.dumps(payload))
