@@ -1,56 +1,28 @@
 var stats = app.view("stats");
 
-stats.renderMatches = function(id) {
-    var renderMatchesFromData = (function (data) {
-       $(".events-container").empty();
+stats.renderStats = function(){
+	var renderStatsFromData = (function(data){
+		$(".stats-container").html(this.app.render("stats_page", {}));
+		$(function(){
+			var history_data = [];
+			var cumulative = 0;
+			for(var i = 0; i < data.history.length; i++){
+				history_data.push([i, cumulative]);
+				cumulative += data.history[i].value * (data.history[i].won? 1 : -1);
+				console.log(data.history[i].match_date);
+			}
 
-        _.each(data.matches, (function (item) {
-            $(".events-container").append(this.app.render("match_frontpage", {
-                match: item
-            }));
-        }).bind(this));
-    }).bind(this);
+			$.plot("#stats-history-display", [history_data]);
+		});     
 
-    $.ajax("/api/events/" + id + "/list", {
-        success: renderMatchesFromData
-    })
-}
+	}).bind(this);
 
-stats.renderEvents = function () {
-    var renderEventsFromData = (function (data) {
-        $(".events-container").empty();
-
-        _.each(data.events, (function (item) {
-            $(".events-container").append(this.app.render("events_frontpage", {
-                event: item
-            }));
-        }).bind(this));
-    }).bind(this);
-
-    $.ajax("/api/events/list", {
-        type: 'POST',
-        data: {
-            active: true
-        },
-        success: renderEventsFromData
-    })
+	$.ajax("/api/stats/value/history", {
+		success: renderStatsFromData
+	});
 }
 
 stats.route("/stats", function () {
-    this.renderEvents();
-	console.log("test");
-    $(".events-container").delegate(".event-row", "click", (function (ev) {
-        var eventID = $(ev.target).closest(".event-row").attr("data-id");
-        window.location = "/event/" + eventID;
-    }).bind(this));
-});
-
-stats.routeRegex(/^\/event\/(\d+)$/, function (route, id) {
-    this.renderMatches(id);
-
-    $(".events-container").delegate(".match-row", "click", (function (ev) {
-        var eventID = $(ev.target).closest(".match-row").attr("data-id");
-        window.location = "/match/" + eventID;
-    }).bind(this));
+	this.renderStats();
 });
 

@@ -15,6 +15,7 @@ from helpers.user import (UserGroup, gache_user_info, user_save_settings,
 from helpers.common import get_enum_array
 from helpers.news import newspost_to_json
 from helpers.trade import get_trade_notify_content
+from helpers.stats import value_history_to_json
 
 from tasks.inventory import push_steam_inventory
 
@@ -41,9 +42,9 @@ def route_flash():
     flash(request.values.get("msg"), request.values.get("type", "success"))
     return APIResponse()
 
-@api.route("/stats/overview")
-def route_stats_overview():
-    pass
+
+
+    
 
 MATCH_LIST_QUERY = """
 SELECT {} FROM matches
@@ -500,3 +501,16 @@ def api_get_trade_list():
 
     return APIResponse({"trade": get_trade_notify_content(trade.id)[1]})
 
+@api.route("/stats/value/history", methods=["GET"])
+def route_stats_overview():
+    #TODO check if the user's allowed sharing of their history
+    if request.values.get('id'):
+        user = request.values.get('id')
+    else:
+        user = g.user
+    
+    stats = g.cursor.execute("""
+    SELECT bets.value, matches.match_date, (bets.team=(matches.results->'winner')::text::int) as won, matches.id FROM matches JOIN bets ON matches.id=bets.match WHERE bets.better=%s AND matches.results->'winner'::text != 'null' ORDER BY matches.match_date
+    """
+    , (user, )).fetchall()
+    return APIResponse({"history":map(value_history_to_json, stats)})

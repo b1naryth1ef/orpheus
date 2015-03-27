@@ -39,6 +39,21 @@ TEAMS = [
     ("dignitas", "Team Dignitas", "dignitas.png"),
     ("nip", "Ninjas In Pajamas", "nip.png"),
     ("virtus.pro", "Virtus Pro", "virtuspro.png"),
+    ("clg", "Counter Logic Gaming", "counterLogicGaming.png"),
+    ("CPH", "Copenhagen Wolves", "CPHWolves.png"),
+    ("eLv", "eLevate", "eLevate.png"),
+    ("FSid3", "Flipsid3", "flipsid3.png"),
+    ("G2", "Gamers2", "gamers2.png"),
+    ("LGB", "LGB eSports", "lgb.png"),
+    ("LG", "Luminosity Gaming", "luminosityGaming.png"),
+    ("mouz", "mousesports", "mousesports.png"),
+    ("Na\`Vi", "Natus Vincere", "navi.jpg"),
+    ("PENTA", "PENTA Sports", "penta.png"),
+    ("TeamPro", "Team Property", "property.png"),
+    ("SKDC", "SapphireKelownaDotCom", "skdc.jpg"),
+    ("Liquid\`", "Team Liquid", "teamLiquid.png"),
+    ("Titan", "Titan", "titan.png"),
+    ("TSM", "Team Solo Mid", "tsm.jpg")
 ]
 
 def generate_teams(t, db):
@@ -48,19 +63,19 @@ def generate_teams(t, db):
 EVENTS = [
     ('ESEA Invite Season 18',
         'http://play.esea.net/index.php?s=league&d=standings&division_id=2428',
-        'ESEA', 'http://i.imgur.com/KCZZVDH.jpg', 'http://i.imgur.com/cQ88n4A.png',
+        'ESEA', 'esea_splash.png', 'esea_logo.png',
         ['twitch.tv/ESEA'], [1], 'SEASON', datetime.utcnow()),
     ('ESEA Premier Season 18',
         'http://play.esea.net/index.php?s=league&d=standings&division_id=2429',
-        'ESEA', 'http://i.imgur.com/KCZZVDH.jpg', 'http://i.imgur.com/cQ88n4A.png',
+        'ESEA', 'esea_splash.png', 'esea_logo.png',
         ['twitch.tv/ESEA'], [1], 'SEASON', datetime.utcnow()),
     ('ESEA Main Season 18',
         'http://play.esea.net/index.php?s=league&d=standings&division_id=2430',
-        'ESEA', 'http://i.imgur.com/KCZZVDH.jpg', 'http://i.imgur.com/cQ88n4A.png',
+        'ESEA', 'esea_splash.png', 'esea_logo.png',
         ['twitch.tv/ESEA'], [1], 'SEASON', datetime.utcnow()),
     ('ESEA Intermediate Season 18',
         'http://play.esea.net/index.php?s=league&d=standings&division_id=2431',
-        'ESEA', 'http://i.imgur.com/KCZZVDH.jpg', 'http://i.imgur.com/cQ88n4A.png',
+        'ESEA', 'esea_splash.png', 'esea_logo.png',
         ['twitch.tv/ESEA'], [1], 'SEASON', datetime.utcnow()),
 ]
 
@@ -71,85 +86,94 @@ def generate_events(t, db):
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, true);
         """, event)
 
-MATCHES = [
-    {
-        "game": 1,
-        "event": 1,
-        "teams": [1, 5],
-        "state": "OPEN",
-        "itemstate": "OPEN",
-        "meta": {
-            "streams": ["http://twitch.tv/test1", "http://twitch.tv/test2"],
-            "maps": ["de_nuke"]
-        },
-        "match_date": ONE_WEEK_FUTURE,
-        "public_date": datetime.utcnow()
-    },
-    {
-        "game": 1,
-        "event": 2,
-        "state": "OPEN",
-        "itemstate": "OPEN",
-        "teams": [3, 4],
-        "meta": {
-            "note": "This is a test note!",
-            "streams": ["http://mlg.tv/swag", "http://twitch.tv/esea"],
-            "maps": ["de_nuke", "de_mirage", "de_dust2"]
-        },
-        "match_date": ONE_WEEK_FUTURE,
-        "public_date": datetime.utcnow()
-    },
-    {
-        "game": 1,
-        "event": 1,
-        "state": "WAITING",
-        "itemstate": "LOCKED",
-        "teams": [5, 6],
-        "meta": {
-            "streams": ["http://mlg.tv/swag", "http://twitch.tv/esea"],
-            "maps": ["de_facade", "de_mirage", "de_dust2"]
-        },
-        "match_date": ONE_WEEK_PAST,
-        "public_date": ONE_WEEK_PAST,
-    }
-]
-
 MATCH_QUERY = """
-INSERT INTO matches (event, state, itemstate, game, teams, meta, match_date, public_date, active) VALUES
-(%(event)s, %(state)s, %(itemstate)s, %(game)s, %(teams)s, %(meta)s, %(match_date)s, %(public_date)s, true);
+INSERT INTO matches (event, state, itemstate, game, teams, meta, results, match_date, public_date, active) VALUES
+(%(event)s, %(state)s, %(itemstate)s, %(game)s, %(teams)s, %(meta)s, %(results)s, %(match_date)s, %(public_date)s, true);
 """
+NUM_MATCHES = 750
+NUM_MATCHES_PER_DAY = 4
+MATCH_HAPPENED_PRB = 0.75
 
 def generate_matches(t, db):
-    for match in MATCHES:
+    match_date_accumulator = datetime.utcnow() + relativedelta(weeks=(-1 * (MATCH_HAPPENED_PRB * NUM_MATCHES) / (NUM_MATCHES_PER_DAY * 7 )))
+    matches_today = 0; 
+    match_date_accumulator = match_date_accumulator.replace(hour=1, minute=0) 
+    for i in range (0, NUM_MATCHES):
+        t1 = random.randrange(1, len(TEAMS))
+        t2 = random.randrange(1, len(TEAMS))
+        while t1 == t2:
+            t2 = random.randrange(1, len(TEAMS))
+        
+        match_happened = random.random() < MATCH_HAPPENED_PRB
+        
+        match_date = ONE_WEEK_FUTURE
+        public_date = datetime.utcnow()
+        state = "OPEN"
+        item_state="OPEN"
+        results = {}
+        if(match_happened):
+            state = "COMPLETED"
+            item_state = "DISTRIBUTED"
+            match_date = match_date_accumulator
+            public_date = match_date_accumulator + relativedelta(weeks=-1)
+            matches_today = matches_today + 1
+            match_date_accumulator = match_date_accumulator + relativedelta(minutes=3)
+            if matches_today >= NUM_MATCHES_PER_DAY:
+                if random.random() < 0.5 + 0.25 * (matches_today - NUM_MATCHES_PER_DAY):
+                   matches_today = 0
+                   match_date_accumulator = match_date_accumulator + relativedelta(days=1)
+            results = {
+                "winner": random.choice([t1, t2])
+                    }
+            #result['winner'] = Json(result['winner'])
+        match = {
+            "game": 1,
+            "event": random.randrange(1, len(EVENTS)),
+            "state": state,
+            "itemstate": item_state,
+            "teams": [t1, t2],
+            "meta": {
+                "streams": ["http://twitch.tv/esea"],
+                "maps": ["de_nuke", "de_mirage", "de_dust2"]
+            },
+            "results": results,
+            "match_date": match_date,
+            "public_date": public_date
+        }
         match['meta'] = Json(match['meta'])
-        t.execute(MATCH_QUERY, match)
-
-betters = range(1, len(RANDOM_STEAMIDS))
-
-BETS = [
-    {
-        "better": betters.pop(0),
-        "match": 3,
-        "team": random.choice([5, 6]),
-        "value": random.randint(1, 40),
-        "state": "CONFIRMED",
-        "created_at": datetime.utcnow(),
-    } for i in range(25000)
-]
+        match['results']=Json(match['results'])
+        t.execute(MATCH_QUERY, match);
 
 BET_QUERY = """
 INSERT INTO bets (better, match, team, value, items, state, created_at) VALUES
 (%(better)s, %(match)s, %(team)s, %(value)s, ARRAY[{}], %(state)s, %(created_at)s);
 """
+NUM_BETTERS = 100
 
 # TODO
 def generate_bets(t, db):
+    """
     for index, entry in enumerate(BETS):
         if index % 10000 == 0:
             print "    Bet #%s" % index
             db.commit()
         q = BET_QUERY.format(", ".join([str(random.randint(1, 40000)) for i in range(4)]))
         t.execute(q, entry)
+    """
+    t.execute("SELECT * FROM matches")
+    for record in t.fetchall():
+        for better in range (1, NUM_BETTERS):
+            q = BET_QUERY.format(", ".join([str(random.randint(1, 40000)) for i in range(4)]))
+            entry = {
+                "better": better,
+                "match": record[0],
+                "team": random.choice([record[5][0], record[5][1]]),
+                "value": random.randint(1, 40),
+                "state": "CONFIRMED",
+                "created_at": datetime.utcnow(),
+            }
+
+            t.execute(q, entry)
 
 
 ITEM_QUERY = """
@@ -201,7 +225,6 @@ ban_descriptions = [
 ]
 
 def generate_bans(t, db):
-    print "GENERATING BANS"
     num = 1000
     users = "SELECT * FROM users WHERE id >= 1 AND id <= " + str(num) + ";"
     t.execute(users)
@@ -232,11 +255,11 @@ def pg_utcnow():
 
 DATA_GENERATORS = [
     generate_bots,
-    generate_users,
     generate_games,
     generate_teams,
     generate_events,
     generate_matches,
+    generate_users,
     generate_items,
     generate_bets,
     generate_bans
