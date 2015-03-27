@@ -83,7 +83,9 @@ def create_bet(user, match, team, items):
         })
 
         # Find a bot that has inventory space
-        bot = find_avail_bot(len(items))
+        # bot = find_avail_bot(len(items))
+        # LOL
+        bot = 490
 
         if not bot:
             raise FortException("Bot's are full, please try again later!")
