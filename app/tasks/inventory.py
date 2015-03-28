@@ -163,9 +163,15 @@ def load_steam_inventory(user_id, push=False, force=False):
             for item_id, item in data['rgInventory'].iteritems():
                 ikey = "%s_%s" % (item['classid'], item['instanceid'])
                 ids.append(update_item(user.steamid, item_id, data=data['rgDescriptions'][ikey]))
+            ids = filter(lambda i: i != -1, ids)
+
+            # TODO: not the bestest behav's ya feel?
+            if not len(ids):
+                log.warning("No inventory items!")
+                return
 
             pipe = redis.pipeline()
-            pipe.sadd(temp_key, *filter(lambda i: i != -1, ids))
+            pipe.sadd(temp_key, *ids)
             pipe.sdiff("u:%s:inv" % user_id, temp_key)
             pipe.rename(temp_key, "u:%s:inv" % user_id)
             pipe.set("u:%s:inv:updated" % user_id, time.time())
