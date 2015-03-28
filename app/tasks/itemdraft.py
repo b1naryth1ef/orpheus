@@ -77,18 +77,11 @@ def run_item_drafts():
             return
 
         value_mod = ((int(total_value) * 1.0) / int(winner_value))
-
-        draft_bets = []
-
-        for bet in won_bets:
-            if total_value > bet.value:
-                my_return = ((float(total_value) * 1.0) / float(winner_value)) * float(bet.value)
-            else:
-                my_return = bet.value
-            draft_bets.append((bet.id, my_return))
+        log.debug("value: %s", value_mod)
 
         # Calculate return value for winners
-        # draft_bets = map(lambda i: (i.id, value_mod * int(i.value)), won_bets)
+        draft_bets = map(lambda i: (i.id, value_mod * int(i.value)), won_bets)
+        log.debug("bets: %s", draft_bets)
 
         try:
             log.info("[Draft #%s] starting pre-draft", draft.id)
