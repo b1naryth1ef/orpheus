@@ -53,13 +53,13 @@ def run_item_drafts():
 
         # Grab all won bets
         won_bets = c.execute("""
-            SELECT id, value FROM bets WHERE match=%s AND team=%s""",
+            SELECT id, value FROM bets WHERE match=%s AND team=%s AND state='CONFIRMED'""",
             (draft.match, draft.team)).fetchall(as_list=True)
 
         # Grab all "lost" items
         lost_items = c.execute("""
             SELECT i.id, i.price FROM
-                (SELECT unnest(b.items) AS item_id FROM bets b WHERE b.match=%s AND b.team!=%s) b
+                (SELECT unnest(b.items) AS item_id FROM bets b WHERE b.match=%s AND b.team!=%s AND state='CONFIRMED') b
                 JOIN items i ON id=item_id""", (draft.match, draft.team)).fetchall(as_list=True)
 
         # Calculate the total value placed on the match
