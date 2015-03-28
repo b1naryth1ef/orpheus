@@ -44,6 +44,11 @@ def route_humans():
 def route_faq():
     return render_template("prose.html", content=rules_content)
 
+@public.route("/stats")
+def route_stats():
+    return render_template("stats.html")
+
+
 if app.config.get("ENV") != "PROD":
     @public.route("/img/<name>")
     def serve_image(name):
