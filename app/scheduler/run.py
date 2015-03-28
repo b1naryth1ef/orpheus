@@ -18,7 +18,7 @@ sched.schedule(apply_draft_items, seconds=30, start_now=True)
 
 # Bots
 sched.schedule(check_steam_servers, minutes=27)
-sched.schedule(refresh_all_inventories, minutes=13)
+# sched.schedule(refresh_all_inventories, minutes=13)
 
 # Trades
 sched.schedule(update_trades, seconds=20, start_now=True)
