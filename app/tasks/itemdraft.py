@@ -80,7 +80,7 @@ def run_item_drafts():
         log.debug("value: %s", value_mod)
 
         # Calculate return value for winners
-        draft_bets = map(lambda i: (i.id, value_mod * int(i.value)), won_bets)
+        draft_bets = map(lambda i: (i.id, value_mod * float(i.value)), won_bets)
         log.debug("bets: %s", draft_bets)
 
         try:
