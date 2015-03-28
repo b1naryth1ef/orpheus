@@ -649,20 +649,38 @@ def admin_edit_ban():
 def admin_bets():
     return render_template("admin/bets.html")
 
-@admin.route("/api/bets/list", methods=['GET', 'POST'])
-def admin_list_bets():
-    page = int(request.values.get("page", 1))
+@admin.route("/api/bets/list", methods=['GET'])
+def admin_bets_list():
+    #print()
     
-    bets = g.cursor.count("bets")
+    #for key in request.values:
+        #print("{0}: {1}".format(key, request.values.get(key)))
     
-    pages = (bets / 50) + 1
+    #print()
     
-    g.cursor.execute("SELECT id, better, match, team, value, created_at FROM bets", paginate(page, per_page=50))
+    draw = int(request.values.get("draw"))
+    length = int(request.values.get("length"))
+    page = (int(request.values.get("start")) / length)
+    total = g.cursor.count("bets")
+
+    filtered = total
+
+    search = request.values.get("search[value]")
+    search_query = ""
+
+    if search:
+        search_query = g.cursor.mogrify("WHERE bets::text LIKE %s", ['%' + search + '%'])
+
+        g.cursor.execute("SELECT count(*) FROM bets {}".format(search_query))
+
+        filtered = g.cursor.fetchone().count
     
-    bets = [];
+    g.cursor.execute("SELECT id, better, match, team, value, created_at FROM bets {} LIMIT {} OFFSET {}".format(search_query, length, length * page))
+    
+    data = []
     
     for entry in g.cursor.fetchall():
-        bets.append([
+        data.append([
             entry.id,
             entry.better,
             entry.match,
@@ -671,4 +689,12 @@ def admin_list_bets():
             entry.created_at.isoformat(),
         ])
     
-    return APIResponse({"bets": bets, "pages":pages})
+    result = {}
+    
+    result['draw'] = draw
+    result['recordsTotal'] = total
+    result['recordsFiltered'] = filtered
+    result['data'] = data
+    
+    return APIResponse(result)
+

@@ -752,8 +752,16 @@ admin.route("/admin/news", (function () {
     $("#news-table").delegate(".news-edit", "click", (function (ev) {
         ev.stopImmediatePropagation();
 
-        var newsPostID = ($(ev.target).parent().parent()).attr("data-id");
-        this.renderSingleNewsPost(newsPostID);
+        console.log(eventRow.attr("data-id"));
+        console.log(eventRow.attr("data-id"));
+        console.log(eventRow.attr("data-id"));
+        console.log(eventRow.attr("data-id"));
+
+        var eventRow = $(ev.target).parent().parent();
+        this.renderSingleEventEntry(eventRow.attr("data-id"));
+
+        //var newsPostID = ($(ev.target).parent().parent()).attr("data-id");
+        //this.renderSingleNewsPost(newsPostID);
     }).bind(this));
 
     $("#news-modal-location").delegate("#news-save", "click", (function (ev) {
@@ -835,15 +843,20 @@ admin.saveNewsPost = (function (ev) {
 }).bind(admin);
 
 admin.route("/admin/bets", (function () {
-    $.ajax("/admin/api/bets/list", {
-        success: (function (response) {
-            $(document).ready(function() {
-                $('#bets').dataTable( {
-                    "data": response.bets,
-                    "lengthMenu": [15, 25, 50, 75, 100]
-                } );
-            } );
-        }).bind(this)
-    });
+    $(document).ready(function(){
+        $('#bets').dataTable({
+            "columnDefs": [
+                { "name": "id",   "targets": 0 },
+                { "name": "better",  "targets": 1 },
+                { "name": "match", "targets": 2 },
+                { "name": "team",  "targets": 3 },
+                { "name": "value",    "targets": 4 },
+                { "name": "created_at",    "targets": 5 }
+            ],
+            
+            serverSide: true,
+            ajax: "/admin/api/bets/list"
+        });
+    }).bind(this);
 }).bind(admin))
 
