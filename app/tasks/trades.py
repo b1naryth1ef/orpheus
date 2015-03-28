@@ -78,6 +78,27 @@ def update_trades():
             steam = SteamAPI(trade.apikey)
             offer = steam.getTradeOffer(trade.offerid)
 
+            state = offer['trade_offer_state']
+            log.info('Trade #%s state: %s', trade.id, state)
+            if state == ETradeOfferState.INVALID or state > ETradeOfferState.ACCEPTED:
+                log.info("Canceling trade %s, state", trade.id)
+                steam.cancelTradeOffer(trade.offerid)
+                c.update("trades", trade.id, state='REJECTED')
+
+                if trade.bet_ref:
+                    c.update("bets", trade.bet_ref, state='CANCELLED')
+                    WebPush(trade.uid).clear_hover().send({"type": "refresh-match", "id": trade.mid})
+                continue
+            elif state == ETradeOfferState.ACCEPTED:
+                log.info("Updating state for trade %s, accepted", trade.id)
+                c.update("trades", trade.id, state='ACCEPTED')
+
+                refresh_bot_inventory.queue(trade.bot_ref, trade.steamid)
+                if trade.bet_ref:
+                    c.update("bets", trade.bet_ref, state='CONFIRMED')
+                    WebPush(trade.uid).clear_hover().send({"type": "refresh-match", "id": trade.mid})
+                continue
+
             if trade.created_at < datetime.utcnow() - relativedelta.relativedelta(minutes=5):
                 log.info("Canceling trade %s, expired", trade.id)
                 c.update("trades", trade.id, state='REJECTED')
@@ -89,24 +110,6 @@ def update_trades():
                 steam.cancelTradeOffer(trade.offerid)
                 continue
 
-            state = offer['trade_offer_state']
-            log.info('Trade #%s state: %s', trade.id, state)
-            if state == ETradeOfferState.INVALID or state > ETradeOfferState.ACCEPTED:
-                log.info("Canceling trade %s, state", trade.id)
-                steam.cancelTradeOffer(trade.offerid)
-                c.update("trades", trade.id, state='REJECTED')
-
-                if trade.bet_ref:
-                    c.update("bets", trade.bet_ref, state='CANCELLED')
-                    WebPush(trade.uid).clear_hover().send({"type": "refresh-match", "id": trade.mid})
-            elif state == ETradeOfferState.ACCEPTED:
-                log.info("Updating state for trade %s, accepted", trade.id)
-                c.update("trades", trade.id, state='ACCEPTED')
-
-                refresh_bot_inventory.queue(trade.bot_ref, trade.steamid)
-                if trade.bet_ref:
-                    c.update("bets", trade.bet_ref, state='CONFIRMED')
-                    WebPush(trade.uid).clear_hover().send({"type": "refresh-match", "id": trade.mid})
 
 @task()
 def trade_notify(tid):
