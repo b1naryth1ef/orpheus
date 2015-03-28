@@ -11,8 +11,20 @@
 		</div>
 		<div class="navbar-collapse collapse">
 			<ul class="nav navbar-nav">
+				<% if(showSample){ %>	
+				<li><a id="value-history" href="/stats/sample" style="color:red;">You don't have much to see, how about a <b><u>Sample</b></u> page?</a></li>
+				<% } %>
 				<li><a id="value-history" href="#">Value History</a></li>
 				<li><a id="bet-win-loss" href="#">Bet W/L</a></li>
+				<li class="dropdown"> 
+				<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Options<span class="caret"></span></a>
+				<ul class="dropdown-menu" role="menu" id="stats-history-display-options">
+					<li><a href="#"><input type="checkbox" id = "all-teams-checkbox" checked><span class="lbl"> All Teams (Cumulative)</span></a></li>
+					<li class="divider"></li>
+					<li><a href="#" id="clear-selection"><span class="lbl"> Clear Selection</span></a></li>
+					<li class="dropdown-header">Teams</li>
+				</ul>
+				</li>
 				<li><a id="help" href="#">Help</a></li>
 			</ul>
 		</div>
@@ -24,7 +36,7 @@
 		<div class="row">
 			<div class="stats-container">
 				<div id="stats-history-display"></div>
-			</div
+			</div>
 		</div>
 	</div>
 </div>

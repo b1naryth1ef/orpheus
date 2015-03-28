@@ -11,6 +11,7 @@ from helpers.bot import get_bot_space, create_bot_item_transfer, create_return_t
 from helpers.bet import BetState, create_bet, find_avail_bot
 from helpers.user import (UserGroup, gache_user_info, user_save_settings,
     authed, USER_SETTING_SAVE_PARAMS)
+from helpers.team import team_to_json
 
 from helpers.common import get_enum_array
 from helpers.news import newspost_to_json
@@ -204,9 +205,14 @@ def route_game_list():
 def route_game_info():
     pass
 
+GET_TEAMS_SQL = """
+SELECT * FROM teams
+"""
 @api.route("/team/list")
 def route_team_list():
-    pass
+    #TODO check if the user's allowed sharing of their history
+    teams = g.cursor.execute(GET_TEAMS_SQL).fetchall()
+    return APIResponse({"teams":map(team_to_json, teams)})
 
 @api.route("/team/<int:id>/info")
 def route_team_info():
@@ -508,9 +514,12 @@ def route_stats_overview():
         user = request.values.get('id')
     else:
         user = g.user
+
+    if not isinstance(user, int) and not user.isdigit():
+        return APIResponse({"success":"false"});
     
-    stats = g.cursor.execute("""
-    SELECT bets.value, matches.match_date, (bets.team=(matches.results->'winner')::text::int) as won, matches.id FROM matches JOIN bets ON matches.id=bets.match WHERE bets.better=%s AND matches.results->'winner'::text != 'null' ORDER BY matches.match_date
-    """
-    , (user, )).fetchall()
+    query = g.cursor.mogrify("""
+    SELECT bets.value, bets.team, matches.match_date, (bets.team=(matches.results->'winner')::text::int) as won, matches.id FROM matches JOIN bets ON matches.id=bets.match WHERE bets.better=%s AND matches.results->'winner'::text != 'null' ORDER BY matches.match_date
+    """, (user, ))
+    stats = g.cursor.execute(query).fetchall()
     return APIResponse({"history":map(value_history_to_json, stats)})

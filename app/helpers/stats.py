@@ -8,5 +8,6 @@ def value_history_to_json(entry):
     return {
             "value":entry.value,
             "match_date":entry.match_date.isoformat(),
+            "team":entry.team,
             "won": entry.won
     }
