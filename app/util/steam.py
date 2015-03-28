@@ -265,12 +265,6 @@ class SteamMarketAPI(object):
     def get_inventory(self, steamid, context=2):
         url = INVENTORY_QUERY.format(id=steamid, app=self.appid, ctx=context)
 
-        print(url)
-        print(url)
-        print(url)
-        print(url)
-        print(url)
-
         r = retry_request(lambda f: f.get(url, timeout=10))
         if not r:
             raise SteamAPIError("Failed to get inventory for steamid %s" % id)
