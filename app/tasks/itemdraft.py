@@ -64,11 +64,11 @@ def run_item_drafts():
 
         # Calculate the total value placed on the match
         total_value = c.execute(
-            "SELECT sum(value) as v FROM bets WHERE match=%s", (draft.match, )).fetchone().v or 0
+            "SELECT sum(value) as v FROM bets WHERE match=%s AND state='CONFIRMED'", (draft.match, )).fetchone().v or 0
 
         # Calculate value of winning team
         winner_value = c.execute(
-            "SELECT sum(value) as v FROM bets WHERE match=%s AND team=%s",
+            "SELECT sum(value) as v FROM bets WHERE match=%s AND team=%s AND state='CONFIRMED'",
             (draft.match, draft.team)).fetchone().v or 0
 
         if not total_value or not winner_value:
