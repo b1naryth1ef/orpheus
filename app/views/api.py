@@ -387,10 +387,12 @@ def route_returns_request():
 def route_returns_match_request(id):
     with Cursor() as c:
         bet = c.execute("""
-            SELECT winnings FROM bets WHERE better=%s AND match=%s AND state='WON'""",
+            SELECT items, winnings FROM bets WHERE better=%s AND match=%s AND state='WON'""",
         (g.user, id)).fetchone()
 
-    return request_returns(map(int, bet.winnings))
+        if not bet:
+            raise APIError("No returns!")
+    return request_returns(map(int, bet.winnings + bet.items))
 
 # TODO: This is also in admin.py, it really really needs to go into a helper file.
 # Once all base functionality is complete I'll go throught and refactor as much as I can.

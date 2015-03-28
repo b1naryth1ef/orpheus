@@ -39,6 +39,7 @@ def apply_draft_items():
         c.execute("UPDATE bets SET winnings='{}', state='LOST' WHERE match=%s AND state>='CONFIRMED'",
             (match.mid, ))
 
+        # TODO: make won if not have returns plz
         for idx, entry in enumerate(items):
             c.execute("""
                 UPDATE bets SET winnings=array_append(winnings, %s::numeric), state='WON'
