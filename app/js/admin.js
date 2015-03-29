@@ -358,7 +358,23 @@ admin.renderSingleMatchEntry = (function (match) {
         events: this.eventCache,
         create: false,
     }));
+
+    $("#team1").html($("#team1 option").sort(function (a, b) {
+        var aText = a.text.toLowerCase();
+        var bText = b.text.toLowerCase();
+        
+        return aText == bText ? 0 : aText < bText ? -1 : 1
+    }))
+
+    $("#team2").html($("#team2 option").sort(function (a, b) {
+        var aText = a.text.toLowerCase();
+        var bText = b.text.toLowerCase();
+
+        return aText == bText ? 0 : aText < bText ? -1 : 1
+    }))
+
     setupDateFields();
+
     $("#match-modal").modal("show");
 }).bind(admin);
 
@@ -465,7 +481,23 @@ admin.route("/admin/matches", function () {
             events: this.eventCache,
             create: true,
         }));
+
+        $("#team1").html($("#team1 option").sort(function (a, b) {
+            var aText = a.text.toLowerCase();
+            var bText = b.text.toLowerCase();
+
+            return aText == bText ? 0 : aText < bText ? -1 : 1
+        }))
+
+        $("#team2").html($("#team2 option").sort(function (a, b) {
+            var aText = a.text.toLowerCase();
+            var bText = b.text.toLowerCase();
+
+            return aText == bText ? 0 : aText < bText ? -1 : 1
+        }))
+
         setupDateFields();
+
         $("#match-modal").modal("show");
     }).bind(this));
 
@@ -558,6 +590,7 @@ admin.loadTeams = (function () {
     $.when(
             $.get("/admin/api/team/list", (function (data) {
                 this.teamCache = data.teams;
+                console.log(data);
             }).bind(this))
           ).then((function () {
         this.renderTeams();
@@ -566,11 +599,14 @@ admin.loadTeams = (function () {
 
 admin.renderSingleTeamEntry = (function (team) {
     $("#team-modal").modal("hide");
+
     $("#team-modal-location").empty().html(this.app.render("admin_team_entry", {
         team: team,
         create: false,
     }));
+
     setupDateFields();
+
     $("#team-modal").modal("show");
 }).bind(admin);
 
@@ -579,6 +615,7 @@ admin.route("/admin/teams", function () {
 
     $("#team-add-button").click((function (ev) {
         $("#team-modal").modal("hide");
+
         $("#team-modal-location").empty().html(this.app.render("admin_team_entry", {
             create: true,
         }));
@@ -590,7 +627,9 @@ admin.route("/admin/teams", function () {
 
     $("#teams-table").delegate(".team-edit", "click", (function (ev) {
         ev.stopImmediatePropagation();
+
         var teamRow = $(ev.target).parent().parent();
+
         this.renderSingleTeamEntry(this.teamCache[teamRow.attr("data-id")]);
     }).bind(this));
 

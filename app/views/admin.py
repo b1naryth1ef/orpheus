@@ -18,6 +18,11 @@ from util.errors import UserError, APIError, FortException
 from util.responses import APIResponse
 from util.sessions import find_sessions_for_user
 
+from collections import OrderedDict
+
+import json
+import ast
+
 admin = Blueprint("admin", __name__, url_prefix="/admin")
 
 @admin.before_request
@@ -404,6 +409,7 @@ def admin_team_list():
     page = int(request.values.get("page", 1))
 
     g.cursor.execute("SELECT count(*) as c FROM teams")
+
     pages = (g.cursor.fetchone().c / 100) + 1
 
     g.cursor.execute(TEAM_LIST_QUERY, paginate(page, per_page=100))

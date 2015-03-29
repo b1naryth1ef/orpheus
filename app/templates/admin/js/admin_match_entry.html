@@ -28,10 +28,10 @@
             <div class="form-group">
               <label class="col-sm-2 control-label">Team #1</label>
               <div class="col-sm-10">
-                <select data-name="team1" class="form-control m-b match-field">
+                <select data-name="team1" class="form-control m-b match-field" id="team1">
                   <% for (team in teams) { %>
-                  <% var team = teams[team] %>
-                  <option <%= (!create && match.teams[m_teams[0]].id == team.id) ? "selected" : "" %> value="<%= team.id %>"><%= team.name %> (<%= team.tag %>)</option>
+                    <% var team = teams[team] %>
+                    <option <%= (!create && match.teams[m_teams[0]].id == team.id) ? "selected" : "" %> value="<%= team.id %>"><%= team.name %> (<%= team.tag %>)</option>
                   <% } %>
                 </select>
               </div>
@@ -41,10 +41,10 @@
             <div class="form-group">
               <label class="col-sm-2 control-label">Team #2</label>
               <div class="col-sm-10">
-                <select data-name="team2" class="form-control m-b match-field">
+                <select data-name="team2" class="form-control m-b match-field" id="team2">
                   <% for (team in teams) { %>
-                  <% var team = teams[team] %>
-                  <option <%= (!create && match.teams[m_teams[1]].id == team.id) ? "selected" : "" %> value="<%= team.id %>"><%= team.name %> (<%= team.tag %>)</option>
+                    <% var team = teams[team] %>
+                    <option <%= (!create && match.teams[m_teams[1]].id == team.id) ? "selected" : "" %> value="<%= team.id %>"><%= team.name %> (<%= team.tag %>)</option>
                   <% } %>
                 </select>
               </div>

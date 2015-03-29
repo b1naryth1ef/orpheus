@@ -178,6 +178,7 @@ def main():
             for gen in DATA_GENERATORS:
                 print "  running %s" % gen.__name__
                 gen(c, db)
+        
         print "  DONE!"
 
     if args.migrate:
