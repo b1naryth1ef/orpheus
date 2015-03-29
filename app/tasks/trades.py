@@ -64,8 +64,8 @@ def update_trades():
     with Cursor() as c:
         trades = c.execute("""
             SELECT
-                t.id, t.offerid, t.created_at, t.bet_ref, t.bot_ref, t.return_ref,
-                b.steamid, b.apikey, u.id as uid, m.id as mid
+                t.id, t.offerid, t.created_at, t.bet_ref, t.bot_ref, b.steamid,
+                b.apikey, u.id as uid, m.id as mid
             FROM trades t
             JOIN bots b ON b.id=t.bot_ref
             JOIN users u ON u.id=t.user_ref
