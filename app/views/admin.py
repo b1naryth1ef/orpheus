@@ -18,11 +18,6 @@ from util.errors import UserError, APIError, FortException
 from util.responses import APIResponse
 from util.sessions import find_sessions_for_user
 
-from collections import OrderedDict
-
-import json
-import ast
-
 admin = Blueprint("admin", __name__, url_prefix="/admin")
 
 @admin.before_request
