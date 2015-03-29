@@ -54,10 +54,12 @@
                 </div>
               <% } %>
             </div>
-            <div class="row" style="text-align: center">
-              <button type="button" class="btn btn-info match-returns" data-id="<%= bet.match.id %>">Request Returns</button>
-            </div>
           </div>
+        </div>
+      <% } %>
+      <% if (bet.returns) { %>
+        <div class="row" style="text-align: center">
+          <button type="button" class="btn btn-info match-returns" data-id="<%= bet.match.id %>">Request Returns</button>
         </div>
       <% } %>
     </div>

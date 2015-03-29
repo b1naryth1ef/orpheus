@@ -1,5 +1,7 @@
 import json, requests
 
+from collections import defaultdict
+
 from cStringIO import StringIO
 from datetime import datetime
 from flask import Blueprint, request, g, send_file, redirect, flash
@@ -251,6 +253,7 @@ def route_user_info(id):
                 "team": entry.team,
                 "state": entry.state,
                 "winnings": entry.winnings,
+                "returns": get_returns(g.user, entry.match),
                 "items": entry.items,
                 "trade": {
                     "offer": entry.t_offerid,
@@ -314,23 +317,33 @@ def route_item_image(id):
     item = g.cursor.execute("SELECT image FROM items WHERE id=%s", (id, )).fetchone()
     return redirect("https://steamcommunity-a.akamaihd.net/economy/image/%s" % item.image)
 
+def get_returns(user, match=None):
+    with Cursor() as c:
+        extra = ""
+
+        if match:
+            extra = " AND r.match=%(match)s"
+
+        c.execute("""
+            SELECT r.id as return_id, i.id, i.image, i.price, b.id as bot FROM returns r
+            JOIN itemprices ip ON ip.id=r.item_type
+            JOIN items i ON (i.name=ip.name AND i.state='INTERNAL')
+            JOIN bots b ON b.steamid=i.owner
+            WHERE r.state='PENDING' AND r.owner=%(owner)s {}
+        """.format(extra), {
+            "owner": user,
+            "match": match,
+        })
+
+        return c.fetchall(as_list=True)
+
 @api.route("/returns/list")
 def route_returns_list():
     with Cursor() as c:
-        c.execute("""
-            SELECT i.id as iid, bt.id as bid, image, i.price FROM items i
-            LEFT JOIN bots b ON b.steamid=i.owner
-            JOIN bets bt ON (
-                bt.items @> ARRAY[i.id]
-                OR bt.winnings @> ARRAY[i.id])
-            WHERE i.state='INTERNAL' AND bt.state='WON' AND bt.better=%s;
-        """, (g.user, ))
-
         returns = []
-        for entry in c.fetchall():
+        for entry in get_returns(g.user):
             returns.append({
-                "id": entry.iid,
-                "bet": entry.bid,
+                "id": entry.id,
                 "image": entry.image,
                 "price": entry.price
             })
@@ -339,60 +352,31 @@ def route_returns_list():
             "returns": returns
         })
 
-def request_returns(req):
+@api.route("/returns/match/<id>/request", methods=['POST'])
+def route_returns_match_request(id):
     with Cursor() as c:
         c.execute("SELECT id FROM trades WHERE user_ref=%s AND state < 'ACCEPTED'", (g.user, ))
         if c.fetchone():
             raise APIError("You already have a bet with a pending trade offer! Please accept that before creating more bets.")
 
-        c.execute("""
-            SELECT i.id as iid, b.id as bid FROM items i
-            JOIN bots b ON b.steamid=i.owner
-            JOIN bets bt ON (
-                bt.items @> ARRAY[i.id]
-                OR bt.winnings @> ARRAY[i.id])
-            JOIN matches m ON m.id=bt.match
-            WHERE i.state='INTERNAL' AND bt.state='WON' AND bt.better=%s
-            AND i.state='INTERNAL' AND i.id IN %s AND m.itemstate!='LOCKED';
-        """, (g.user, tuple(req), ))
-        items = c.fetchall(as_list=True)
+        returns = get_returns(g.user, match=id)
 
-        if len(items) != len(req):
-            raise APIError("Invalid items requested")
-
-        # Meh we could do this in sql easier #ohwell
-        trades = {k: [] for k in set(map(lambda i: i.bid, items))}
-
-        for item in items:
-            trades[item.bid].append(item.iid)
+        trades = defaultdict(list)
+        for entry in returns:
+            trades[entry.bot].append(entry)
 
         offers = []
-        for bot_id, items in trades.items():
-            offers.append(create_return_trade(bot_id, g.user, items))
+        for bot, returns in trades.items():
+            id = create_return_trade(bot, g.user, map(lambda i: i.id, returns))
+
+            for ret in returns:
+                c.update("returns", ret.return_id, trade=id)
+
+            offers.append(id)
 
         return APIResponse({
-            "offers": offers
+            "offers": offers,
         })
-
-@api.route("/returns/request", methods=['POST'])
-def route_returns_request():
-    req = request.json['returns']
-
-    if len(req) > 25:
-        raise APIError("Too many returns requested at once")
-
-    return request_returns(req)
-
-@api.route("/returns/match/<id>/request", methods=['POST'])
-def route_returns_match_request(id):
-    with Cursor() as c:
-        bet = c.execute("""
-            SELECT items, winnings FROM bets WHERE better=%s AND match=%s AND state='WON'""",
-        (g.user, id)).fetchone()
-
-        if not bet:
-            raise APIError("No returns!")
-    return request_returns(map(int, bet.winnings + bet.items))
 
 # TODO: This is also in admin.py, it really really needs to go into a helper file.
 # Once all base functionality is complete I'll go throught and refactor as much as I can.

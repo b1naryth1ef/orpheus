@@ -51,6 +51,21 @@ CREATE TABLE items (
 CREATE INDEX ON items (name);
 CREATE INDEX ON items (class_id, instance_id);
 
+/*
+  REPRESENTS FUCKING STEAM SUCKING
+*/
+
+CREATE TYPE return_state AS ENUM ('PENDING', 'RETURNED', 'LOCKED');
+
+CREATE TABLE returns (
+  id         SERIAL PRIMARY KEY,
+  state      return_state NOT NULL,
+  match      integer references matches(id),
+  user       integer references users(id),
+  trade      integer references trades(id),
+  item_type  integer references itemprices(id),
+  item_id    numeric
+);
 
 /*
   Represents a single user in the system
@@ -268,7 +283,7 @@ CREATE TABLE trades (
   /* Optional References */
   bot_ref     integer REFERENCES bots(id),
   user_ref    integer REFERENCES users(id),
-  bet_ref     integer REFERENCES bets(id)
+  bet_ref     integer REFERENCES bets(id),
 );
 
 

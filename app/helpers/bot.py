@@ -41,7 +41,7 @@ def create_return_trade(bot_id, user_id, items):
             "items_in": [],
             "created_at": datetime.utcnow(),
             "bot_ref": bot_id,
-            "user_ref": user_id
+            "user_ref": user_id,
         })
 
     push_trade(tid)

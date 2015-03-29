@@ -64,8 +64,8 @@ def update_trades():
     with Cursor() as c:
         trades = c.execute("""
             SELECT
-                t.id, t.offerid, t.created_at, t.bet_ref, t.bot_ref, b.steamid, b.apikey,
-                u.id as uid, m.id as mid
+                t.id, t.offerid, t.created_at, t.bet_ref, t.bot_ref, t.return_ref,
+                b.steamid, b.apikey, u.id as uid, m.id as mid
             FROM trades t
             JOIN bots b ON b.id=t.bot_ref
             JOIN users u ON u.id=t.user_ref
@@ -97,6 +97,9 @@ def update_trades():
                 if trade.bet_ref:
                     c.update("bets", trade.bet_ref, state='CONFIRMED')
                     WebPush(trade.uid).clear_hover().send({"type": "refresh-match", "id": trade.mid})
+
+                # Update returns
+                c.execute("UPDATE returns SET state='RETURNED' WHERE trade=%s", (trade.id, ))
                 continue
 
             if trade.created_at < datetime.utcnow() - relativedelta.relativedelta(minutes=5):
@@ -109,7 +112,6 @@ def update_trades():
 
                 steam.cancelTradeOffer(trade.offerid)
                 continue
-
 
 @task()
 def trade_notify(tid):
