@@ -59,6 +59,15 @@ def push_trade(tid):
         # Otherwise, let the hoard take it
         redis.rpush("tradeq", json.dumps(payload))
 
+def update_trade(trade, trade_state, bet_state):
+    with Cursor() as c:
+        c.update("trades", trade.id, state=trade_state)
+        WebPush(trade.uid).clear_hover()
+
+        if trade.bet_ref:
+            c.update("bets", trade.bet_ref, state=bet_state)
+            WebPush(trade.uid).send({"type": "refresh-match", "id": trade.mid})
+
 @task()
 def update_trades():
     with Cursor() as c:
@@ -83,35 +92,20 @@ def update_trades():
             if state == ETradeOfferState.INVALID or state > ETradeOfferState.ACCEPTED:
                 log.info("Canceling trade %s, state", trade.id)
                 steam.cancelTradeOffer(trade.offerid)
-                c.update("trades", trade.id, state='REJECTED')
-
-                if trade.bet_ref:
-                    c.update("bets", trade.bet_ref, state='CANCELLED')
-                    WebPush(trade.uid).clear_hover().send({"type": "refresh-match", "id": trade.mid})
+                update_trade(trade, 'REJECTED', 'CANCELLED')
                 continue
             elif state == ETradeOfferState.ACCEPTED:
                 log.info("Updating state for trade %s, accepted", trade.id)
-                c.update("trades", trade.id, state='ACCEPTED')
-
-                refresh_bot_inventory.queue(trade.bot_ref, trade.steamid)
-                if trade.bet_ref:
-                    c.update("bets", trade.bet_ref, state='CONFIRMED')
-                    WebPush(trade.uid).clear_hover().send({"type": "refresh-match", "id": trade.mid})
+                update_trade(trade, 'ACCEPTED', 'CONFIRMED')
 
                 # Update returns
                 c.execute("UPDATE returns SET state='RETURNED' WHERE trade=%s", (trade.id, ))
                 continue
 
-            if trade.created_at < datetime.utcnow() - relativedelta.relativedelta(minutes=5):
+            if trade.created_at < datetime.utcnow() - relativedelta.relativedelta(minutes=15):
                 log.info("Canceling trade %s, expired", trade.id)
-                c.update("trades", trade.id, state='REJECTED')
-
-                if trade.bet_ref:
-                    c.update("bets", trade.bet_ref, state='CANCELLED')
-                    WebPush(trade.uid).clear_hover().send({"type": "refresh-match", "id": trade.mid})
-
                 steam.cancelTradeOffer(trade.offerid)
-                continue
+                update_trade(trade, 'REJECTED', 'CANCELLED')
 
 @task()
 def trade_notify(tid):

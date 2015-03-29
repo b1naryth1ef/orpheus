@@ -28,16 +28,21 @@ def task(*args, **kwargs):
     return deco
 
 class Task(object):
-    def __init__(self, name, f, max_running=None, buffer_time=None):
+    def __init__(self, name, f, max_running=None, buffer_time=None, max_size=25):
         self.name = name
         self.f = f
         self.max_running = max_running
+        self.max_size = max_size
         self.buffer_time = buffer_time
 
     def __call__(self, *args, **kwargs):
         return self.f(*args, **kwargs)
 
     def queue(self, *args, **kwargs):
+        # Make sure we have space
+        if (redis.llen("jq:%s" % self.name) or 0) > self.max_size:
+            raise Exception("Queue for task %s is full!" % self.name)
+
         id = str(uuid.uuid4())
         redis.rpush("jq:%s" % self.name, json.dumps({
             "id": id,
