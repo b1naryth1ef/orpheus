@@ -42,7 +42,7 @@
           </div>
         </div>
       </div>
-      <% if (bet.winnings) { %>
+      <% if (bet.winnings && bet.winnings.length) { %>
         <div class="row">
           <div class="col-md-12">
             <div class="row row-centered">
@@ -57,7 +57,7 @@
           </div>
         </div>
       <% } %>
-      <% if (bet.returns) { %>
+      <% if (bet.returns && bet.returns.length) { %>
         <div class="row" style="text-align: center">
           <button type="button" class="btn btn-info match-returns" data-id="<%= bet.match.id %>">Request Returns</button>
         </div>
