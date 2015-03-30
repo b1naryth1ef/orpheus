@@ -73,7 +73,7 @@ def update_trades():
     with Cursor() as c:
         trades = c.execute("""
             SELECT
-                t.id, t.offerid, t.created_at, t.bet_ref, t.bot_ref, b.steamid,
+                t.id, t.offerid, t.expires_at, t.bet_ref, t.bot_ref, b.steamid,
                 b.apikey, u.id as uid, m.id as mid
             FROM trades t
             JOIN bots b ON b.id=t.bot_ref
@@ -102,7 +102,7 @@ def update_trades():
                 c.execute("UPDATE returns SET state='RETURNED' WHERE trade=%s", (trade.id, ))
                 continue
 
-            if trade.created_at < datetime.utcnow() - relativedelta.relativedelta(minutes=15):
+            if trade.expires_at < datetime.utcnow() - relativedelta.relativedelta(minutes=15):
                 log.info("Canceling trade %s, expired", trade.id)
                 steam.cancelTradeOffer(trade.offerid)
                 update_trade(trade, 'REJECTED', 'CANCELLED')

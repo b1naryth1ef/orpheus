@@ -278,6 +278,8 @@ CREATE TABLE trades (
   message     text,
   items_in    numeric[] NOT NULL,
   items_out   numeric[] NOT NULL,
+
+  expires_at  timestamp,
   created_at  timestamp,
 
   /* Optional References */
