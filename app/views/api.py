@@ -330,6 +330,7 @@ def get_returns(user, match=None):
             JOIN items i ON (i.name=ip.name AND i.state='INTERNAL')
             JOIN bots b ON b.steamid=i.owner
             WHERE r.state='PENDING' AND r.owner=%(owner)s {}
+            FOR UPDATE
         """.format(extra), {
             "owner": user,
             "match": match,
@@ -354,7 +355,7 @@ def route_returns_list():
 
 @api.route("/returns/match/<id>/request", methods=['POST'])
 def route_returns_match_request(id):
-    with Cursor(isolation=Cursor.SERIALIZABLE) as c:
+    with Cursor() as c:
         c.execute("SELECT id FROM trades WHERE user_ref=%s AND state < 'ACCEPTED'", (g.user, ))
         if c.fetchone():
             raise APIError("You already have a bet with a pending trade offer! Please accept that before creating more bets.")
