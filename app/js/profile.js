@@ -20,7 +20,7 @@ profile.route("/profile", function () {
             if (data.success) {
                 $.notify("Returns Request", "success");
             } else {
-                $.notify("Error Requesting Returns", "danger");
+                $.notify("Error Requesting Returns: " + data.message, "danger");
             }
         }).bind(this));
     }).bind(this));

@@ -69,10 +69,14 @@ class Cursor(object):
     should be used for the duration of a request, errors and exceptions
     are scoped within the context of the cursor, allow rollback semantics.
     """
-    def __init__(self, database='fort'):
+
+    SERIALIZABLE = psycopg2.extensions.ISOLATION_LEVEL_SERIALIZABLE
+
+    def __init__(self, database='fort', isolation=None):
         self.db = get_connection(database)
         self.cursor = self.db.cursor()
         self.parent = False
+        self.isolation = isolation
 
     @staticmethod
     def json(obj):
@@ -108,6 +112,8 @@ class Cursor(object):
         if self.db.status != psycopg2.extensions.STATUS_IN_TRANSACTION:
             self.parent = True
             self.db.set_session(autocommit=False)
+            if self.isolation:
+                self.db.set_isolation_level(self.isolation)
         return self
 
     def __exit__(self, typ, value, tb):

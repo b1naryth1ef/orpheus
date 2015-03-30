@@ -354,11 +354,12 @@ def route_returns_list():
 
 @api.route("/returns/match/<id>/request", methods=['POST'])
 def route_returns_match_request(id):
-    with Cursor() as c:
+    with Cursor(isolation=Cursor.SERIALIZABLE) as c:
         c.execute("SELECT id FROM trades WHERE user_ref=%s AND state < 'ACCEPTED'", (g.user, ))
         if c.fetchone():
             raise APIError("You already have a bet with a pending trade offer! Please accept that before creating more bets.")
 
+        # Grab the returns
         returns = get_returns(g.user, match=id)
 
         trades = defaultdict(list)
@@ -370,6 +371,7 @@ def route_returns_match_request(id):
             id = create_return_trade(bot, g.user, map(lambda i: i.id, returns))
 
             for ret in returns:
+
                 c.update("returns", ret.return_id, trade=id)
 
             offers.append(id)
