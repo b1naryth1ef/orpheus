@@ -685,7 +685,10 @@ def admin_bets_list():
     search_query = " AND ".join(column_searches)
 
     if search:
-        search_query = search_query + " AND " + g.cursor.mogrify("bets::text LIKE %s", ['%' + search + '%'])
+        if search_query:
+            search_query = search_query + " AND "
+
+        search_query = search_query + g.cursor.mogrify("bets::text LIKE %s", ['%' + search + '%'])
 
     if search_query:
         search_query = "WHERE " + search_query

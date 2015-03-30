@@ -882,7 +882,7 @@ admin.saveNewsPost = (function (ev) {
 }).bind(admin);
 
 admin.route("/admin/bets", (function () {
-    $(document).ready(function(){
+    $(document).ready(function() {
         $('#bets').dataTable({
             "columnDefs": [
                 { "name": "id",   "targets": 0 },
@@ -895,8 +895,26 @@ admin.route("/admin/bets", (function () {
 
             "lengthMenu": [25, 50, 100, 150, 200, 300, 400, 500],
             
-            serverSide: true,
-            ajax: "/admin/api/bets/list"
+            ajax: "/admin/api/bets/list",
+            serverSide: true
+        });
+
+        var dataTable = $('#bets').DataTable();
+
+        $('#bets tbody').on('click', 'tr', function () {
+            var tr = $(this).closest('tr');
+            var row = dataTable.row(tr);
+
+            if (row.child.isShown()) {
+                tr.removeClass('details');
+
+                row.child.hide();
+            }
+            else {
+                tr.addClass('details');
+
+                row.child("format( row.data() )").show();
+            }
         });
 
         $('#bets tfoot th').each(function () {
@@ -905,11 +923,9 @@ admin.route("/admin/bets", (function () {
             $(this).html('<input type="text" placeholder="'+title+'" />');
         });
      
-        var table = $('#bets').DataTable();
-     
-        table.columns().eq(0).each(function (colIdx) {
-            $('input', table.column(colIdx).footer()).on('keyup change', function () {
-                table
+        dataTable.columns().eq(0).each(function (colIdx) {
+            $('input', dataTable.column(colIdx).footer()).on('keyup change', function () {
+                dataTable
                     .column(colIdx)
                     .search(this.value)
                     .draw();
