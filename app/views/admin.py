@@ -650,36 +650,59 @@ def admin_edit_ban():
 def admin_bets():
     return render_template("admin/bets.html")
 
+BETS_DATATABLE_COLUMN_COUNT = 6
+BETS_DATATABLE_SEARCHABLE_FIELDS = ["id", "better", "match", "team", "value", "created_at"]
+
 @admin.route("/api/bets/list", methods=['GET'])
 def admin_bets_list():
-    #print()
-    
-    #for key in request.values:
-        #print("{0}: {1}".format(key, request.values.get(key)))
-    
-    #print()
-    
     draw = int(request.values.get("draw"))
     length = int(request.values.get("length"))
-    page = (int(request.values.get("start")) / length)
+    order_column_index = int(request.values.get("order[0][column]"))
+    order_column_name = str(request.values.get("columns[{0}][name]".format(order_column_index)))
+    order_direction = str(request.values.get("order[0][dir]")).upper()
+    page = int(request.values.get("start")) / length
+    search = request.values.get("search[value]")
+
     total = g.cursor.count("bets")
 
     filtered = total
 
-    search = request.values.get("search[value]")
-    search_query = ""
+    column_searches = []
+
+    for i in range(BETS_DATATABLE_COLUMN_COUNT):
+        column_name = str(request.values.get("columns[{0}][name]".format(i)))
+
+        if not column_name in BETS_DATATABLE_SEARCHABLE_FIELDS:
+            print("Bets Datatable Column Search: Invalid Field")
+
+            continue
+
+        search_value = str(request.values.get("columns[{0}][search][value]".format(i)))
+
+        if search_value:
+            search_query = g.cursor.mogrify("bets.{0}::text LIKE %s".format(column_name), ['%' + search_value + '%'])
+
+            column_searches.append(search_query)
+
+    search_query = " AND ".join(column_searches)
 
     if search:
-        search_query = g.cursor.mogrify("WHERE bets::text LIKE %s", ['%' + search + '%'])
+        search_query = search_query + " AND " + g.cursor.mogrify("bets::text LIKE %s", ['%' + search + '%'])
+
+    if search_query:
+        search_query = "WHERE " + search_query
 
         g.cursor.execute("SELECT count(*) FROM bets {}".format(search_query))
 
         filtered = g.cursor.fetchone().count
-    
-    g.cursor.execute("SELECT id, better, match, team, value, created_at FROM bets {} LIMIT {} OFFSET {}".format(search_query, length, length * page))
-    
+
+    order_column_name = g.cursor.mogrify(order_column_name)
+    order_direction = g.cursor.mogrify(order_direction)
+
+    g.cursor.execute("SELECT id, better, match, team, value, created_at FROM bets {} ORDER BY {} {} LIMIT {} OFFSET {}".format(search_query, order_column_name, order_direction, length, length * page))
+
     data = []
-    
+
     for entry in g.cursor.fetchall():
         data.append([
             entry.id,
@@ -689,13 +712,13 @@ def admin_bets_list():
             entry.value,
             entry.created_at.isoformat(),
         ])
-    
+
     result = {}
-    
+
     result['draw'] = draw
     result['recordsTotal'] = total
     result['recordsFiltered'] = filtered
     result['data'] = data
-    
+
     return APIResponse(result)
 

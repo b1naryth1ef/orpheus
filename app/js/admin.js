@@ -896,6 +896,23 @@ admin.route("/admin/bets", (function () {
             serverSide: true,
             ajax: "/admin/api/bets/list"
         });
+
+        $('#bets tfoot th').each(function () {
+            var title = $('#bets thead th').eq($(this).index()).text();
+
+            $(this).html('<input type="text" placeholder="'+title+'" />');
+        });
+     
+        var table = $('#bets').DataTable();
+     
+        table.columns().eq(0).each(function (colIdx) {
+            $('input', table.column(colIdx).footer()).on('keyup change', function () {
+                table
+                    .column(colIdx)
+                    .search(this.value)
+                    .draw();
+            });
+        });
     }).bind(this);
 }).bind(admin))
 

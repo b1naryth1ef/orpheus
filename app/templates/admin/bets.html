@@ -1,6 +1,14 @@
 {% extends "admin/index.html" %}
 
 {% block content %}
+<style>
+    tfoot input {
+        width: 100%;
+        padding: 3px;
+        box-sizing: border-box;
+    }
+</style>
+
 <div class="panel panel-default">
     <div class="panel-body">
         <p><h3>Bets</h3></p>
@@ -19,6 +27,17 @@
                         <th>Created At</th>
                     </tr>
                 </thead>
+
+                <tfoot>
+                    <tr>
+                        <th>ID</th>
+                        <th>Better</th>
+                        <th>Match</th>
+                        <th>Team</th>
+                        <th>Value</th>
+                        <th>Created At</th>
+                    </tr>
+                </tfoot>
             </table>
         </div>
     </div>
