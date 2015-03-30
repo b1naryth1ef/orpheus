@@ -673,8 +673,6 @@ def admin_bets_list():
         column_name = str(request.values.get("columns[{0}][name]".format(i)))
 
         if not column_name in BETS_DATATABLE_SEARCHABLE_FIELDS:
-            print("Bets Datatable Column Search: Invalid Field")
-
             continue
 
         search_value = str(request.values.get("columns[{0}][search][value]".format(i)))

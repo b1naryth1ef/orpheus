@@ -892,6 +892,8 @@ admin.route("/admin/bets", (function () {
                 { "name": "value",    "targets": 4 },
                 { "name": "created_at",    "targets": 5 }
             ],
+
+            "lengthMenu": [25, 50, 100, 150, 200, 300, 400, 500],
             
             serverSide: true,
             ajax: "/admin/api/bets/list"
