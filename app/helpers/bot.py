@@ -44,10 +44,5 @@ def create_return_trade(bot_id, user_id, items):
             "user_ref": user_id,
         })
 
-    try:
-        push_trade.queue(tid)
-        return tid
-    except:
-        c.update("trades", tid, state='UNKNOWN')
-        raise
+    return tid
 

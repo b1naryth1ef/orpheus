@@ -17,6 +17,7 @@ from helpers.user import (UserGroup, gache_user_info, user_save_settings,
 from helpers.common import get_enum_array
 from helpers.news import newspost_to_json
 from helpers.trade import get_trade_notify_content
+from tasks.trades import push_trade
 
 from tasks.inventory import push_steam_inventory
 
@@ -377,9 +378,10 @@ def route_returns_match_request(id):
 
             offers.append(id)
 
-        return APIResponse({
-            "offers": offers,
-        })
+    map(push_trade.queue, offers)
+    return APIResponse({
+        "offers": offers,
+    })
 
 # TODO: This is also in admin.py, it really really needs to go into a helper file.
 # Once all base functionality is complete I'll go throught and refactor as much as I can.
