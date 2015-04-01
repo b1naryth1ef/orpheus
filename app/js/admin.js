@@ -881,56 +881,76 @@ admin.saveNewsPost = (function (ev) {
     });
 }).bind(admin);
 
-admin.route("/admin/bets", (function () {
-    $(document).ready(function() {
-        $('#bets').dataTable({
-            "columnDefs": [
-                { "name": "id",   "targets": 0 },
-                { "name": "better",  "targets": 1 },
-                { "name": "match", "targets": 2 },
-                { "name": "team",  "targets": 3 },
-                { "name": "value",    "targets": 4 },
-                { "name": "created_at",    "targets": 5 }
-            ],
+String.prototype.format = function() {
+    var s = this;
+    var i = arguments.length;
 
+    while (i--) {
+        s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i]);
+    }
+
+    return s;
+};
+
+admin.route("/admin/bets", function() {
+    var dataTableColumns = ["id", "better", "match", "team", "value", "created_at"]
+
+    $(document).ready(function() {
+        var columns = [];
+
+        for (i = 0; i < dataTableColumns.length; i++) {
+            var columnName = "{0}".format(dataTableColumns[i]);
+
+            columns.push({ "data": columnName, "name": columnName })
+        }
+
+        $("#bets").dataTable({
+            "columns": columns,
             "lengthMenu": [25, 50, 100, 150, 200, 300, 400, 500],
             
-            ajax: "/admin/api/bets/list",
+            ajax: {
+                "data": (function(data) {
+                    data.numberOfColumns = columns.length;
+                }),
+
+                "url": "/admin/api/bets/list"
+            },
             serverSide: true
         });
 
-        var dataTable = $('#bets').DataTable();
+        var dataTable = $("#bets").DataTable();
 
-        $('#bets tbody').on('click', 'tr', function () {
-            var tr = $(this).closest('tr');
+        $("#bets tbody").on("click", "tr", function() {
+            var tr = $(this).closest("tr");
             var row = dataTable.row(tr);
+            var child = row.child;
 
-            if (row.child.isShown()) {
-                tr.removeClass('details');
-
-                row.child.hide();
+            if (child.isShown()) {
+                child.hide();
             }
             else {
-                tr.addClass('details');
+                child("").show();
 
-                row.child("format( row.data() )").show();
+                $(child()).empty();
+
+                $(child()).append(admin.app.render("admin_bet_entry", {
+                    data: row.data(),
+                    numberOfColumns: columns.length
+                }));
             }
         });
 
-        $('#bets tfoot th').each(function () {
-            var title = $('#bets thead th').eq($(this).index()).text();
+        $("#bets tfoot th").each(function() {
+            var title = $("#bets thead th").eq($(this).index()).text();
 
-            $(this).html('<input type="text" placeholder="'+title+'" />');
+            $(this).html('<input type="text" placeholder="' + title + '" />');
         });
      
-        dataTable.columns().eq(0).each(function (colIdx) {
-            $('input', dataTable.column(colIdx).footer()).on('keyup change', function () {
-                dataTable
-                    .column(colIdx)
-                    .search(this.value)
-                    .draw();
+        dataTable.columns().eq(0).each(function(columnIndex) {
+            $("input", dataTable.column(columnIndex).footer()).on("keyup change", function() {
+                dataTable.column(columnIndex).search(this.value).draw();
             });
         });
-    }).bind(this);
-}).bind(admin))
+    });
+})
 

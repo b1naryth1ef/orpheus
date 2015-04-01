@@ -10,7 +10,7 @@ from helpers.user import UserGroup, authed
 from helpers.game import create_game
 from helpers.match import create_match, match_to_json
 from helpers.bot import get_bot_space
-from helpers.common import get_enum_array
+from helpers.common import get_column_names, get_enum_array
 from helpers.news import create_news_post, update_news_post
 
 from util import paginate, from_js_datetime
@@ -650,13 +650,11 @@ def admin_edit_ban():
 def admin_bets():
     return render_template("admin/bets.html")
 
-BETS_DATATABLE_COLUMN_COUNT = 6
-BETS_DATATABLE_SEARCHABLE_FIELDS = ["id", "better", "match", "team", "value", "created_at"]
-
 @admin.route("/api/bets/list", methods=['GET'])
 def admin_bets_list():
     draw = int(request.values.get("draw"))
     length = int(request.values.get("length"))
+    number_of_columns = int(request.values.get("numberOfColumns"))
     order_column_index = int(request.values.get("order[0][column]"))
     order_column_name = str(request.values.get("columns[{0}][name]".format(order_column_index)))
     order_direction = str(request.values.get("order[0][dir]")).upper()
@@ -667,12 +665,13 @@ def admin_bets_list():
 
     filtered = total
 
+    column_names = get_column_names("bets")
     column_searches = []
 
-    for i in range(BETS_DATATABLE_COLUMN_COUNT):
+    for i in range(number_of_columns):
         column_name = str(request.values.get("columns[{0}][name]".format(i)))
 
-        if not column_name in BETS_DATATABLE_SEARCHABLE_FIELDS:
+        if not column_name in column_names:
             continue
 
         search_value = str(request.values.get("columns[{0}][search][value]".format(i)))
@@ -700,26 +699,33 @@ def admin_bets_list():
     order_column_name = g.cursor.mogrify(order_column_name)
     order_direction = g.cursor.mogrify(order_direction)
 
-    g.cursor.execute("SELECT id, better, match, team, value, created_at FROM bets {} ORDER BY {} {} LIMIT {} OFFSET {}".format(search_query, order_column_name, order_direction, length, length * page))
+    g.cursor.execute("SELECT * FROM bets {} ORDER BY {} {} LIMIT {} OFFSET {}".format(search_query, order_column_name, order_direction, length, length * page))
 
     data = []
 
     for entry in g.cursor.fetchall():
-        data.append([
-            entry.id,
-            entry.better,
-            entry.match,
-            entry.team,
-            entry.value,
-            entry.created_at.isoformat(),
-        ])
+        data.append({
+            "id": entry.id,
+            "better": entry.better,
+            "match": entry.match,
+            "team": entry.team,
+            "value": entry.value,
+            "items": entry.items,
+            "winnings": entry.winnings,
+            "state": entry.state,
+            "created_at": entry.created_at.isoformat()
+        })
 
-    result = {}
-
-    result['draw'] = draw
-    result['recordsTotal'] = total
-    result['recordsFiltered'] = filtered
-    result['data'] = data
+    result = {
+        "draw": draw,
+        "recordsTotal": total,
+        "recordsFiltered": filtered,
+        "data": data
+    }
 
     return APIResponse(result)
+
+@admin.route("/api/bets/<int:id>", methods=['GET'])
+def admin_bet_information(id):
+    pass
 
