@@ -1,7 +1,16 @@
 <th colspan="<%= numberOfColumns %>">
   <div id="1" class="panel panel-primary" style="margin-bottom: 0px">
     <div class="panel-body">
-      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum tincidunt est vitae ultrices accumsan. Aliquam ornare lacus adipiscing, posuere lectus et, fringilla augue.</p>
+      <div class="row-masonry row-masonry-md-12 ng-scope">
+        <% for (item in bet.items) { %>
+          <div class="col-masonry" style="margin: 0px;">
+            <div data-toggle="tooltip" title="<%= bet.items[item].name %>">
+              <img src="https://steamcommunity-a.akamaihd.net/economy/image/<%= bet.items[item].image %>" style="max-height: 125px; max-width: 125px; background-color: #<%= bet.items[item].meta.color %>"/>
+              <p style="margin: 0px;">$<%= Number(bet.items[item].price).monetary() %></p>
+            </div>
+          </div>
+        <% } %>
+      </div>
     </div>
   </div>
 </th>

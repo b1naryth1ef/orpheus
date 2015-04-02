@@ -701,31 +701,54 @@ def admin_bets_list():
 
     g.cursor.execute("SELECT * FROM bets {} ORDER BY {} {} LIMIT {} OFFSET {}".format(search_query, order_column_name, order_direction, length, length * page))
 
-    data = []
+    bet_records = g.cursor.fetchall(as_list=True)
 
-    for entry in g.cursor.fetchall():
-        data.append({
-            "id": entry.id,
-            "better": entry.better,
-            "match": entry.match,
-            "team": entry.team,
-            "value": entry.value,
-            "items": entry.items,
-            "winnings": entry.winnings,
-            "state": entry.state,
-            "created_at": entry.created_at.isoformat()
+    bets = []
+
+    for bet_record in bet_records:
+        g.cursor.execute("SELECT items.* FROM items JOIN bets ON items.id = ANY(bets.items || bets.winnings) WHERE bets.id={0}".format(bet_record.id))
+
+        items_records = g.cursor.fetchall(as_list=True)
+
+        items = {}
+        winnings = {}
+
+        for item_record in items_records:
+            item = {
+                "id": item_record.id,
+                "name": item_record.name,
+                "owner": item_record.owner,
+                "image": item_record.image,
+                "class_id": item_record.class_id,
+                "instance_id": item_record.instance_id,
+                "price": item_record.price,
+                "state": item_record.state,
+                "meta": item_record.meta,
+            }
+
+            if item_record.id in bet_record.items:
+                items[str(item_record.id)] = item
+            else:
+                winnings[str(item_record.id)] = item
+
+        bets.append({
+            "id": bet_record.id,
+            "better": bet_record.better,
+            "match": bet_record.match,
+            "team": bet_record.team,
+            "value": bet_record.value,
+            "items": items,
+            "winnings": winnings,
+            "state": bet_record.state,
+            "created_at": bet_record.created_at.isoformat()
         })
 
     result = {
         "draw": draw,
         "recordsTotal": total,
         "recordsFiltered": filtered,
-        "data": data
+        "data": bets
     }
 
     return APIResponse(result)
-
-@admin.route("/api/bets/<int:id>", methods=['GET'])
-def admin_bet_information(id):
-    pass
 

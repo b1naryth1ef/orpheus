@@ -177,16 +177,20 @@ def generate_bets(t, db):
 
 
 ITEM_QUERY = """
-INSERT INTO items (id, name, class_id, instance_id, price, state) VALUES
-(%(id)s, %(name)s, %(id)s, %(id)s, %(price)s, 'INTERNAL');
+INSERT INTO items (id, name, class_id, instance_id, price, state, image, meta) VALUES
+(%(id)s, %(name)s, %(id)s, %(id)s, %(price)s, 'INTERNAL', %(image)s, %(meta)s);
 """
+
+ITEM_META = "{ \"color\": \"D2D2D2\" }"
 
 def generate_items(t, db):
     for id in range(50000):
         t.execute(ITEM_QUERY, {
             "id": id,
             "name": "Test Item #%s" % id,
-            "price": random.randint(100, 4000) / 100.0
+            "price": random.randint(100, 4000) / 100.0,
+            "image": "fWFc82js0fmoRAP-qOIPu5THSWqfSmTELLqcUywGkijVjZYMUrsm1j-9xgEObwgfEh_nvjlWhNzZCveCDfIBj98xqodQ2CZknz56I_OKMyJYcxPSPqFNVfg14jfkDCYk8fhvVcWx8vVSeQ7rvNeVO7B-MNwYG8mGC_WHYVr_70pq0fULe8aLpXvm3C3gP20PRVO1rSj5oTL5/360fx360f",
+            "meta": ITEM_META
         })
 
 BAN_QUERY = """

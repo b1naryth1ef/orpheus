@@ -30,8 +30,6 @@ def get_column_names(table_name):
             "SELECT column_name from information_schema.columns WHERE table_name=%s", [table_name]
         ).fetchall(as_list=True))
 
-#select column_name from information_schema.columns where table_name='bets';
-
 def get_enum_array(enum_type):
     with Cursor() as c:
         return map(lambda i: i[0], c.execute(

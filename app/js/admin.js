@@ -898,7 +898,7 @@ admin.route("/admin/bets", function() {
     $(document).ready(function() {
         var columns = [];
 
-        for (i = 0; i < dataTableColumns.length; i++) {
+        for (var i = 0; i < dataTableColumns.length; i++) {
             var columnName = "{0}".format(dataTableColumns[i]);
 
             columns.push({ "data": columnName, "name": columnName })
@@ -925,6 +925,10 @@ admin.route("/admin/bets", function() {
             var row = dataTable.row(tr);
             var child = row.child;
 
+            if(row[0].length == 0) {
+                return;
+            }
+
             if (child.isShown()) {
                 child.hide();
             }
@@ -934,7 +938,7 @@ admin.route("/admin/bets", function() {
                 $(child()).empty();
 
                 $(child()).append(admin.app.render("admin_bet_entry", {
-                    data: row.data(),
+                    bet: row.data(),
                     numberOfColumns: columns.length
                 }));
             }
