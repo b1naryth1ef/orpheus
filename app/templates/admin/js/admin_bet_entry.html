@@ -1,16 +1,34 @@
 <th colspan="<%= numberOfColumns %>">
-  <div id="1" class="panel panel-primary" style="margin-bottom: 0px">
-    <div class="panel-body">
-      <div class="row-masonry row-masonry-md-12 ng-scope">
+  <div class="panel panel-primary">
+    <div class="panel-body" style="padding: 0px">
+      <h3 style="text-align: center">State: <%= bet.state %></h3>
+      <h3 style="text-align: center">Items Bet</h3>
+      <div class="container" style="text-align: center;">
         <% for (item in bet.items) { %>
-          <div class="col-masonry" style="margin: 0px;">
+          <div style="display: inline-block;">
             <div data-toggle="tooltip" title="<%= bet.items[item].name %>">
-              <img src="https://steamcommunity-a.akamaihd.net/economy/image/<%= bet.items[item].image %>" style="max-height: 125px; max-width: 125px; background-color: #<%= bet.items[item].meta.color %>"/>
-              <p style="margin: 0px;">$<%= Number(bet.items[item].price).monetary() %></p>
+              <img src="https://steamcommunity-a.akamaihd.net/economy/image/<%= bet.items[item].image %>" style="max-height: 75px; max-width: 75px; background-color: #<%= bet.items[item].meta.color %>"/>
+              <p style="text-align: center;">$<%= Number(bet.items[item].price).monetary() %></p>
             </div>
           </div>
+        <% } %>
+      </div>
+      <h3 style="text-align: center">Items Won</h3>
+      <div class="container" style="text-align: center;">
+        <% if (bet.winnings.length > 0) { %>
+          <% for (item in bet.items) { %>
+            <div style="display: inline-block;">
+              <div data-toggle="tooltip" title="<%= bet.items[item].name %>">
+                <img src="https://steamcommunity-a.akamaihd.net/economy/image/<%= bet.items[item].image %>" style="max-height: 75px; max-width: 75px; background-color: #<%= bet.items[item].meta.color %>"/>
+                <p style="text-align: center;">$<%= Number(bet.items[item].price).monetary() %></p>
+              </div>
+            </div>
+          <% } %>
+        <% } else { %>
+          <p style="text-align: center;">None</p>
         <% } %>
       </div>
     </div>
   </div>
 </th>
+
