@@ -48,16 +48,16 @@ def run_draft(draft):
     for i, item in enumerate(items):
         if not i % 100:
             log.info("  processing item #%s" % i)
-        draft_item(c, item)
+        draft_item(c, draft, item)
 
 GET_BETTER_FOR_ITEM = """
 SELECT * FROM betters
-WHERE needed >= %s
+WHERE needed >= %s AND draft_id=%s
 ORDER BY needed DESC LIMIT 1
 """
 
-def draft_item(c, item):
-    entry = c.execute(GET_BETTER_FOR_ITEM, (item.value, )).fetchone()
+def draft_item(c, id, item):
+    entry = c.execute(GET_BETTER_FOR_ITEM, (item.value, id)).fetchone()
 
     if not entry:
         return
@@ -66,10 +66,10 @@ def draft_item(c, item):
     needed = entry.value - current
 
     # Update item, we've now allocated it
-    c.execute("UPDATE items SET better=%s WHERE id=%s", (entry.id, item.id, ))
+    c.execute("UPDATE items SET better=%s WHERE id=%s AND draft_id=%s", (entry.id, item.id, id))
 
     # Update better
-    c.execute("UPDATE betters SET current=%s, needed=%s WHERE id=%s", (
-        current, needed, entry.id,
+    c.execute("UPDATE betters SET current=%s, needed=%s WHERE id=%s AND draft_id=%s", (
+        current, needed, entry.id, id
     ))
 

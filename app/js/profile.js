@@ -9,11 +9,18 @@ profile.route("/profile", function () {
     $(".profile-container").delegate(".match-returns", "click", (function (ev) {
         ev.stopImmediatePropagation();
 
+        // Start loader
+        $(ev.target).prop("disabled", true);
+        $($(ev.target).parents()[1]).addClass("whirl");
+
         $.post("/api/returns/match/" + $(ev.target).attr("data-id") + "/request", (function (data) {
+            $(ev.target).prop("disabled", false);
+            $($(ev.target).parents()[1]).removeClass("whirl");
+
             if (data.success) {
                 $.notify("Returns Request", "success");
             } else {
-                $.notify("Error Requesting Returns", "danger");
+                $.notify("Error Requesting Returns: " + data.message, "danger");
             }
         }).bind(this));
     }).bind(this));

@@ -22,7 +22,7 @@ def get_trade_pin(id):
     return m.hexdigest()[:6]
 
 NOTIFY_MSG = """
-<p>You have a pending trade <a href="https://steamcommunity.com/tradeoffer/{trade.offerid}" target="_blank">click here</a>
+<p>You have a pending trade offer, <a href="https://steamcommunity.com/tradeoffer/{trade.offerid}" target="_blank">click here</a>
 to view it.</p>
 Trade PIN: <span class="text-warning">{pin}</span><br />
 </p>

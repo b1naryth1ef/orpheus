@@ -53,22 +53,22 @@ def run_item_drafts():
 
         # Grab all won bets
         won_bets = c.execute("""
-            SELECT id, value FROM bets WHERE match=%s AND team=%s""",
+            SELECT id, value FROM bets WHERE match=%s AND team=%s AND state='CONFIRMED'""",
             (draft.match, draft.team)).fetchall(as_list=True)
 
         # Grab all "lost" items
         lost_items = c.execute("""
             SELECT i.id, i.price FROM
-                (SELECT unnest(b.items) AS item_id FROM bets b WHERE b.match=%s AND b.team!=%s) b
+                (SELECT unnest(b.items) AS item_id FROM bets b WHERE b.match=%s AND b.team!=%s AND state='CONFIRMED') b
                 JOIN items i ON id=item_id""", (draft.match, draft.team)).fetchall(as_list=True)
 
         # Calculate the total value placed on the match
         total_value = c.execute(
-            "SELECT sum(value) as v FROM bets WHERE match=%s", (draft.match, )).fetchone().v or 0
+            "SELECT sum(value) as v FROM bets WHERE match=%s AND state='CONFIRMED'", (draft.match, )).fetchone().v or 0
 
         # Calculate value of winning team
         winner_value = c.execute(
-            "SELECT sum(value) as v FROM bets WHERE match=%s AND team=%s",
+            "SELECT sum(value) as v FROM bets WHERE match=%s AND team=%s AND state='CONFIRMED'",
             (draft.match, draft.team)).fetchone().v or 0
 
         if not total_value or not winner_value:
@@ -77,9 +77,11 @@ def run_item_drafts():
             return
 
         value_mod = ((int(total_value) * 1.0) / int(winner_value))
+        log.debug("value: %s", value_mod)
 
         # Calculate return value for winners
-        draft_bets = map(lambda i: (i.id, value_mod * int(i.value)), won_bets)
+        draft_bets = map(lambda i: (i.id, value_mod * float(i.value)), won_bets)
+        log.debug("bets: %s", draft_bets)
 
         try:
             log.info("[Draft #%s] starting pre-draft", draft.id)

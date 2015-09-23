@@ -152,7 +152,7 @@ def match_to_json(m, user=None):
             team_data['stats']['players'] = bet_stats[team.id].count
             team_data['stats']['skins'] = bet_stats[team.id].skins_count
             team_data['stats']['value'] = bet_stats[team.id].value
-            team_data['odds'] = float("{0:.2f}".format(bet_stats[team.id].count / total_bets))
+            team_data['odds'] = float("{0:.2f}".format(bet_stats[team.id].value / total_value))
             values[team.id] = bet_stats[team.id].value
 
         match['teams'][team.id] = team_data

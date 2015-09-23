@@ -1,6 +1,5 @@
 import json, time, traceback, logging
 
-
 from fort import app
 from tasks import task
 from database import Cursor, redis

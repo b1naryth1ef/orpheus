@@ -92,7 +92,7 @@ def get_user_info(uid):
         resp = c.execute("SELECT steamid, settings, ugroup, trade_token FROM users WHERE id=%s",
             (uid, )).fetchone()
 
-    if not uid:
+    if not resp:
         return {
             "authed": False
         }

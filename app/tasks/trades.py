@@ -40,8 +40,8 @@ def push_trade(tid):
 
         # First, give a chance to any arbiter that has our specified bot loaded up
         if trade.bid and trade.status == "USED":
-            if redis.llen("tradeq:bot:%s" % trade.bid) or 0 > 25:
-                raise Exception("Queue Full")
+            if (redis.llen("tradeq:bot:%s" % trade.bid) or 0) > 25:
+               raise Exception("Queue Full")
 
             redis.rpush("tradeq:bot:%s" % trade.bid, json.dumps(payload))
             time.sleep(5)
@@ -53,19 +53,28 @@ def push_trade(tid):
             # This will bite me in the ass later
             redis.delete("tradeq:bot:%s" % trade.bid)
 
-        if redis.llen("tradeq") or 0 > 50:
+        if (redis.llen("tradeq") or 0) > 50:
             raise Exception("Queue Full")
 
         # Otherwise, let the hoard take it
         redis.rpush("tradeq", json.dumps(payload))
+
+def update_trade(trade, trade_state, bet_state):
+    with Cursor() as c:
+        c.update("trades", trade.id, state=trade_state)
+        WebPush(trade.uid).clear_hover()
+
+        if trade.bet_ref:
+            c.update("bets", trade.bet_ref, state=bet_state)
+            WebPush(trade.uid).send({"type": "refresh-match", "id": trade.mid})
 
 @task()
 def update_trades():
     with Cursor() as c:
         trades = c.execute("""
             SELECT
-                t.id, t.offerid, t.created_at, t.bet_ref, t.bot_ref, b.steamid, b.apikey,
-                u.id as uid, m.id as mid
+                t.id, t.offerid, t.expires_at, t.bet_ref, t.bot_ref, b.steamid,
+                b.apikey, u.id as uid, m.id as mid
             FROM trades t
             JOIN bots b ON b.id=t.bot_ref
             JOIN users u ON u.id=t.user_ref
@@ -78,35 +87,25 @@ def update_trades():
             steam = SteamAPI(trade.apikey)
             offer = steam.getTradeOffer(trade.offerid)
 
-            if trade.created_at < datetime.utcnow() - relativedelta.relativedelta(minutes=5):
-                log.info("Canceling trade %s, expired", trade.id)
-                c.update("trades", trade.id, state='REJECTED')
-
-                if trade.bet_ref:
-                    c.update("bets", trade.bet_ref, state='CANCELLED')
-                    WebPush(trade.uid).clear_hover().send({"type": "refresh-match", "id": trade.mid})
-
-                steam.cancelTradeOffer(trade.offerid)
-                continue
-
             state = offer['trade_offer_state']
             log.info('Trade #%s state: %s', trade.id, state)
             if state == ETradeOfferState.INVALID or state > ETradeOfferState.ACCEPTED:
                 log.info("Canceling trade %s, state", trade.id)
                 steam.cancelTradeOffer(trade.offerid)
-                c.update("trades", trade.id, state='REJECTED')
-
-                if trade.bet_ref:
-                    c.update("bets", trade.bet_ref, state='CANCELLED')
-                    WebPush(trade.uid).clear_hover().send({"type": "refresh-match", "id": trade.mid})
+                update_trade(trade, 'REJECTED', 'CANCELLED')
+                continue
             elif state == ETradeOfferState.ACCEPTED:
                 log.info("Updating state for trade %s, accepted", trade.id)
-                c.update("trades", trade.id, state='ACCEPTED')
+                update_trade(trade, 'ACCEPTED', 'CONFIRMED')
 
-                refresh_bot_inventory.queue(trade.bot_ref, trade.steamid)
-                if trade.bet_ref:
-                    c.update("bets", trade.bet_ref, state='CONFIRMED')
-                    WebPush(trade.uid).clear_hover().send({"type": "refresh-match", "id": trade.mid})
+                # Update returns
+                c.execute("UPDATE returns SET state='RETURNED' WHERE trade=%s", (trade.id, ))
+                continue
+
+            if trade.expires_at < datetime.utcnow() - relativedelta.relativedelta(minutes=15):
+                log.info("Canceling trade %s, expired", trade.id)
+                steam.cancelTradeOffer(trade.offerid)
+                update_trade(trade, 'REJECTED', 'CANCELLED')
 
 @task()
 def trade_notify(tid):
